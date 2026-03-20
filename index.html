@@ -1,0 +1,2433 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0f172a">
+    <title>Футбол на Манеже v17.03</title>
+    
+    <!-- Telegram Web App API -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        // Твои ключи из Firebase (переписал со скриншота)
+        const firebaseConfig = {
+            apiKey: "AIzaSyAV-2fy1NHbLonrxk4_85GwvnhkZ6DtkAM",
+            authDomain: "fnm1-62e5a.firebaseapp.com",
+            projectId: "fnm1-62e5a",
+            storageBucket: "fnm1-62e5a.firebasestorage.app",
+            messagingSenderId: "294150340119",
+            appId: "1:294150340119:web:1e5cd75b167f7913c62652"
+        };
+
+        const canvasAppId = typeof __app_id !== 'undefined' ? __app_id : 'manezh-football-pro';
+        const canvasToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        const canvasConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : firebaseConfig;
+
+        const app = initializeApp(canvasConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        window.db = db;
+        window.appId = canvasAppId;
+        window.doc = doc;
+        window.setDoc = setDoc;
+        window.getDoc = getDoc;
+        window.onSnapshot = onSnapshot;
+
+        onAuthStateChanged(auth, (user) => {
+            window.dbUser = user;
+            if(user && window.initApp && !window.appInitialized) {
+                window.appInitialized = true;
+                window.initApp(); 
+            }
+        });
+
+        async function startAuth() {
+            if (canvasToken) {
+                try { await signInWithCustomToken(auth, canvasToken); } 
+                catch(e) { await signInAnonymously(auth); }
+            } else {
+                await signInAnonymously(auth);
+            }
+        }
+        startAuth();
+    </script>
+
+    <style>
+        :root { 
+            --bg: #0f172a; 
+            --card: #1e293b; 
+            --accent: #38bdf8; 
+            --danger: #ef4444; 
+            --text: #f8fafc; 
+            --gray: #94a3b8;
+            --success: #22c55e;
+            --warning: #facc15;
+            --fs-main: clamp(16px, 2.8vh, 22px); 
+            --disabled-opacity: 0.20;
+        }
+
+        html, body { height: 100%; width: 100%; margin: 0; padding: 0; overflow: hidden; background-color: var(--bg); }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: var(--text); display: flex; flex-direction: column; padding: 12px; box-sizing: border-box; user-select: none; font-size: 15px; } 
+
+        .icon { width: 1.1em; height: 1.1em; fill: currentColor; vertical-align: middle; display: inline-block; }
+        .icon-btn { display: flex; align-items: center; justify-content: center; gap: 6px; }
+
+        .header { display: flex; justify-content: space-between; align-items: center; flex: 0 0 auto; padding: 6px 0; position: relative; height: 50px; }
+        .header h1 { font-size: 1.1rem; margin: 0; color: var(--accent); font-weight: 800; position: absolute; left: 50%; transform: translateX(-50%); width: max-content; pointer-events: none; z-index: 1; text-transform: uppercase; } 
+        
+        .head-icon { background: var(--card); border-radius: 10px; cursor: pointer; color: white; padding: 8px 12px; z-index: 10; display: flex; align-items: center; gap: 6px; transition: all 0.2s; border: 1px solid transparent; } 
+        .head-icon span { font-size: 10px; font-weight: 800; text-transform: uppercase; } 
+        
+        .border-blue { border-color: var(--accent) !important; color: var(--accent) !important; }
+        .border-yellow { border-color: var(--warning) !important; color: var(--warning) !important; }
+
+        .game-meta { flex: 0 0 auto; font-size: 11px; color: #94a3b8; text-align: center; margin: 5px 0; background: rgba(255,255,255,0.05); padding: 6px; border-radius: 8px; text-transform: uppercase; letter-spacing: 0.5px; } 
+
+        .scoreboard-area { flex: 1.6; display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+        .score-plate { flex: 2; background: var(--card); border-radius: 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 20px rgba(0,0,0,0.3); position: relative; }
+        #score { font-size: clamp(60px, 14vh, 120px); font-weight: 900; font-variant-numeric: tabular-nums; } 
+
+        .timer-row { display: flex; align-items: stretch; justify-content: center; gap: 10px; margin: 0 10px; flex: 1; }
+        .timer-plate { flex: 2; background: rgba(255,255,255,0.05); border-radius: 15px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); }
+        #timer { font-size: clamp(24px, 5vh, 48px); font-family: monospace; color: var(--accent); font-weight: 700; } 
+        
+        .ot-wrapper { display: flex; flex-direction: column; align-items: center; flex: 0 0 55px; justify-content: center; } 
+        .ot-toggle-btn { width: 42px; height: 42px; background: #2d3748; border: 1px solid #475569; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: white; transition: 0.2s; } 
+        .active .ot-toggle-btn { background: rgba(59, 130, 246, 0.15); border-color: #3b82f6; color: #3b82f6; box-shadow: 0 0 10px rgba(59, 130, 246, 0.3); }
+
+        .game-main-area { display: flex; flex-direction: column; flex: 4; overflow: hidden; gap: 10px; }
+        .selection-section { display: flex; flex: 3; gap: 12px; align-items: center; }
+        .selection-section.viewer-empty { opacity: 0.15; pointer-events: none; filter: grayscale(1); }
+        .side-container { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; transition: all 0.5s; }
+        .circles-grid { display: flex; flex-wrap: wrap; justify-content: center; align-content: center; gap: 12px; width: 100%; }
+        .circle-select { width: clamp(45px, 10vw, 80px); height: clamp(45px, 10vw, 80px); border-radius: 50%; border: 3px solid rgba(255,255,255,0.2); cursor: pointer; } 
+        .chosen-team-btn { width: 100%; height: 90%; border-radius: 20px; border: none; font-weight: 900; font-size: clamp(14px, 3.2vw, 22px); cursor: pointer; text-transform: uppercase; animation: popIn 0.3s ease-out; }
+
+        .goal-section { display: flex; flex: 0.001; gap: 12px; opacity: 0; pointer-events: none; overflow: hidden; transition: all 0.5s; }
+        .is-ready .goal-section { flex: 3; opacity: 1; display: flex; pointer-events: auto; }
+        .goal-btn { flex: 1; border: none; border-radius: 20px; cursor: pointer; font-weight: 900; font-size: 32px; box-shadow: 0 6px 0 rgba(0,0,0,0.3); } 
+
+        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.98); z-index: 1000; padding: 10px; display: flex; align-items: center; justify-content: center; }
+        .modal-content { position: relative; background: var(--card); border-radius: 25px; padding: 25px; text-align: center; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); width: 95%; max-width: 500px; max-height: 94vh; display: flex; flex-direction: column; overflow: hidden; }
+        .scrollable { flex: 1; overflow-y: auto; overflow-x: hidden; margin-top: 10px; padding-right: 5px; }
+
+        .btn-base { background: #1e293b; border: 1px solid #334155; color: white; border-radius: 10px; font-size: 12px; padding: 15px 4px; flex: 1; cursor: pointer; text-transform: uppercase; font-weight: 700; } 
+        .full-btn { width: 100%; background: var(--accent); color: var(--bg); border: none; border-radius: 16px; padding: 18px 15px; font-size: 18px; font-weight: 900; cursor: pointer; text-transform: uppercase; } 
+
+        .pencil-btn { background: var(--card); border: 1px solid var(--accent); color: var(--accent); border-radius: 8px; padding: 3px 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .pencil-btn:active { transform: scale(0.9); }
+
+        .stats-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 20px; } 
+        .stats-table th { color: var(--gray); font-size: 9px; padding: 8px 2px; border-bottom: 1px solid #334155; text-transform: uppercase; } 
+        .stats-table td { padding: 8px 2px; border-bottom: 1px solid rgba(255,255,255,0.05); text-align: center; } 
+        
+        .player-link { color: var(--accent); cursor: pointer; font-weight: 800; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 4px; }
+        .player-input { width: 100%; background: #0f172a; border: 1px solid #475569; color: #fff; padding: 10px; border-radius: 8px; font-size: 13px; box-sizing: border-box; outline: none; margin-bottom: 5px; } 
+
+        .footer-area { flex: 0 0 auto; display: flex; flex-direction: column; gap: 8px; padding-top: 6px; }
+        
+        #loadingOverlay { position: fixed; inset: 0; background: var(--bg); z-index: 20000; display: flex; align-items: center; justify-content: center; flex-direction: column; color: var(--accent); font-weight: 900; font-size: 20px; text-transform: uppercase; letter-spacing: 2px; }
+        .spinner { width: 40px; height: 40px; border: 4px solid rgba(56, 189, 248, 0.2); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+    </style>
+</head>
+<body class="viewer-mode">
+
+    <div id="loadingOverlay"><div class="spinner"></div><span>Синхронизация...</span></div>
+    <datalist id="globalPlayersList"></datalist>
+
+    <svg style="display: none;">
+        <symbol id="icon-eye" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></symbol>
+        <symbol id="icon-lock" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm9 14H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/></symbol>
+        <symbol id="icon-settings" viewBox="0 0 24 24"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.73,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.06,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.43-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.49-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></symbol>
+        <symbol id="icon-ball" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm6.2 5.09c1.02 1.34 1.64 2.99 1.76 4.77l-4.32 1.77-1.53-3.69 4.09-2.85zm-4.34-1.39l-4.14 2.89L8.14 5.7c1.2-.5 2.52-.77 3.86-.77 1.33 0 2.62.27 3.86.76zM4.04 7.09l4.08 2.85-1.52 3.69L2.28 11.8c.11-1.74.72-3.37 1.76-4.71zm.88 10.3c-.78-1.08-1.36-2.36-1.66-3.75l4.5-1.55 2.05 3.66-2.52 3.49c-.89-.47-1.69-1.09-2.37-1.85zm7.08 3.53c-1.31 0-2.57-.26-3.75-.73l2.42-3.34 2.42 3.34c-1.18.47-2.44.73-3.09.73zm4.61-1.68c-.68.76-1.48 1.38-2.37 1.85l-2.52-3.49 2.05-3.66 4.5 1.55c-.3 1.39-.88 2.67-1.66 3.75zM12 14.86l-2.37-4.27 2.37-1.65 2.37 1.65L12 14.86z"/></symbol>
+        <symbol id="icon-pass-shoe" viewBox="0 0 24 24"><path d="M21.41 12.31L13 3.9C12.35 3.25 11.23 3 10.29 3.42L4 6.2C3.12 6.59 2.59 7.54 2.81 8.49L3 9.3C3.17 10 3.73 10.5 4.43 10.65L9.63 11.72L12.57 14.65C12.92 15 13.43 15.07 13.84 14.83L15.5 13.86L18.42 16.78C18.81 17.17 19.45 17.17 19.84 16.78L21.41 15.15C21.8 14.75 21.8 14.12 21.41 13.73L19.5 12.06L21.41 12.31ZM9.5 18C8.67 18 8 18.67 8 19.5C8 20.33 8.67 21 9.5 21C10.33 21 11 20.33 11 19.5C11 18.67 10.33 18 9.5 18ZM13.5 18C12.67 18 12 18.67 12 19.5C12 20.33 12.67 21 13.5 21C14.33 21 15 20.33 15 19.5C15 18.67 14.33 18 13.5 18ZM5.5 18C4.67 18 4 18.67 4 19.5C4 20.33 4.67 21 5.5 21C6.33 21 7 20.33 7 19.5C7 18.67 6.33 18 5.5 18ZM17.5 18C16.67 18 16 18.67 16 19.5C16 20.33 16.67 21 17.5 21C18.33 21 19 20.33 19 19.5C19 18.67 18.33 18 17.5 18Z"/></symbol>
+        <symbol id="icon-calendar" viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM9 14H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2zm-8 4H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2z"/></symbol>
+        <symbol id="icon-run" viewBox="0 0 24 24"><path d="M13.49 5.48c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm-3.6 13.9l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1l-5.2 2.2v4.7h2v-3.4l1.8-.7-1.6 8.1-4.9-1-.4 2 7 1.4z"/></symbol>
+        <symbol id="icon-stopwatch" viewBox="0 0 24 24"><path d="M15 1H9v2h6V1zm-4 13h2V8h-2v6zm8.03-6.61l1.42-1.42c-.43-.51-.9-.99-1.41-1.41l-1.42 1.42C16.07 4.74 14.12 4 12 4c-4.97 0-9 4.03-9 9s4.02 9 9 9 9-4.03 9-9c0-2.12-.74-4.07-1.97-5.61zM12 20c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></symbol>
+        <symbol id="icon-telegram" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 6.63 5.37 12 12 12s12-5.37 12-12C24 5.37 18.63 0 12 0zm5.89 8.22l-1.97 9.28c-.14.66-.54.82-1.08.51l-3-2.21-1.45 1.39c-.14.18-.36.22-.55.22l.19-2.85 5.18-4.68c.22-.2-.05-.31-.35-.12l-6.4 4.02-2.76-.86c-.6-.18-.62-.6.12-.89l10.79-4.16c.5-.18.94.1.77.84z"/></symbol>
+        <symbol id="icon-trash" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></symbol>
+        <symbol id="icon-edit" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></symbol>
+        <symbol id="icon-plus" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></symbol>
+        <symbol id="icon-stats" viewBox="0 0 24 24"><path d="M10 20h4V4h-4v16zm-6 0h4v-8H4v8zM16 9v11h4V9h-4z"/></symbol>
+        <symbol id="icon-share" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></symbol>
+        <symbol id="icon-reset" viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></symbol>
+        <symbol id="icon-undo" viewBox="0 0 24 24"><path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/></symbol>
+        <symbol id="icon-stop" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4 11H8c-.55 0-1-.45-1-1s.45-1 1-1h8c.55 0 1 .45 1 1s-.45 1-1 1h8c.55 0 1 .45 1 1s-.45 1-1 1z"/></symbol>
+        <symbol id="icon-star" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></symbol>
+    </svg>
+
+    <div class="header">
+        <button id="lockBtn" class="head-icon border-blue" onclick="window.openWelcomeModal()">
+            <svg class="icon" id="lockEmoji"><use href="#icon-eye"></use></svg><span id="lockText">ИГРОК</span>
+        </button>
+        <h1>Футбол на Манеже</h1>
+        <button id="settingsBtn" class="head-icon border-yellow" onclick="window.openSettings()">
+            <svg class="icon"><use href="#icon-settings"></use></svg>
+        </button>
+    </div>
+
+    <div class="game-meta" id="gameMeta">Загрузка...</div>
+    <div id="matchStatusLabel" style="display: none;"></div>
+
+    <div class="scoreboard-area">
+        <div class="score-plate">
+            <div id="score">0 : 0</div>
+            <div id="lastGoalInfo"><div id="lastGoalL" class="h-goals-l"></div><div id="lastGoalR" class="h-goals-r"></div></div>
+        </div>
+        <div class="timer-row">
+            <div class="timer-plate"><div id="timer">00:00</div></div>
+            <div id="otTimerPlate" class="timer-plate"><div id="otTimer">00:00</div></div>
+            <div class="ot-wrapper">
+                <button id="otToggle" class="ot-toggle-btn" onclick="window.toggleOTManual()">
+                    <svg class="icon ot-icon"><use href="#icon-stopwatch"></use></svg>
+                </button>
+                <div class="ot-label">ОВЕРТАЙМ</div>
+            </div>
+        </div>
+        <div id="noGamesMessage" style="display: none; text-align: center; font-weight: 900; font-size: 20px; color: var(--gray); margin-top: 20px; padding: 25px; background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px dashed rgba(255,255,255,0.15);">⚪ В данный момент игр нет</div>
+    </div>
+
+    <div class="game-main-area" id="mainGameContainer">
+        <div class="selection-section">
+            <div class="side-container"><div id="leftCircles" class="circles-grid"></div><div id="leftActive" class="hidden"></div></div>
+            <div class="side-container"><div id="rightCircles" class="circles-grid"></div><div id="rightActive" class="hidden"></div></div>
+        </div>
+        <div id="goalControls" class="goal-section">
+            <button id="goal1" class="goal-btn" onclick="window.addGoal(1)" disabled>ГОЛ</button>
+            <button id="goal2" class="goal-btn" onclick="window.addGoal(2)" disabled>ГОЛ</button>
+        </div>
+    </div>
+
+    <div class="footer-area">
+        <div class="row-3" id="adminControlsRow">
+            <button id="resetBtn" class="btn-base" onclick="window.handleReset()" disabled>сброс</button>
+            <button id="undoBtn" class="btn-base" onclick="window.openUndoModal()" disabled>отменить</button>
+            <button id="finishBtn" class="btn-base" style="color:var(--danger)" onclick="window.openFinish()" disabled>завершить</button>
+        </div>
+        <button id="startBtn" class="full-btn" onclick="window.toggleTimer()" disabled>ВЫБЕРИТЕ КОМАНДЫ</button>
+        <button id="statsBtn" class="full-btn icon-btn" style="margin-top:5px; background:var(--card); color:var(--text); font-size:14px; padding: 14px;" onclick="window.renderCombinedStats()"><svg class="icon"><use href="#icon-stats"></use></svg> СТАТИСТИКА</button>
+    </div>
+
+    <div id="welcomeOverlay" class="overlay lobby-bg" style="z-index: 9999;">
+        <div class="modal-content">
+            <h2 style="color: var(--accent); margin-bottom: 25px; text-transform: uppercase; font-size: 24px;">Футбол на Манеже</h2>
+            <button class="full-btn" style="margin-bottom: 15px;" onclick="window.selectWelcomeMode('viewer')">ИГРОК</button>
+            <button class="full-btn" style="margin-bottom: 15px;" onclick="window.selectWelcomeMode('admin')">АДМИН</button>
+            <div id="logoutBtnContainer" style="display:none; margin-top: 10px;">
+                <button class="btn-base" style="border: 1px solid var(--danger); color: var(--danger); width: 100%;" onclick="window.logout()">ВЫЙТИ ИЗ ЧЕМПИОНАТА</button>
+            </div>
+            <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">v17.03 Pro • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel</div>
+        </div>
+    </div>
+
+    <div id="adminLobbyModal" class="overlay lobby-bg hidden" style="z-index: 10000;">
+        <div class="modal-content">
+            <h2 style="color: var(--accent); margin-top:0;">ВЫБЕРИТЕ ДЕЙСТВИЕ</h2>
+            <button class="full-btn icon-btn" style="margin-bottom: 15px;" onclick="window.openJoinAdmin()"><svg class="icon"><use href="#icon-door"></use></svg> ВОЙТИ В ЧЕМПИОНАТ</button>
+            <button class="full-btn icon-btn" style="margin-bottom: 15px; background:var(--success);" onclick="window.openCreateRoom()"><svg class="icon"><use href="#icon-plus"></use></svg> СОЗДАТЬ ЧЕМПИОНАТ</button>
+            <button class="btn-base" onclick="window.backToWelcome('adminLobbyModal')">НАЗАД</button>
+        </div>
+    </div>
+
+    <div id="createRoomModal" class="overlay lobby-bg hidden" style="z-index: 10001;">
+        <div class="modal-content">
+            <h2 style="color: var(--success); margin-top:0; margin-bottom:5px;">СОЗДАТЬ ЧЕМПИОНАТ</h2>
+            <div style="font-size:11px; color:var(--gray); margin-bottom:15px;">Задайте НАЗВАНИЕ чемпионата и придумайте пароли (для администратора и для игроков).</div>
+            
+            <input type="text" id="createPinInput" class="player-input" placeholder="ПРИДУМАЙТЕ НАЗВАНИЕ (напр. LIGA24)" style="font-size:15px; text-align:center; margin-bottom:10px; padding:12px; width:100%; box-sizing:border-box;">
+            <input type="password" id="createAdminPassInput" class="player-input" placeholder="ПРИДУМАЙТЕ ПАРОЛЬ АДМИНА" style="font-size:15px; text-align:center; margin-bottom:10px; padding:12px; width:100%; box-sizing:border-box;">
+            <input type="password" id="createViewerPassInput" class="player-input" placeholder="ПРИДУМАЙТЕ ПАРОЛЬ ИГРОКА" style="font-size:15px; text-align:center; margin-bottom:15px; padding:12px; width:100%; box-sizing:border-box;">
+            
+            <div style="font-weight:bold; color:var(--accent); font-size:12px; text-align:left; margin-bottom:8px; text-transform:uppercase;">Настройки турнира</div>
+            <div class="scrollable" id="createSettingsContainer" style="margin-bottom:15px;"></div>
+            
+            <div class="row-3">
+                <button class="btn-base" style="background:var(--success)" onclick="window.confirmCreateRoom()">НАЧАТЬ</button>
+                <button class="btn-base" onclick="window.cancelCreateRoom()">ОТМЕНА</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="joinAdminModal" class="overlay lobby-bg hidden" style="z-index: 10001;">
+        <div class="modal-content">
+            <h2 style="color: var(--accent); margin-top:0;">ВХОД ДЛЯ АДМИНА</h2>
+            <input type="text" id="joinAdminPin" class="player-input" placeholder="НАЗВАНИЕ ТУРНИРА" style="font-size:18px; text-align:center; margin-bottom:10px; padding:12px; width:100%; box-sizing:border-box;">
+            <input type="password" id="joinAdminPass" class="player-input" placeholder="ПАРОЛЬ АДМИНА" style="font-size:18px; text-align:center; margin-bottom:15px; padding:12px; width:100%; box-sizing:border-box;">
+            <div class="row-3">
+                <button class="btn-base" style="background:var(--success)" onclick="window.confirmJoinAdmin()">ВОЙТИ</button>
+                <button class="btn-base" onclick="window.backToLobby('joinAdminModal')">ОТМЕНА</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="joinViewerModal" class="overlay lobby-bg hidden" style="z-index: 10000;">
+        <div class="modal-content">
+            <h2 style="color: var(--accent); margin-top:0; margin-bottom:5px;">ВХОД ДЛЯ ИГРОКА</h2>
+            <div style="font-size:11px; color:var(--gray); margin-bottom:15px;">Вам будет доступен просмотр текущих игр и статистики выбранного чемпионата.</div>
+            <input type="text" id="joinViewerPin" class="player-input" placeholder="НАЗВАНИЕ ТУРНИРА" style="font-size:18px; text-align:center; margin-bottom:10px; padding:12px; width:100%; box-sizing:border-box;">
+            <input type="password" id="joinViewerPass" class="player-input" placeholder="ПАРОЛЬ ИГРОКА" style="font-size:18px; text-align:center; margin-bottom:15px; padding:12px; width:100%; box-sizing:border-box;">
+            <div class="row-3">
+                <button class="btn-base" style="background:var(--success)" onclick="window.confirmJoinViewer()">ВОЙТИ</button>
+                <button class="btn-base" onclick="window.backToWelcome('joinViewerModal')">ОТМЕНА</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="passModal" class="overlay hidden" style="z-index: 10000;">
+        <div class="modal-content">
+            <h2 id="passModalTitle">ВВЕДИТЕ ПАРОЛЬ</h2>
+            <div id="passInputsContainer"></div>
+            <div style="color:var(--danger); font-size:12px; margin-bottom:10px; height:12px; font-weight:bold;" id="passError"></div>
+            <div class="row-3">
+                <button class="btn-base" style="background:var(--success)" onclick="window.submitPass()">ПРИНЯТЬ</button>
+                <button class="btn-base" onclick="window.closeModal('passModal')">ОТМЕНА</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="shareModal" class="overlay hidden" style="z-index: 10005;">
+        <div class="modal-content">
+            <h2 style="color:var(--accent); margin-top:0; margin-bottom:15px;">ПОДЕЛИТЬСЯ РЕЗУЛЬТАТАМИ</h2>
+            <div style="text-align:left; margin-bottom: 15px;">
+                <div class="settings-checkbox-row checked" onclick="this.classList.toggle('checked')" id="cbShareTable">
+                    <div class="setting-label">Таблица турнира</div><div class="custom-checkbox"></div>
+                </div>
+                <div class="settings-checkbox-row checked" onclick="this.classList.toggle('checked')" id="cbShareMatches">
+                    <div class="setting-label">Результаты матчей</div><div class="custom-checkbox"></div>
+                </div>
+                <div class="settings-checkbox-row checked" onclick="this.classList.toggle('checked')" id="cbSharePlayers">
+                    <div class="setting-label">Статистика игроков</div><div class="custom-checkbox"></div>
+                </div>
+            </div>
+            <div class="row-3">
+                <button class="btn-base" style="background:var(--success)" onclick="window.executeShare()">ПОДЕЛИТЬСЯ</button>
+                <button class="btn-base" onclick="window.closeModal('shareModal')">ОТМЕНА</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="playerDBModal" class="overlay hidden" style="z-index: 10004;">
+        <div class="modal-content" style="max-width:600px; width: 98%;">
+            <h2 style="color:var(--accent); margin-top:0; margin-bottom:15px; text-transform:uppercase;"><svg class="icon-inline"><use href="#icon-run"></use></svg> БАЗА ИГРОКОВ</h2>
+            <button class="full-btn icon-btn" style="margin-bottom: 15px; font-size:14px; padding:12px; background:var(--success);" onclick="window.addGlobalPlayer()"><svg class="icon"><use href="#icon-plus"></use></svg> ДОБАВИТЬ НОВОГО ИГРОКА</button>
+            
+            <div class="scrollable" id="playerDBContainer" style="text-align:left; padding-right:5px;"></div>
+            
+            <button class="btn-base" style="margin-top:15px;" onclick="window.closeModal('playerDBModal')">ЗАКРЫТЬ</button>
+        </div>
+    </div>
+
+    <div id="confirmReset" class="overlay hidden" style="z-index: 10005;">
+        <div class="modal-content">
+            <h2 style="font-size:20px; margin-top:0; color:var(--text);">СБРОСИТЬ МАТЧ?</h2>
+            <button class="full-btn icon-btn" style="background:var(--danger)" onclick="window.confirmReset(true)"><svg class="icon"><use href="#icon-reset"></use></svg> ДА, СБРОСИТЬ</button>
+            <button class="btn-base" style="margin-top:15px; background: transparent; border:none; color:var(--gray);" onclick="window.closeModal('confirmReset')">ОТМЕНА</button>
+        </div>
+    </div>
+    <div id="confirmUndo" class="overlay hidden" style="z-index: 10005;">
+        <div class="modal-content">
+            <h2 style="font-size:20px; margin-top:0; color:var(--text);">ОТМЕНИТЬ ГОЛ?</h2>
+            <button class="full-btn icon-btn" onclick="window.confirmUndo()"><svg class="icon"><use href="#icon-undo"></use></svg> ДА, ОТМЕНИТЬ</button>
+            <button class="btn-base" style="margin-top:15px; background: transparent; border:none; color:var(--gray);" onclick="window.closeModal('confirmUndo')">ОТМЕНА</button>
+        </div>
+    </div>
+    <div id="confirmFinish" class="overlay hidden" style="z-index: 10005;">
+        <div class="modal-content">
+            <h2 style="font-size:20px; margin-top:0; color:var(--text);">ЗАВЕРШИТЬ МАТЧ?</h2>
+            <button class="full-btn icon-btn" style="background:var(--danger)" onclick="window.confirmFinish()"><svg class="icon"><use href="#icon-stop"></use></svg> ДА, ЗАВЕРШИТЬ</button>
+            <button class="btn-base" style="margin-top:15px; background: transparent; border:none; color:var(--gray);" onclick="window.closeModal('confirmFinish')">ОТМЕНА</button>
+        </div>
+    </div>
+
+    <div id="sysAlertModal" class="overlay hidden" style="z-index: 10005;">
+        <div class="modal-content">
+            <h2 id="sysAlertTitle" style="color:var(--accent); margin-top:0;">ВНИМАНИЕ</h2>
+            <div id="sysAlertMsg" style="margin-bottom:20px; font-size:13px; color:var(--text);"></div>
+            <button class="full-btn" onclick="window.closeModal('sysAlertModal')">OK</button>
+        </div>
+    </div>
+
+    <div id="sysConfirmModal" class="overlay hidden" style="z-index: 10005;">
+        <div class="modal-content">
+            <h2 id="sysConfirmTitle" style="color:var(--danger); margin-top:0;">ПОДТВЕРЖДЕНИЕ</h2>
+            <div id="sysConfirmMsg" style="margin-bottom:20px; font-size:13px; color:var(--text);"></div>
+            <div class="row-3">
+                <button class="btn-base" style="background:var(--danger)" onclick="window.sysConfirmYes()">ДА</button>
+                <button class="btn-base" onclick="window.closeModal('sysConfirmModal')">ОТМЕНА</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="sysPromptModal" class="overlay hidden" style="z-index: 10005;">
+        <div class="modal-content" style="position:relative;">
+            <button id="sysPromptDeleteBtn" style="position:absolute; top:20px; right:20px; background:none; border:none; color:var(--danger); cursor:pointer; display:none; padding:5px; transition: transform 0.1s;" onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform='scale(1)'" onclick="window.sysPromptDelete()">
+                <svg class="icon" style="width: 22px; height: 22px;"><use href="#icon-trash"></use></svg>
+            </button>
+            <h2 id="sysPromptTitle" style="color:var(--accent); margin-top:0; margin-right: 30px;">ВВОД ДАННЫХ</h2>
+            <div id="sysPromptMsg" style="margin-bottom:10px; font-size:13px; color:var(--gray);"></div>
+            <input type="text" id="sysPromptInput" class="player-input" style="width:100%; margin-bottom:20px; text-align:center; font-size:18px; box-sizing:border-box;">
+            <div class="row-3">
+                <button class="btn-base" style="background:var(--success)" onclick="window.sysPromptYes()">ОК</button>
+                <button class="btn-base" onclick="window.closeModal('sysPromptModal')">ОТМЕНА</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="winnerModal" class="overlay hidden"><div class="modal-content"><div id="winMatchNum" style="font-size:11px; opacity:0.8; font-weight:800; color:var(--gray);"></div><div id="winTeamName" style="padding:15px 25px; border-radius:18px; font-weight:900; margin:15px 0; display:inline-block; font-size: 24px;"></div><div id="winScoreText" style="font-size:60px; font-weight:900;">0 : 0</div><button class="full-btn" style="margin-top: 10px;" onclick="window.closeWinner()">ПРИНЯТО</button></div></div>
+    
+    <div id="mvpSelectModal" class="overlay hidden" style="z-index: 10000;">
+        <div class="modal-content">
+            <h2 id="mvpSelTitle" style="color:var(--accent); margin-top:0;">ВЫБЕРИТЕ MVP</h2>
+            <div class="scrollable" id="mvpSelGrid" style="display:flex; flex-direction:column; gap:8px;"></div>
+            <button class="btn-base" style="margin-top:15px;" onclick="window.closeModal('mvpSelectModal')">ОТМЕНА</button>
+        </div>
+    </div>
+
+    <div id="settings" class="overlay hidden">
+        <div class="modal-content">
+            <h2 style="color:var(--accent); margin-top:0; font-size:17px; margin-bottom:15px; text-transform:uppercase;"><svg class="icon-inline"><use href="#icon-settings"></use></svg> Настройки текущего чемпионата</h2>
+            <div class="scrollable" id="settingsContainer"></div>
+            <button class="full-btn" style="margin-top:12px;" onclick="window.saveSettings()">💾 СОХРАНИТЬ</button>
+            <button class="btn-base" style="margin-top:10px;" onclick="window.closeModal('settings')">✖ ОТМЕНА</button>
+        </div>
+    </div>
+    
+    <div id="rosterModal" class="overlay hidden" style="z-index: 10003;"><div class="modal-content"><h2><svg class="icon-inline"><use href="#icon-run"></use></svg> Составы команд</h2>
+    <button class="btn-base icon-btn" style="width:100%; margin-bottom:15px; background:var(--card); border:1px solid var(--accent); color:var(--accent);" onclick="window.openPlayerDB()"><svg class="icon"><use href="#icon-run"></use></svg> ВСЕ ИГРОКИ ТУРНИРА</button>
+    <div class="scrollable" id="rosterContainer"></div><button class="full-btn" style="margin-top: 10px;" onclick="window.closeModal('rosterModal')">ГОТОВО</button></div></div>
+    
+    <div id="tourPlayerEditorModal" class="overlay hidden" style="z-index: 10000;">
+        <div class="modal-content">
+            <h2 id="tourPlayerEditTitle" style="color:var(--accent); margin-top:0; margin-bottom:5px;">РЕДАКТОР ИГРОКОВ</h2>
+            <div style="font-size:12px; color:var(--gray); margin-bottom:15px;">Изменения имен автоматически обновят историю матчей турнира. Если видите "?", замените на настоящее имя.</div>
+            <button class="btn-base icon-btn" style="width:100%; margin-bottom:15px; background:var(--card); border:1px solid var(--accent); color:var(--accent);" onclick="window.openPlayerDB()"><svg class="icon"><use href="#icon-run"></use></svg> ВСЕ ИГРОКИ ТУРНИРА</button>
+            
+            <div class="scrollable" id="tourPlayerEditContainer" style="text-align: left;"></div>
+            <div class="row-3" style="margin-top: 15px;">
+                <button class="btn-base" style="background:var(--success)" onclick="window.saveTourPlayerEdit()">💾 СОХРАНИТЬ</button>
+                <button class="btn-base" onclick="window.closeModal('tourPlayerEditorModal')">ОТМЕНА</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="playerSelModal" class="overlay hidden"><div class="modal-content"><h2 id="pSelTitle">КТО ЗАБИЛ?</h2><div class="scrollable"><div id="pSelGrid" style="display:grid; grid-template-columns:1fr 1fr; gap:12px;"></div></div></div></div>
+    <div id="statsModal" class="overlay hidden"><div class="modal-content" style="width:98%; max-width:600px; padding:20px 15px;"><h2><svg class="icon-inline"><use href="#icon-stats"></use></svg> Статистика</h2><div class="scrollable" id="combinedStatsContainer" style="margin-top:0;"></div><button class="full-btn" style="margin-top: 15px;" onclick="window.closeModal('statsModal')">ЗАКРЫТЬ</button></div></div>
+
+    <div id="adminEditorModal" class="overlay hidden" style="z-index: 10000;">
+        <div class="modal-content">
+            <h2 id="adminEditTitle">РЕДАКТОР МАТЧА</h2>
+            <div class="scrollable" id="adminEditContainer" style="text-align: left; font-size: 12px;"></div>
+            <div class="row-3" style="margin-top: 15px;">
+                <button class="btn-base" style="background:var(--success)" onclick="window.saveAdminEdit()">💾 СОХРАНИТЬ</button>
+                <button class="btn-base icon-btn" style="background:var(--danger)" id="adminDelMatchBtn" onclick="window.deleteAdminMatch()"><svg class="icon"><use href="#icon-trash"></use></svg> УДАЛИТЬ</button>
+                <button class="btn-base" onclick="window.closeModal('adminEditorModal')">ОТМЕНА</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="tourEditorModal" class="overlay hidden" style="z-index: 10000;">
+        <div class="modal-content" style="max-width: 550px;">
+            <h2 id="tourEditTitle" style="color:var(--accent); margin-top:0; margin-bottom:5px;">РЕДАКТИРОВАТЬ ТУРНИР</h2>
+            <div style="font-size:12px; color:var(--gray); margin-bottom:15px;">Ручные изменения заменят авто-подсчет</div>
+            <div class="scrollable" id="tourEditContainer" style="text-align: left; font-size: 12px;"></div>
+            <div class="row-3" style="margin-top: 15px;">
+                <button class="btn-base" style="background:var(--success)" onclick="window.saveTourEdit()">💾 СОХРАНИТЬ</button>
+                <button class="btn-base icon-btn" style="background:var(--danger)" onclick="window.resetTourEdit()"><svg class="icon"><use href="#icon-reset"></use></svg> СБРОС В АВТО</button>
+                <button class="btn-base" onclick="window.closeModal('tourEditorModal')">ОТМЕНА</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+window.COLORS = { "Черные": "#000000", "Белые": "#ffffff", "Желтые": "#facc15", "Зеленые": "#22c55e", "Красные": "#ef4444", "Синие": "#3b82f6", "Разноцветные": "linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" };
+window.colorKeys = Object.keys(window.COLORS);
+window.audioCtx = window.audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+
+window.currentRoom = null;
+window.currentRole = 'viewer';
+
+window.defaultConfig = { 
+    time:420, goalLimit:2, teams:["Зеленые","Красные","Белые"], autoReset:true, useOT:true, 
+    goldenGoal:true, otLimit:0, voiceEnabled:true, usePlayers:true, rosters:{}, 
+    adminPass:"123", viewerPass:"000", soundUrl:"", otInitializedDate:"" 
+};
+
+window.config = null;
+window.tempConfig = null;
+window.matches = [];
+window.customTours = {};
+window.tourRosters = {};
+window.globalPlayers = []; 
+
+window.time = 0; 
+window.interval = null; 
+window.currentMatch = null; 
+window.goalHistory = [];
+window.selL = null; 
+window.selR = null; 
+window.otActive = false; 
+window.isOT = false; 
+window.otTime = 0; 
+window.isFinishing = false;
+window.tSide = null; 
+window.tScorer = null; 
+
+window.currentMvpDate = null;
+window.currentStatsPageIndex = 0;
+window.currentShareDate = null;
+window.editingMatchId = null;
+window.passMode = '';
+window.editingTourPlayerDate = null;
+window.tempTourRosters = {};
+window.editingTourDate = null;
+window.currentSettingsTarget = 'settingsContainer';
+window._confirmCallback = null;
+window._promptCallback = null;
+window._promptDeleteCallback = null;
+
+window.playerDbSortCol = 'points';
+window.playerDbSortDesc = true;
+window.playerDbStats = [];
+
+window.openModal = function(id) { const m = document.getElementById(id); if(m){ m.style.setProperty('display', 'flex', 'important'); m.classList.remove('hidden'); } };
+window.closeModal = function(id) { const m = document.getElementById(id); if(m){ m.style.display = 'none'; m.classList.add('hidden'); } };
+
+window.getStore = function(key, def) {
+    if(!window.currentRoom) return def;
+    const v = localStorage.getItem("mSmartPro_" + key + "_" + window.currentRoom);
+    return v ? JSON.parse(v) : def;
+};
+
+window.setStore = function(key, val) {
+    if(!window.currentRoom) return;
+    localStorage.setItem("mSmartPro_" + key + "_" + window.currentRoom, JSON.stringify(val));
+    if (typeof window.syncToFirebase === 'function') window.syncToFirebase();
+};
+
+function getDefaultPlayerName(team, index) {
+    return `${team} игрок ${index + 1}`;
+}
+
+window.ensureDefaultRosters = function() {
+    if (!window.config || !window.config.usePlayers) return;
+    let changed = false;
+    window.config.teams.forEach(t => {
+        if (!window.config.rosters[t]) {
+            window.config.rosters[t] = Array(5).fill("");
+            changed = true;
+        }
+        window.config.rosters[t] = window.config.rosters[t].map((p, i) => {
+            let name = p ? String(p).trim() : "";
+            if (!name || name === '?') {
+                changed = true;
+                return getDefaultPlayerName(t, i);
+            }
+            return name;
+        });
+    });
+    if (changed) window.setStore("config", window.config);
+};
+
+window.loadRoomData = function() {
+    window.matches = window.getStore("matches", []);
+    window.customTours = window.getStore("customTours", {});
+    window.tourRosters = window.getStore("tourRosters", {});
+    window.globalPlayers = window.getStore("globalPlayers", []);
+    
+    const todayStr = new Date().toLocaleDateString('ru-RU');
+    if (window.config.otInitializedDate !== todayStr) {
+        const playedToday = window.matches.some(m => m.date === todayStr);
+        window.config.useOT = !playedToday; 
+        window.config.otInitializedDate = todayStr;
+        window.setStore("config", window.config);
+    }
+};
+
+window.startApp = function() {
+    if(window.interval) { clearInterval(window.interval); window.interval = null; }
+    window.time = window.config.time;
+    window.isOT = false; window.otTime = 0;
+    window.currentMatch = null; window.isFinishing = false; window.selL = null; window.selR = null;
+    window.otActive = window.config.useOT;
+    
+    window.ensureDefaultRosters(); 
+    
+    document.getElementById('score').innerText = "0 : 0";
+    document.getElementById('startBtn').innerText = "ВЫБЕРИТЕ КОМАНДЫ";
+    document.getElementById('otTimerPlate').style.display = 'none';
+    
+    window.updateSelectionUI(); 
+    window.updateLockUI(); 
+    window.updateWelcomeButtons(); 
+    window.updateUtilityBtns();
+    window.updateTimerDisplay(); 
+    window.updateLastGoalDisplay(); 
+    window.updateMatchStatusLabel();
+};
+
+window.showConfirm = function(msg, callback) {
+    document.getElementById('sysConfirmMsg').innerText = msg;
+    window._confirmCallback = callback;
+    window.openModal('sysConfirmModal');
+};
+window.sysConfirmYes = function() {
+    window.closeModal('sysConfirmModal');
+    if(window._confirmCallback) window._confirmCallback();
+};
+
+window.showPrompt = function(msg, defaultVal, callback, deleteCallback = null, customTitle = "ВВОД ДАННЫХ") {
+    document.getElementById('sysPromptTitle').innerText = customTitle;
+    document.getElementById('sysPromptMsg').innerText = msg;
+    const inp = document.getElementById('sysPromptInput');
+    inp.value = defaultVal || '';
+    window._promptCallback = callback;
+    window._promptDeleteCallback = deleteCallback;
+    
+    const delBtn = document.getElementById('sysPromptDeleteBtn');
+    if (deleteCallback) {
+        delBtn.style.display = 'block';
+    } else {
+        delBtn.style.display = 'none';
+    }
+
+    window.openModal('sysPromptModal');
+    inp.onkeyup = function(e) { if (e.key === 'Enter') window.sysPromptYes(); };
+    setTimeout(() => inp.focus(), 100);
+};
+window.sysPromptYes = function() {
+    window.closeModal('sysPromptModal');
+    if(window._promptCallback) window._promptCallback(document.getElementById('sysPromptInput').value);
+};
+window.sysPromptDelete = function() {
+    window.closeModal('sysPromptModal');
+    if(window._promptDeleteCallback) window._promptDeleteCallback();
+};
+
+window.showAlert = function(msg) {
+    document.getElementById('sysAlertMsg').innerText = msg;
+    window.openModal('sysAlertModal');
+};
+
+window.snapshotTourRoster = function(date) {
+    if (!window.tourRosters[date]) { window.tourRosters[date] = { teams: [], rosters: {} }; }
+    window.config.teams.forEach(t => {
+        if (!window.tourRosters[date].teams.includes(t)) window.tourRosters[date].teams.push(t);
+        window.tourRosters[date].rosters[t] = JSON.parse(JSON.stringify(window.config.rosters[t] || []));
+    });
+    window.setStore("tourRosters", window.tourRosters);
+};
+
+window.updateGlobalPlayersList = function() {
+    let names = new Set(window.globalPlayers || []);
+    const addName = (n) => { 
+        if(n && String(n).trim() !== '' && n !== '?' && n !== 'Автогол' && !String(n).includes('(АГ)')) {
+            names.add(String(n).trim());
+        }
+    };
+    
+    if (window.config && window.config.rosters) {
+        Object.values(window.config.rosters).forEach(arr => arr.forEach(addName));
+    }
+    if (window.tourRosters) {
+        Object.values(window.tourRosters).forEach(tr => Object.values(tr.rosters).forEach(arr => arr.forEach(addName)));
+    }
+    if (window.matches) {
+        window.matches.forEach(m => m.events.forEach(e => { addName(e.s); addName(e.a); }));
+    }
+    let mvps = window.getStore("tourMvps", {});
+    Object.values(mvps).forEach(addName);
+    
+    window.globalPlayers = Array.from(names).sort();
+    window.setStore("globalPlayers", window.globalPlayers);
+    
+    let dl = document.getElementById('globalPlayersList');
+    if(dl) dl.innerHTML = window.globalPlayers.map(p => `<option value="${p}">`).join('');
+};
+
+window.openPlayerDB = function() {
+    window.updateGlobalPlayersList();
+    const c = document.getElementById('playerDBContainer');
+    
+    if (window.globalPlayers.length === 0) {
+        c.innerHTML = `<div style="text-align:center; color:var(--gray); margin-top:20px; font-size:12px;">База пуста. Игроки появятся здесь автоматически после первого матча или добавления в состав.</div>`;
+        window.openModal('playerDBModal');
+        return;
+    } 
+
+    let pStats = {};
+    window.globalPlayers.forEach(p => pStats[p] = {name: p, tours: new Set(), g: 0, a: 0, mvp: 0});
+    
+    let mvps = window.getStore("tourMvps", {});
+    Object.keys(mvps).forEach(date => {
+        let n = mvps[date];
+        if (pStats[n]) { pStats[n].mvp++; pStats[n].tours.add(date); }
+    });
+
+    if (window.tourRosters) {
+        Object.keys(window.tourRosters).forEach(date => {
+            Object.values(window.tourRosters[date].rosters).forEach(arr => arr.forEach(p => {
+                let pn = String(p).trim();
+                if(pStats[pn]) pStats[pn].tours.add(date);
+            }));
+        });
+    }
+
+    window.matches.forEach(m => {
+        if (m.events) {
+            m.events.forEach(e => {
+                let sName = e.s ? String(e.s).trim() : null;
+                let isOG = sName && (sName === 'Автогол' || sName.includes('(АГ)'));
+                
+                if (sName && sName !== 'Автогол' && !isOG && pStats[sName]) {
+                    pStats[sName].tours.add(m.date);
+                    pStats[sName].g++;
+                }
+                
+                let aName = e.a ? String(e.a).trim() : null;
+                if (aName && pStats[aName]) {
+                    pStats[aName].tours.add(m.date);
+                    pStats[aName].a++;
+                }
+            });
+        }
+    });
+
+    window.playerDbStats = Object.values(pStats);
+    window.renderPlayerDBTable();
+    window.openModal('playerDBModal');
+};
+
+window.sortPlayerDB = function(col) {
+    if (window.playerDbSortCol === col) {
+        window.playerDbSortDesc = !window.playerDbSortDesc;
+    } else {
+        window.playerDbSortCol = col;
+        window.playerDbSortDesc = (col !== 'name'); 
+    }
+    window.renderPlayerDBTable();
+};
+
+window.renderPlayerDBTable = function() {
+    const c = document.getElementById('playerDBContainer');
+    
+    window.playerDbStats.sort((a, b) => {
+        let valA, valB;
+        if (window.playerDbSortCol === 'name') {
+            valA = a.name.toLowerCase();
+            valB = b.name.toLowerCase();
+        } else if (window.playerDbSortCol === 'points') {
+            valA = a.g + a.a;
+            valB = b.g + b.a;
+        } else if (window.playerDbSortCol === 'tours') {
+            valA = a.tours.size;
+            valB = b.tours.size;
+        } else {
+            valA = a[window.playerDbSortCol];
+            valB = b[window.playerDbSortCol];
+        }
+
+        if (valA < valB) return window.playerDbSortDesc ? 1 : -1;
+        if (valA > valB) return window.playerDbSortDesc ? -1 : 1;
+        return a.name.localeCompare(b.name);
+    });
+
+    const getSortIcon = (col) => {
+        if (window.playerDbSortCol === col || (col === 'points' && window.playerDbSortCol === 'points')) {
+            return window.playerDbSortDesc ? '▼' : '▲';
+        }
+        return '<span style="opacity:0.3">↕</span>';
+    };
+
+    let h = `<table class="stats-table" style="margin-bottom:0; width: 100%; border-collapse: separate; border-spacing: 0 4px;">
+        <thead>
+            <tr>
+                <th style="width: 20px; text-align: center; color: var(--gray); border: none; padding-bottom: 5px;">#</th>
+                <th style="text-align: left; color: var(--gray); border: none; padding-bottom: 5px; cursor: pointer; user-select: none;" onclick="window.sortPlayerDB('name')">Игрок <span style="font-size:10px">${getSortIcon('name')}</span></th>
+                <th style="width: 50px; text-align: center; color: var(--gray); border: none; padding-bottom: 5px; cursor: pointer; user-select: none;" onclick="window.sortPlayerDB('g')">Голы <span style="font-size:10px">${getSortIcon('g')}</span></th>
+                <th style="width: 50px; text-align: center; color: var(--gray); border: none; padding-bottom: 5px; cursor: pointer; user-select: none;" onclick="window.sortPlayerDB('a')">Пасы <span style="font-size:10px">${getSortIcon('a')}</span></th>
+                <th style="width: 50px; text-align: center; color: var(--gray); border: none; padding-bottom: 5px; cursor: pointer; user-select: none;" onclick="window.sortPlayerDB('tours')">Игры <span style="font-size:10px">${getSortIcon('tours')}</span></th>
+                <th style="width: 50px; text-align: center; color: var(--gray); border: none; padding-bottom: 5px; cursor: pointer; user-select: none;" onclick="window.sortPlayerDB('mvp')">MVP <span style="font-size:10px">${getSortIcon('mvp')}</span></th>
+            </tr>
+        </thead>
+        <tbody>`;
+    
+    window.playerDbStats.forEach((p, idx) => {
+        let bgRow = idx % 2 === 0 ? 'rgba(255,255,255,0.03)' : 'transparent';
+        h += `<tr style="background: ${bgRow};">
+            <td style="text-align: center; color: var(--gray); padding: 8px 2px; border-radius: 6px 0 0 6px;">${idx + 1}</td>
+            <td style="text-align: left; font-weight: bold; position: relative; padding: 8px 2px;">
+                <span class="player-link" onclick="window.renameGlobalPlayer('${p.name}')" title="Редактировать">${p.name}</span>
+            </td>
+            <td style="text-align: center; font-weight: 800; padding: 8px 2px;">${p.g}</td>
+            <td style="text-align: center; padding: 8px 2px;">${p.a}</td>
+            <td style="text-align: center; padding: 8px 2px;">${p.tours.size}</td>
+            <td style="text-align: center; color: var(--accent); font-weight: 800; border-radius: 0 6px 6px 0; padding: 8px 2px;">${p.mvp > 0 ? p.mvp : ''}</td>
+        </tr>`;
+    });
+    h += `</tbody></table>`;
+    c.innerHTML = h;
+};
+
+window.renameGlobalPlayer = function(oldName) {
+    window.showPrompt(`Новое имя для "${oldName}":`, oldName, (newName) => {
+        let nName = newName.trim();
+        if(!nName || nName === oldName || nName === '?' || nName === 'Автогол') return;
+        
+        const replaceArr = (arr) => {
+            for(let i=0; i<arr.length; i++) if(String(arr[i]).trim() === oldName) arr[i] = nName;
+        };
+
+        if (window.config.rosters) {
+            Object.values(window.config.rosters).forEach(replaceArr);
+        }
+        
+        if (window.tourRosters) {
+            Object.values(window.tourRosters).forEach(tr => Object.values(tr.rosters).forEach(replaceArr));
+        }
+
+        if (window.matches) {
+            window.matches.forEach(m => {
+                if (m.events) {
+                    m.events.forEach(e => {
+                        if (e.s === oldName) e.s = nName;
+                        if (e.s === oldName + ' (АГ)') e.s = nName + ' (АГ)';
+                        if (e.a === oldName) e.a = nName;
+                    });
+                }
+            });
+        }
+
+        let mvps = window.getStore("tourMvps", {});
+        let mvpChanged = false;
+        Object.keys(mvps).forEach(d => {
+            if (mvps[d] === oldName) { mvps[d] = nName; mvpChanged = true; }
+        });
+        if (mvpChanged) window.setStore("tourMvps", mvps);
+
+        window.setStore("config", window.config);
+        window.setStore("tourRosters", window.tourRosters);
+        window.setStore("matches", window.matches);
+        
+        window.updateGlobalPlayersList();
+        window.openPlayerDB();
+        
+        if (!document.getElementById('tourPlayerEditorModal').classList.contains('hidden')) {
+            window.openTourPlayerEditor(window.editingTourPlayerDate);
+        }
+        if (!document.getElementById('rosterModal').classList.contains('hidden')) {
+            window.openRosterEditor();
+        }
+    }, () => {
+        window.deleteGlobalPlayer(oldName);
+    });
+};
+
+window.deleteGlobalPlayer = function(name) {
+    window.showConfirm(`Вы действительно хотите удалить игрока "${name}"?`, () => {
+        window.globalPlayers = window.globalPlayers.filter(p => p !== name);
+        window.setStore("globalPlayers", window.globalPlayers);
+        window.updateGlobalPlayersList();
+        window.openPlayerDB();
+    });
+};
+
+window.addGlobalPlayer = function() {
+    window.showPrompt("Имя нового игрока:", "", (name) => {
+        let n = name.trim();
+        if (n && n !== '?' && n !== 'Автогол' && !window.globalPlayers.includes(n)) {
+            window.globalPlayers.push(n);
+            window.setStore("globalPlayers", window.globalPlayers);
+            window.updateGlobalPlayersList();
+            window.openPlayerDB();
+        }
+    });
+};
+
+window.updateWelcomeButtons = function() {
+    const adminBtn = document.getElementById('welcomeAdminBtn');
+    const viewerBtn = document.getElementById('welcomeViewerBtn');
+    const logoutContainer = document.getElementById('logoutBtnContainer');
+    
+    if (!adminBtn || !viewerBtn) return;
+    
+    if (logoutContainer) {
+        logoutContainer.style.display = window.currentRoom ? 'block' : 'none';
+    }
+    
+    viewerBtn.innerHTML = `<span style="display: flex; align-items: center; gap: 6px;"><svg class="icon"><use href="#icon-eye"></use></svg> ИГРОК</span><span class="btn-subtext" style="margin-top: 0; opacity: 0.8; font-size: 12px; color: inherit;">Вам доступен просмотр игр и статистики</span>`;
+    adminBtn.innerHTML = `<span style="display: flex; align-items: center; gap: 6px;"><svg class="icon"><use href="#icon-lock"></use></svg> АДМИН</span><span class="btn-subtext" style="margin-top: 0; opacity: 0.9; font-size: 12px; color: inherit;">Создать чемпионат или войти для управления</span>`;
+
+    if (!window.currentRoom) {
+        viewerBtn.style.background = 'var(--card)';
+        viewerBtn.style.color = 'var(--text)';
+        viewerBtn.style.border = '1px solid var(--gray)';
+        
+        adminBtn.style.background = 'var(--accent)';
+        adminBtn.style.color = 'var(--bg)';
+        adminBtn.style.border = 'none';
+    } else {
+        if (window.currentRole === 'viewer') {
+            viewerBtn.style.background = 'var(--accent)';
+            viewerBtn.style.color = 'var(--bg)';
+            viewerBtn.style.border = 'none';
+            
+            adminBtn.style.background = 'var(--card)';
+            adminBtn.style.color = 'var(--text)';
+            adminBtn.style.border = '1px solid var(--gray)';
+        } else {
+            adminBtn.style.background = 'var(--accent)';
+            adminBtn.style.color = 'var(--bg)';
+            adminBtn.style.border = 'none';
+            
+            viewerBtn.style.background = 'var(--card)';
+            viewerBtn.style.color = 'var(--text)';
+            viewerBtn.style.border = '1px solid var(--gray)';
+        }
+    }
+};
+
+window.openWelcomeModal = function() {
+    window.updateWelcomeButtons();
+    document.getElementById('welcomeOverlay').style.setProperty('display', 'flex', 'important');
+};
+
+window.backToWelcome = function(modalId) { window.closeModal(modalId); window.openWelcomeModal(); };
+
+window.backToLobby = function(modalId) {
+    window.closeModal(modalId);
+    window.openModal('adminLobbyModal');
+};
+
+window.selectWelcomeMode = function(m) {
+    if (!window.currentRoom) {
+        if (m === 'admin') {
+            window.closeModal('welcomeOverlay');
+            window.openModal('adminLobbyModal');
+        } else {
+            window.closeModal('welcomeOverlay');
+            window.openJoinViewer();
+        }
+    } else {
+        if (m === 'admin') {
+            if (window.currentRole === 'admin') {
+                document.getElementById('welcomeOverlay').style.display = 'none';
+            } else {
+                window.openPassModal('switchRole');
+            }
+        } else if (m === 'viewer') {
+            if (window.currentRole === 'viewer') {
+                document.getElementById('welcomeOverlay').style.display = 'none';
+            } else {
+                window.currentRole = 'viewer';
+                window.config.isLocked = true;
+                window.setStore("config", window.config);
+                localStorage.setItem("mSmartPro_lastRole", window.currentRole);
+                document.getElementById('welcomeOverlay').style.display = 'none';
+                window.updateLockUI(); window.updateSelectionUI(); window.updateUtilityBtns();
+            }
+        }
+    }
+};
+
+window.openJoinViewer = function() {
+    window.closeModal('welcomeOverlay');
+    document.getElementById('joinViewerPin').value = '';
+    document.getElementById('joinViewerPass').value = '';
+    window.openModal('joinViewerModal');
+    setTimeout(() => document.getElementById('joinViewerPin').focus(), 100);
+};
+
+window.openJoinAdmin = function() {
+    window.closeModal('adminLobbyModal');
+    document.getElementById('joinAdminPin').value = '';
+    document.getElementById('joinAdminPass').value = '';
+    window.openModal('joinAdminModal');
+    setTimeout(() => document.getElementById('joinAdminPin').focus(), 100);
+};
+
+window.openCreateRoom = function() {
+    window.closeModal('adminLobbyModal');
+    document.getElementById('createPinInput').value = '';
+    document.getElementById('createAdminPassInput').value = '';
+    document.getElementById('createViewerPassInput').value = '';
+    window.tempConfig = JSON.parse(JSON.stringify(window.defaultConfig));
+    window.currentSettingsTarget = 'createSettingsContainer';
+    window.renderSettingsList(window.currentSettingsTarget);
+    window.openModal('createRoomModal');
+};
+
+window.cancelCreateRoom = function() {
+    window.closeModal('createRoomModal');
+    if (!window.currentRoom) {
+        window.openModal('adminLobbyModal');
+    }
+};
+
+window.openCreateRoomFromSettings = function() {
+    window.closeModal('settings');
+    window.openCreateRoom();
+};
+
+window.confirmCreateRoom = async function() {
+    const pin = document.getElementById('createPinInput').value.trim();
+    const aPass = document.getElementById('createAdminPassInput').value.trim();
+    const vPass = document.getElementById('createViewerPassInput').value.trim();
+    
+    if(!pin || !aPass || !vPass) return window.showAlert("Заполните Название и Пароли!");
+    if(aPass === vPass) return window.showAlert("Пароли админа и игрока должны различаться!");
+    
+    document.getElementById('loadingOverlay').style.display = 'flex';
+    
+    try {
+        if (typeof window.getDoc === 'function' && typeof window.db !== 'undefined') {
+            const roomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', pin);
+            const snap = await window.getDoc(roomRef);
+            if(snap.exists()) {
+                document.getElementById('loadingOverlay').style.display = 'none';
+                return window.showAlert("Это название уже занято! Придумайте другое.");
+            }
+        }
+        
+        window.currentRoom = pin;
+        window.currentRole = 'admin';
+        window.tempConfig.adminPass = aPass;
+        window.tempConfig.viewerPass = vPass;
+        window.config = JSON.parse(JSON.stringify(window.tempConfig));
+        
+        window.matches = [];
+        window.customTours = {};
+        window.tourRosters = {};
+        window.globalPlayers = [];
+        window.tourMvps = {};
+        
+        if (typeof window.syncToFirebase === 'function') await window.syncToFirebase();
+        
+        localStorage.setItem("mSmartPro_lastRoom", window.currentRoom);
+        localStorage.setItem("mSmartPro_lastRole", window.currentRole);
+        
+        window.closeModal('createRoomModal');
+        window.startApp();
+        if (typeof window.listenToRoom === 'function') window.listenToRoom();
+    } catch(e) {
+        console.error("Error creating room:", e);
+        window.showAlert("Ошибка при создании чемпионата.");
+    } finally {
+        document.getElementById('loadingOverlay').style.display = 'none';
+    }
+};
+
+window.confirmJoinAdmin = async function() {
+    const pin = document.getElementById('joinAdminPin').value.trim();
+    const pass = document.getElementById('joinAdminPass').value.trim();
+    
+    if(!pin || !pass) return window.showAlert("Введите Название и Пароль!");
+    
+    document.getElementById('loadingOverlay').style.display = 'flex';
+    
+    try {
+        let c = null;
+        if (typeof window.getDoc === 'function' && typeof window.db !== 'undefined') {
+            const roomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', pin);
+            const snap = await window.getDoc(roomRef);
+            if(!snap.exists()) {
+                document.getElementById('loadingOverlay').style.display = 'none';
+                return window.showAlert("Чемпионат с таким названием не найден!");
+            }
+            let data = snap.data();
+            c = data.config;
+            window.applyDataFromFirebase(data);
+        } else {
+            let confStr = localStorage.getItem("mSmartPro_config_" + pin);
+            if(!confStr) {
+                document.getElementById('loadingOverlay').style.display = 'none';
+                return window.showAlert("Чемпионат с таким названием не найден!");
+            }
+            c = JSON.parse(confStr);
+            window.config = c;
+            window.loadRoomData();
+        }
+        
+        if (pass === c.adminPass || pass === (c.adminPass||"123")) {
+            window.currentRole = 'admin';
+        } else {
+            document.getElementById('loadingOverlay').style.display = 'none';
+            return window.showAlert("Неверный пароль!");
+        }
+        
+        window.currentRoom = pin;
+        
+        localStorage.setItem("mSmartPro_lastRoom", window.currentRoom);
+        localStorage.setItem("mSmartPro_lastRole", window.currentRole);
+        
+        window.closeModal('joinAdminModal');
+        window.startApp();
+        if (typeof window.listenToRoom === 'function') window.listenToRoom();
+    } catch(e) {
+        console.error("Error joining:", e);
+        window.showAlert("Ошибка при подключении.");
+    } finally {
+        document.getElementById('loadingOverlay').style.display = 'none';
+    }
+};
+
+window.confirmJoinViewer = async function() {
+    const pin = document.getElementById('joinViewerPin').value.trim();
+    const pass = document.getElementById('joinViewerPass').value.trim();
+    
+    if(!pin) return window.showAlert("Введите Название чемпионата!");
+    
+    document.getElementById('loadingOverlay').style.display = 'flex';
+    
+    try {
+        let c = null;
+        if (typeof window.getDoc === 'function' && typeof window.db !== 'undefined') {
+            const roomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', pin);
+            const snap = await window.getDoc(roomRef);
+            if(!snap.exists()) {
+                document.getElementById('loadingOverlay').style.display = 'none';
+                return window.showAlert("Чемпионат с таким названием не найден!");
+            }
+            let data = snap.data();
+            c = data.config;
+            window.applyDataFromFirebase(data);
+        } else {
+            let confStr = localStorage.getItem("mSmartPro_config_" + pin);
+            if(!confStr) {
+                document.getElementById('loadingOverlay').style.display = 'none';
+                return window.showAlert("Чемпионат с таким названием не найден!");
+            }
+            c = JSON.parse(confStr);
+            window.config = c;
+            window.loadRoomData();
+        }
+        
+        if (pass !== c.viewerPass && pass !== (c.viewerPass||"000")) {
+            document.getElementById('loadingOverlay').style.display = 'none';
+            return window.showAlert("Неверный пароль игрока!");
+        }
+        
+        window.currentRoom = pin;
+        window.currentRole = 'viewer';
+        
+        localStorage.setItem("mSmartPro_lastRoom", window.currentRoom);
+        localStorage.setItem("mSmartPro_lastRole", window.currentRole);
+        
+        window.closeModal('joinViewerModal');
+        window.startApp();
+        if (typeof window.listenToRoom === 'function') window.listenToRoom();
+    } catch(e) {
+        console.error("Error joining as viewer:", e);
+        window.showAlert("Ошибка при подключении.");
+    } finally {
+        document.getElementById('loadingOverlay').style.display = 'none';
+    }
+};
+
+window.changeRoomName = function() {
+    window.openPassModal('changeName');
+};
+
+window.changeViewerPass = function() {
+    window.openPassModal('changeViewer');
+};
+
+window.openPassModal = function(mode) {
+    window.passMode = mode;
+    document.getElementById('passError').innerText = '';
+    const cont = document.getElementById('passInputsContainer');
+    const handleEnter = (e) => { if (e.key === 'Enter') window.submitPass(); };
+    
+    if (mode === 'change') {
+        document.getElementById('passModalTitle').innerText = 'ИЗМЕНИТЬ ПАРОЛЬ АДМИНА';
+        cont.innerHTML = `
+            <input type="password" id="passOld" class="player-input" placeholder="Старый пароль" style="font-size:16px; text-align:center; margin-bottom:10px; padding:10px; width:100%; box-sizing:border-box;">
+            <input type="password" id="passNew" class="player-input" placeholder="Новый пароль" style="font-size:16px; text-align:center; margin-bottom:10px; padding:10px; width:100%; box-sizing:border-box;">
+            <input type="password" id="passConfirm" class="player-input" placeholder="Подтвердить пароль" style="font-size:16px; text-align:center; margin-bottom:10px; padding:10px; width:100%; box-sizing:border-box;">
+        `;
+        window.openModal('passModal');
+        setTimeout(() => {
+            document.getElementById('passOld').focus();
+            ['passOld', 'passNew', 'passConfirm'].forEach(id => {
+                document.getElementById(id).addEventListener('keyup', handleEnter);
+            });
+        }, 100);
+    } else if (mode === 'changeViewer') {
+        document.getElementById('passModalTitle').innerText = 'ИЗМЕНИТЬ ПАРОЛЬ ИГРОКА';
+        cont.innerHTML = `
+            <input type="password" id="passOld" class="player-input" placeholder="Старый пароль" style="font-size:16px; text-align:center; margin-bottom:10px; padding:10px; width:100%; box-sizing:border-box;">
+            <input type="password" id="passNew" class="player-input" placeholder="Новый пароль" style="font-size:16px; text-align:center; margin-bottom:10px; padding:10px; width:100%; box-sizing:border-box;">
+            <input type="password" id="passConfirm" class="player-input" placeholder="Подтвердить пароль" style="font-size:16px; text-align:center; margin-bottom:10px; padding:10px; width:100%; box-sizing:border-box;">
+        `;
+        window.openModal('passModal');
+        setTimeout(() => {
+            document.getElementById('passOld').focus();
+            ['passOld', 'passNew', 'passConfirm'].forEach(id => {
+                document.getElementById(id).addEventListener('keyup', handleEnter);
+            });
+        }, 100);
+    } else if (mode === 'changeName') {
+        document.getElementById('passModalTitle').innerText = 'ИЗМЕНИТЬ НАЗВАНИЕ';
+        cont.innerHTML = `
+            <input type="text" id="pinOld" class="player-input" placeholder="Текущее название" style="font-size:16px; text-align:center; margin-bottom:10px; padding:10px; width:100%; box-sizing:border-box;">
+            <input type="text" id="pinNew" class="player-input" placeholder="Новое название" style="font-size:16px; text-align:center; margin-bottom:10px; padding:10px; width:100%; box-sizing:border-box;">
+            <input type="text" id="pinConfirm" class="player-input" placeholder="Подтвердить название" style="font-size:16px; text-align:center; margin-bottom:10px; padding:10px; width:100%; box-sizing:border-box;">
+        `;
+        window.openModal('passModal');
+        setTimeout(() => {
+            document.getElementById('pinOld').focus();
+            ['pinOld', 'pinNew', 'pinConfirm'].forEach(id => {
+                document.getElementById(id).addEventListener('keyup', handleEnter);
+            });
+        }, 100);
+    } else {
+        document.getElementById('passModalTitle').innerText = 'ВВЕДИТЕ ПАРОЛЬ';
+        cont.innerHTML = `<input type="password" id="passInput" class="player-input" style="font-size:24px; text-align:center; margin-bottom:10px; padding:10px; width:100%; box-sizing:border-box;">`;
+        window.openModal('passModal');
+        setTimeout(() => {
+            const pI = document.getElementById('passInput');
+            pI.focus(); pI.addEventListener('keyup', handleEnter);
+        }, 100);
+    }
+};
+
+window.submitPass = async function() {
+    if (window.passMode === 'change') {
+        const oldP = document.getElementById('passOld').value;
+        const newP = document.getElementById('passNew').value;
+        const confP = document.getElementById('passConfirm').value;
+        
+        if (oldP !== window.config.adminPass) return document.getElementById('passError').innerText = 'Неверный старый пароль!';
+        if (newP.trim() === '') return document.getElementById('passError').innerText = 'Новый пароль не может быть пустым!';
+        if (newP !== confP) return document.getElementById('passError').innerText = 'Новые пароли не совпадают!';
+        
+        window.config.adminPass = newP;
+        if(window.tempConfig) window.tempConfig.adminPass = newP;
+        window.setStore("config", window.config);
+        window.closeModal('passModal');
+        window.showAlert("Пароль админа успешно изменен!");
+    } else if (window.passMode === 'changeViewer') {
+        const oldP = document.getElementById('passOld').value;
+        const newP = document.getElementById('passNew').value;
+        const confP = document.getElementById('passConfirm').value;
+        
+        if (oldP !== (window.config.viewerPass || "000")) return document.getElementById('passError').innerText = 'Неверный старый пароль!';
+        if (newP.trim() === '') return document.getElementById('passError').innerText = 'Новый пароль не может быть пустым!';
+        if (newP !== confP) return document.getElementById('passError').innerText = 'Новые пароли не совпадают!';
+        
+        window.config.viewerPass = newP;
+        if(window.tempConfig) window.tempConfig.viewerPass = newP;
+        window.setStore("config", window.config);
+        window.closeModal('passModal');
+        window.showAlert("Пароль игрока успешно изменен!");
+    } else if (window.passMode === 'changeName') {
+        const oldP = document.getElementById('pinOld').value.trim();
+        const newP = document.getElementById('pinNew').value.trim();
+        const confP = document.getElementById('pinConfirm').value.trim();
+        
+        if (oldP !== window.currentRoom) return document.getElementById('passError').innerText = 'Неверное текущее название!';
+        if (newP === '') return document.getElementById('passError').innerText = 'Новое название не может быть пустым!';
+        if (newP !== confP) return document.getElementById('passError').innerText = 'Новые названия не совпадают!';
+        if (newP === window.currentRoom) return document.getElementById('passError').innerText = 'Новое название совпадает со старым!';
+
+        document.getElementById('loadingOverlay').style.display = 'flex';
+        
+        try {
+            if (typeof window.getDoc === 'function' && typeof window.db !== 'undefined') {
+                const newRoomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', newP);
+                const snap = await window.getDoc(newRoomRef);
+                if(snap.exists()) {
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                    return document.getElementById('passError').innerText = 'Это название уже занято!';
+                }
+                
+                await window.setDoc(newRoomRef, {
+                    config: window.config,
+                    matches: window.matches,
+                    customTours: window.customTours,
+                    tourRosters: window.tourRosters,
+                    globalPlayers: window.globalPlayers,
+                    tourMvps: window.tourMvps || {}
+                });
+            }
+            
+            let oldRoom = window.currentRoom;
+            window.currentRoom = newP;
+            localStorage.setItem("mSmartPro_lastRoom", window.currentRoom);
+            
+            window.closeModal('passModal');
+            window.showAlert("Название успешно изменено на: " + window.currentRoom);
+            setTimeout(() => location.reload(), 1500);
+            
+        } catch(e) {
+            console.error("Rename error:", e);
+            document.getElementById('passError').innerText = 'Ошибка при переименовании!';
+        } finally {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+
+    } else {
+        const val = document.getElementById('passInput').value;
+        if (val === window.config.adminPass || val === (window.config.adminPass||"123")) {
+            window.currentRole = 'admin';
+            window.config.isLocked = false;
+            window.setStore("config", window.config);
+            localStorage.setItem("mSmartPro_lastRole", window.currentRole);
+            window.closeModal('passModal');
+            if (window.passMode === 'switchRole') {
+                document.getElementById('welcomeOverlay').style.display = 'none';
+                window.updateLockUI(); window.updateSelectionUI(); window.updateUtilityBtns();
+            }
+        } else {
+            document.getElementById('passError').innerText = 'Неверный пароль!';
+        }
+    }
+};
+
+window.changeAdminPass = function() { window.openPassModal('change'); };
+
+window.updateMatchStatusLabel = function() {
+    const lbl = document.getElementById("matchStatusLabel");
+    const noGamesMsg = document.getElementById("noGamesMessage");
+    const selectionSec = document.querySelector('.selection-section');
+    
+    if(!lbl) return;
+    
+    if (window.currentRole !== 'viewer') {
+        lbl.style.display = 'none';
+        if(noGamesMsg) noGamesMsg.style.display = 'none';
+        if(selectionSec) selectionSec.classList.remove('viewer-empty');
+        return;
+    }
+    
+    if (window.selL && window.selR) {
+        lbl.style.display = 'none'; 
+        if(noGamesMsg) noGamesMsg.style.display = 'none';
+        if(selectionSec) selectionSec.classList.remove('viewer-empty');
+    } else {
+        lbl.style.display = 'none'; 
+        if(noGamesMsg) noGamesMsg.style.display = 'block';
+        if(selectionSec) selectionSec.classList.add('viewer-empty');
+    }
+};
+
+window.updateLockUI = function() {
+    const e = document.getElementById("lockEmoji"), t = document.getElementById("lockText");
+    const sBtn = document.getElementById("settingsBtn");
+    const adminRow = document.getElementById("adminControlsRow");
+    const startBtn = document.getElementById("startBtn");
+    const statsBtn = document.getElementById("statsBtn");
+
+    if (e && t) { 
+        if (window.currentRole === 'admin') { 
+            e.innerHTML = '<use href="#icon-lock"></use>'; 
+            t.innerText = "АДМИН"; 
+        } else { 
+            e.innerHTML = '<use href="#icon-eye"></use>'; 
+            t.innerText = "ИГРОК"; 
+        }
+    }
+    if(sBtn) sBtn.style.display = (window.currentRole === 'admin') ? 'flex' : 'none';
+    document.getElementById('otToggle').parentElement.classList.toggle('active', window.otActive);
+
+    if (window.currentRole === 'viewer') {
+        document.body.classList.add('viewer-mode');
+        if(adminRow) adminRow.style.display = 'none';
+        if(startBtn) startBtn.style.display = 'none';
+        if(statsBtn) {
+            statsBtn.style.background = 'var(--accent)';
+            statsBtn.style.color = 'var(--bg)';
+            statsBtn.style.fontSize = '18px';
+            statsBtn.style.padding = '18px 15px';
+        }
+    } else {
+        document.body.classList.remove('viewer-mode');
+        if(adminRow) adminRow.style.display = 'flex';
+        if(startBtn) startBtn.style.display = 'block';
+        if(statsBtn) {
+            statsBtn.style.background = 'var(--card)';
+            statsBtn.style.color = 'var(--text)';
+            statsBtn.style.fontSize = '14px';
+            statsBtn.style.padding = '14px';
+        }
+    }
+    window.updateMatchStatusLabel();
+};
+
+window.selectTeam = function(side, team) {
+    if (window.interval || window.currentRole === 'viewer') return;
+    if (side === 'L' && team === window.selR) return;
+    if (side === 'R' && team === window.selL) return;
+    if (side === 'L') window.selL = team; else window.selR = team;
+    window.updateSelectionUI();
+};
+
+window.updateSelectionUI = function() {
+    const draw = (id, cur, opp) => {
+        const cont = document.getElementById(id + 'Circles'), act = document.getElementById(id + 'Active');
+        if (!cont || !act) return;
+        if (cur) {
+            cont.classList.add('hidden'); act.classList.remove('hidden');
+            const light = cur==='Белые'||cur==='Желтые';
+            act.innerHTML = `<button class="chosen-team-btn" style="background:${window.COLORS[cur]}; color:${light?'#000':'#fff'}" onclick="window.resetTeam('${id}')">${cur}</button>`;
+        } else {
+            cont.classList.remove('hidden'); act.classList.add('hidden');
+            cont.innerHTML = window.config.teams.map(t => `<div class="circle-select ${t===opp?'blocked':''}" style="background:${window.COLORS[t]}" onclick="window.selectTeam('${id==='left'?'L':'R'}','${t}')"></div>`).join('');
+        }
+    };
+    draw('left', window.selL, window.selR); draw('right', window.selR, window.selL);
+    window.checkReady();
+    window.updateMatchStatusLabel();
+};
+
+window.resetTeam = function(id) { if(window.interval || window.currentRole === 'viewer') return; if(id==='left') window.selL=null; else window.selR=null; window.updateSelectionUI(); };
+
+window.checkReady = function() {
+    const s = document.getElementById('startBtn'), g1 = document.getElementById('goal1'), g2 = document.getElementById('goal2');
+    if (window.selL && window.selR) {
+        s.disabled = (window.currentRole === 'viewer'); s.innerText = window.currentMatch ? "ПРОДОЛЖИТЬ" : "СТАРТ МАТЧА";
+        document.getElementById('mainGameContainer').classList.add('is-ready');
+        g1.style.background = window.COLORS[window.selL]; g2.style.background = window.COLORS[window.selR];
+        g1.style.color = (window.selL==='Белые'||window.selL==='Желтые')?'#000':'#fff';
+        g2.style.color = (window.selR==='Белые'||window.selR==='Желтые')?'#000':'#fff';
+    } else {
+        s.disabled = true; s.innerText = "ВЫБЕРИТЕ КОМАНДЫ";
+        document.getElementById('mainGameContainer').classList.remove('is-ready');
+    }
+};
+
+window.formatGoal = function(e) { 
+    let res = e.s || '?'; 
+    if(e.a) res += ` <span style="opacity:0.5; margin-left:3px;"><svg class="icon-inline"><use href="#icon-pass-shoe"></use></svg> ${e.a}</span>`; 
+    return res; 
+};
+
+window.updateLastGoalDisplay = function() {
+    const lL = document.getElementById('lastGoalL');
+    const lR = document.getElementById('lastGoalR');
+    if (!lL || !lR) return;
+    lL.innerHTML = ""; lR.innerHTML = "";
+    if (!window.currentMatch || !window.currentMatch.events || !window.currentMatch.events.length) return;
+    
+    const gl = window.currentMatch.events.filter(e => e.side === 1 && e.s).slice(-3);
+    const gr = window.currentMatch.events.filter(e => e.side === 2 && e.s).slice(-3);
+    
+    const fmtG = (e) => { 
+        let res = e.s || '?'; 
+        if(e.a) res += ` <span style="opacity:0.5; margin-left:3px;"><svg class="icon-inline"><use href="#icon-pass-shoe"></use></svg> ${e.a}</span>`; 
+        return `<div class="goal-bubble"><svg class="icon-inline"><use href="#icon-ball"></use></svg> ${res}</div>`; 
+    };
+    
+    lL.innerHTML = gl.map(e => fmtG(e)).join('');
+    lR.innerHTML = gr.map(e => fmtG(e)).join('');
+};
+
+window.toggleTimer = function() {
+    if (window.currentRole === 'viewer') return;
+    if (navigator.vibrate) navigator.vibrate(40); 
+    
+    if (window.audioCtx.state === 'suspended') window.audioCtx.resume();
+    if (window.interval) { clearInterval(window.interval); window.interval = null; document.getElementById('startBtn').innerText = "ПРОДОЛЖИТЬ"; }
+    else {
+        if (!window.currentMatch) { 
+            window.currentMatch = { id: window.matches.length ? Math.max(...window.matches.map(m=>m.id||0))+1 : 1, t1: window.selL, t2: window.selR, s1: 0, s2: 0, date: new Date().toLocaleDateString('ru-RU'), time: new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'}), events: [] }; 
+            window.time = window.config.time; window.isFinishing = false; 
+            window.updateLastGoalDisplay();
+        }
+        window.interval = setInterval(() => {
+            if(!window.isOT) { 
+                window.time -= 0.2; if(window.time<=0){ window.time=0; if(window.otActive && window.currentMatch.s1===window.currentMatch.s2){window.isOT=true; window.otTime=0; document.getElementById('otTimerPlate').style.display='flex';} else window.endMatch(); }
+            } else { window.otTime += 0.2; }
+            window.updateTimerDisplay();
+            const lim = parseInt(window.config.goalLimit);
+            if (lim > 0 && (window.currentMatch.s1 >= lim || window.currentMatch.s2 >= lim)) { if(window.interval){clearInterval(window.interval); window.interval=null;} window.endMatch(); }
+        }, 200);
+        document.getElementById('startBtn').innerText = "⏸ ПАУЗА";
+    }
+    window.updateUtilityBtns();
+    window.updateMatchStatusLabel();
+};
+
+window.updateTimerDisplay = function() {
+    document.getElementById('timer').innerText = `${Math.floor(window.time/60).toString().padStart(2,'0')}:${Math.floor(window.time%60).toString().padStart(2,'0')}`;
+    document.getElementById('otTimer').innerText = `${Math.floor(window.otTime/60).toString().padStart(2,'0')}:${Math.floor(window.otTime%60).toString().padStart(2,'0')}`;
+};
+
+window.playGoalSound = function() { const o = window.audioCtx.createOscillator(), g = window.audioCtx.createGain(); o.type='sine'; o.frequency.value=800; g.gain.value=0.1; o.connect(g); g.connect(window.audioCtx.destination); o.start(); o.stop(window.audioCtx.currentTime+0.2); };
+
+window.animateScore = function() {
+    const scoreEl = document.getElementById('score');
+    scoreEl.classList.remove('score-anim');
+    void scoreEl.offsetWidth; 
+    scoreEl.classList.add('score-anim');
+};
+
+window.addGoal = function(side) {
+    if (!window.currentMatch || !window.interval || window.currentRole === 'viewer' || window.isFinishing) return;
+    if (navigator.vibrate) navigator.vibrate([50, 50, 50]); 
+    window.playGoalSound();
+    if (window.config.usePlayers) { window.tSide = side; window.showScorerSel(); } else window.processGoal(side, null, null);
+};
+
+window.showScorerSel = function() {
+    const team = window.tSide === 1 ? window.currentMatch.t1 : window.currentMatch.t2;
+    const players = (window.config.rosters[team] || []).filter(p => p.trim());
+    
+    let h = players.map(p => `<button class="p-btn" onclick="window.selScorer('${p}')">${p}</button>`).join('');
+    h += `<button class="p-btn" style="grid-column:span 2;background:var(--gray)" onclick="window.showOwnGoalSel()">АВТОГОЛ</button>`;
+    
+    document.getElementById('pSelTitle').innerText = "КТО ЗАБИЛ?";
+    document.getElementById('pSelGrid').innerHTML = h;
+    window.openModal('playerSelModal');
+};
+
+window.selScorer = function(p) { window.tScorer = p; window.showAssistSel(); };
+
+window.showOwnGoalSel = function() {
+    const oppTeam = window.tSide === 1 ? window.currentMatch.t2 : window.currentMatch.t1;
+    const players = (window.config.rosters[oppTeam] || []).filter(p => p.trim());
+    
+    let h = players.map(p => `<button class="p-btn" onclick="window.selOwnGoal('${p}')">${p}</button>`).join('');
+    h += `<button class="p-btn" style="grid-column:span 2;background:var(--gray)" onclick="window.selOwnGoal('Автогол')">НЕИЗВЕСТНО</button>`;
+    
+    document.getElementById('pSelTitle').innerText = "АВТОГОЛ (СОПЕРНИК):";
+    document.getElementById('pSelGrid').innerHTML = h;
+};
+
+window.selOwnGoal = function(p) {
+    window.closeModal('playerSelModal');
+    const scorerName = p === 'Автогол' ? 'Автогол' : `${p} (АГ)`;
+    window.processGoal(window.tSide, scorerName, null);
+};
+
+window.showAssistSel = function() {
+    const team = window.tSide === 1 ? window.currentMatch.t1 : window.currentMatch.t2;
+    const players = (window.config.rosters[team] || []).filter(p => p.trim() && p !== window.tScorer);
+    
+    let h = players.map(p => `<button class="p-btn" onclick="window.finishGoal('${p}')">${p}</button>`).join('');
+    h += `<button class="p-btn" style="grid-column:span 2;background:var(--gray)" onclick="window.finishGoal(null)">БЕЗ ПАСА</button>`;
+    
+    document.getElementById('pSelTitle').innerText = "КТО ОТДАЛ ПАС?";
+    document.getElementById('pSelGrid').innerHTML = h;
+};
+
+window.finishGoal = function(a) { window.closeModal('playerSelModal'); setTimeout(() => window.processGoal(window.tSide, window.tScorer, a), 250); };
+
+window.processGoal = function(side, s, a) {
+    if (window.isFinishing) return;
+    if (side === 1) window.currentMatch.s1++; else window.currentMatch.s2++;
+    window.currentMatch.events.push({side, s, a});
+    document.getElementById('score').innerText = window.currentMatch.s1 + " : " + window.currentMatch.s2;
+    window.animateScore();
+    window.updateLastGoalDisplay();
+    const lim = parseInt(window.config.goalLimit);
+    if (lim > 0 && (window.currentMatch.s1 >= lim || window.currentMatch.s2 >= lim)) { if(window.interval){clearInterval(window.interval); window.interval=null;} window.terminateMatch(); }
+    window.updateUtilityBtns();
+};
+
+window.terminateMatch = function() {
+    if (window.isFinishing) return;
+    window.isFinishing = true;
+    if (window.interval) { clearInterval(window.interval); window.interval = null; }
+    document.querySelectorAll('.overlay').forEach(ov => { if(ov.id!=='winnerModal') window.closeModal(ov.id); });
+    if (window.config.voiceEnabled) window.announce(window.currentMatch.s1 > window.currentMatch.s2 ? "Победа " + window.currentMatch.t1 : (window.currentMatch.s2 > window.currentMatch.s1 ? "Победа " + window.currentMatch.t2 : "Ничья"));
+    setTimeout(window.endMatch, 600); 
+};
+
+window.endMatch = function() {
+    const dayMatchesCount = window.matches.filter(m => m.date === window.currentMatch.date).length + 1;
+    document.getElementById('winMatchNum').innerText = "МАТЧ #" + dayMatchesCount + " • " + window.currentMatch.date + " " + window.currentMatch.time;
+    
+    const namePl = document.getElementById('winTeamName');
+    const win = window.currentMatch.s1 > window.currentMatch.s2 ? window.currentMatch.t1 : (window.currentMatch.s2 > window.currentMatch.s1 ? window.currentMatch.t2 : "НИЧЬЯ");
+    namePl.innerText = win.toUpperCase();
+    namePl.style.background = win==="НИЧЬЯ" ? "var(--gray)" : window.COLORS[win];
+    namePl.style.color = (win==='Белые'||win==='Желтые')?'#000':'#fff';
+    document.getElementById('winScoreText').innerText = window.currentMatch.s1 + " : " + window.currentMatch.s2;
+    window.openModal('winnerModal');
+    
+    window.matches.unshift({...window.currentMatch});
+    window.setStore("matches", window.matches);
+    window.snapshotTourRoster(window.currentMatch.date);
+    window.updateGlobalPlayersList();
+    window.updateMatchStatusLabel();
+};
+
+window.openMvpSelector = function(date) {
+    window.currentMvpDate = date;
+    const dayMatches = window.matches.filter(m => m.date === date);
+    let playerStats = {};
+    let activeTeams = [];
+    let activeRosters = {};
+    
+    if (window.tourRosters[date]) {
+        activeTeams = window.tourRosters[date].teams || [];
+        activeRosters = window.tourRosters[date].rosters || {};
+    } else {
+        let playedTeams = new Set();
+        dayMatches.forEach(m => { playedTeams.add(m.t1); playedTeams.add(m.t2); });
+        if (window.customTours[date]) { Object.keys(window.customTours[date]).forEach(t => playedTeams.add(t)); }
+        activeTeams = Array.from(playedTeams);
+        activeRosters = window.config.rosters;
+    }
+    
+    activeTeams.forEach(team => {
+        if(activeRosters[team]) {
+            activeRosters[team].forEach(p => {
+                let pName = (p || '').toString().trim();
+                if(pName && pName !== '?') playerStats[pName] = { name: pName, team: team, pts: 0 };
+            });
+        }
+    });
+    
+    dayMatches.forEach(m => {
+        if(m.events) {
+            m.events.forEach(e => {
+                let team = e.side === 1 ? m.t1 : m.t2;
+                let sName = e.s ? String(e.s).trim() : null;
+                let isOG = sName && (sName === 'Автогол' || sName.includes('(АГ)'));
+                if(isOG) { team = e.side === 1 ? m.t2 : m.t1; sName = sName.replace(' (АГ)', '').trim(); }
+                
+                if (sName && sName !== 'Автогол' && sName !== '?' && !isOG) {
+                    if (!playerStats[sName]) playerStats[sName] = { name: sName, team: team, pts: 0 };
+                    playerStats[sName].pts++; 
+                }
+                if (e.a && e.a !== '?') {
+                    let aName = String(e.a).trim();
+                    let aTeam = e.side === 1 ? m.t1 : m.t2;
+                    if (!playerStats[aName]) playerStats[aName] = { name: aName, team: aTeam, pts: 0 };
+                    playerStats[aName].pts++; 
+                }
+            });
+        }
+    });
+
+    let pArr = Object.values(playerStats).sort((a,b) => b.pts - a.pts);
+    let html = '';
+    
+    if(pArr.length === 0) {
+        html = '<div style="color:var(--gray); font-size:12px;">Нет данных об игроках</div>';
+    } else {
+        html = pArr.map(p => `<button class="p-btn" style="background:${window.COLORS[p.team]}; color:${(p.team==='Белые'||p.team==='Желтые')?'#000':'#fff'}; font-size:14px; padding:12px; font-weight:800; border:1px solid rgba(255,255,255,0.2);" onclick="window.setMvp('${p.name}')">${p.name} <span style="opacity:0.6; font-size:12px;">(${p.pts} очков)</span></button>`).join('');
+    }
+    
+    html += `<button class="p-btn icon-btn" style="background:var(--danger); border:none; margin-top:12px; font-size:12px;" onclick="window.setMvp(null)"><svg class="icon"><use href="#icon-trash"></use></svg> СБРОСИТЬ MVP</button>`;
+    
+    document.getElementById('mvpSelGrid').innerHTML = html;
+    document.getElementById('mvpSelTitle').innerText = `MVP ЗА ${date}`;
+    window.openModal('mvpSelectModal');
+};
+
+window.setMvp = function(name) {
+    let tourMvps = window.getStore("tourMvps", {});
+    if (name) { tourMvps[window.currentMvpDate] = name; } else { delete tourMvps[window.currentMvpDate]; }
+    window.setStore("tourMvps", tourMvps);
+    window.closeModal('mvpSelectModal');
+    window.renderCombinedStats();
+};
+
+window.changeStatsPageIndex = (dir) => { 
+    window.currentStatsPageIndex = (window.currentStatsPageIndex || 0) + dir; 
+    window.renderCombinedStats(); 
+};
+
+window.renderCombinedStats = function() {
+    const cont = document.getElementById('combinedStatsContainer');
+    cont.innerHTML = "";
+    const grouped = {}; 
+    window.matches.forEach(m => { if (!grouped[m.date]) grouped[m.date] = []; grouped[m.date].push(m); });
+    Object.keys(window.customTours).forEach(dt => { if (!grouped[dt]) grouped[dt] = []; });
+    const statsDates = Object.keys(grouped).sort((a,b) => b.split('.').reverse().join('') - a.split('.').reverse().join(''));
+    if (!statsDates.length) { cont.innerHTML = "<p style='color:var(--gray); margin-top:30px;'>История пуста</p>"; window.openModal('statsModal'); return; }
+    
+    if (window.currentStatsPageIndex < 0) window.currentStatsPageIndex = 0;
+    if (window.currentStatsPageIndex >= statsDates.length) window.currentStatsPageIndex = statsDates.length - 1;
+
+    const date = statsDates[window.currentStatsPageIndex || 0];
+    const dayMatches = grouped[date] || [];
+    let tourMvps = window.getStore("tourMvps", {});
+    
+    let stats = {};
+    dayMatches.forEach(m => {
+        [m.t1, m.t2].forEach(t => { if(!stats[t]) stats[t] = {n:t,i:0,v:0,nch:0,p:0,gz:0,gp:0,o:0}; });
+        stats[m.t1].i++; stats[m.t2].i++; stats[m.t1].gz += m.s1; stats[m.t1].gp += m.s2; stats[m.t2].gz += m.s2; stats[m.t2].gp += m.s1;
+        if(m.s1 > m.s2) { stats[m.t1].o+=3; stats[m.t1].v++; stats[m.t2].p++; } else if(m.s2 > m.s1) { stats[m.t2].o+=3; stats[m.t2].v++; stats[m.t1].p++; } else { stats[m.t1].o++; stats[m.t2].o++; stats[m.t1].nch++; stats[m.t2].nch++; }
+    });
+    if (window.customTours[date]) stats = window.customTours[date];
+
+    let playerStats = {};
+    let currentMvp = tourMvps[date];
+    let activeRosters = window.tourRosters[date] ? window.tourRosters[date].rosters : window.config.rosters;
+    
+    Object.keys(activeRosters).forEach(team => {
+        activeRosters[team].forEach(p => {
+            let pName = (p || '').toString().trim();
+            if(pName && pName !== '?') { playerStats[pName] = { name: pName, team: team, g: 0, a: 0, og: 0 }; }
+        });
+    });
+
+    dayMatches.forEach(m => {
+        if(m.events) {
+            m.events.forEach(e => {
+                let team = e.side === 1 ? m.t1 : m.t2;
+                let sName = e.s ? String(e.s).trim() : null;
+                let isOG = false;
+
+                if (sName) {
+                    if (sName === 'Автогол' || sName.includes('(АГ)')) {
+                        isOG = true; team = e.side === 1 ? m.t2 : m.t1; 
+                        if(sName !== 'Автогол') sName = sName.replace(' (АГ)', '').trim();
+                    }
+                    if (sName !== 'Автогол' && sName !== '?') {
+                        if (!playerStats[sName]) playerStats[sName] = { name: sName, team: team, g: 0, a: 0, og: 0 };
+                        if (isOG) playerStats[sName].og++; else playerStats[sName].g++;
+                    }
+                }
+                if (e.a && e.a !== '?') {
+                    let aName = String(e.a).trim();
+                    let aTeam = e.side === 1 ? m.t1 : m.t2;
+                    if (!playerStats[aName]) playerStats[aName] = { name: aName, team: aTeam, g: 0, a: 0, og: 0 };
+                    playerStats[aName].a++;
+                }
+            });
+        }
+    });
+
+    let h = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><button class="stats-page-btn" ${window.currentStatsPageIndex === statsDates.length - 1 ? 'disabled' : ''} onclick="window.changeStatsPageIndex(1)">◀</button><div style="font-weight:900; font-size:16px; display:flex; align-items:center; gap:6px; color:var(--text); text-transform:uppercase;"><svg class="icon-inline" style="width:20px;"><use href="#icon-calendar"></use></svg> ТУРНИР ${date}</div><button class="stats-page-btn" ${window.currentStatsPageIndex === 0 ? 'disabled' : ''} onclick="window.changeStatsPageIndex(-1)">▶</button></div>`;
+    
+    if (window.currentRole === 'admin') h += `<div style="display:flex; gap:5px; margin-bottom:15px; justify-content:center; flex-wrap:wrap;"><button class="pencil-btn border-yellow" style="padding:6px 12px; font-size:11px;" onclick="window.openPlayerDB()"><svg class="icon" style="margin-right:4px;"><use href="#icon-run"></use></svg> ВСЕ ИГРОКИ</button><button class="pencil-btn" style="padding:6px 12px; color:var(--success); border-color:var(--success); font-size:11px;" onclick="window.addNewTournament()"><svg class="icon"><use href="#icon-plus"></use></svg> ТУРНИР</button><button class="pencil-btn" style="padding:6px 12px;" onclick="window.openShareModal('${date}')"><svg class="icon"><use href="#icon-share"></use></svg></button><button class="pencil-btn" style="padding:6px 12px; color:var(--danger); border-color:var(--danger);" onclick="window.deleteDay('${date}')"><svg class="icon"><use href="#icon-trash"></use></svg></button></div>`;
+    
+    h += `<div style="text-align:left; font-weight:800; color:var(--accent); font-size:12px; margin-bottom:10px; text-transform:uppercase;">ТАБЛИЦА ТУРНИРА   ${window.currentRole === 'admin' ? `<button class="pencil-btn" style="padding:3px 6px;" onclick="window.openTourEditor('${date}')"><svg class="icon" style="width:12px;"><use href="#icon-edit"></use></svg></button>` : ''}</div>`;
+    h += `<table class="stats-table"><thead><tr><th style="text-align:left">КОМАНДА</th><th>И</th><th>В</th><th>Н</th><th>П</th><th>ГЗ</th><th>ГП</th><th>+/-</th><th>О</th></tr></thead><tbody>${Object.values(stats).sort((a,b)=>b.o-a.o || (b.gz-b.gp)-(a.gz-a.gp)).map(t=>`<tr><td style="text-align:left"><div class="team-dot" style="background:${window.COLORS[t.n]||'var(--gray)'}"></div><b>${t.n}</b></td><td>${t.i}</td><td>${t.v}</td><td>${t.nch}</td><td>${t.p}</td><td>${t.gz}</td><td>${t.gp}</td><td>${t.gz-t.gp}</td><td style="color:var(--accent); font-weight:900; font-size: 14px;">${t.o}</td></tr>`).join('')}</tbody></table>`;
+    
+    h += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;"><div style="font-weight:800; color:var(--accent); font-size:12px; text-transform:uppercase;">СТАТИСТИКА ИГРОКОВ   ${window.currentRole === 'admin' ? `<button class="pencil-btn" style="padding:3px 6px;" onclick="window.openTourPlayerEditor('${date}')"><svg class="icon" style="width:12px;"><use href="#icon-edit"></use></svg></button>` : ''}</div>`;
+    if (window.currentRole === 'admin') h += `<button class="pencil-btn border-yellow" style="padding:4px 8px; font-size:10px;" onclick="window.openMvpSelector('${date}')"><svg class="icon"><use href="#icon-star"></use></svg> MVP ТУРНИРА</button>`;
+    h += `</div>`;
+
+    Object.keys(activeRosters).forEach(team => {
+        let pArr = Object.values(playerStats).filter(p => p.team === team).sort((a,b)=>(b.g+b.a)-(a.g+a.a) || b.g-a.g);
+        if(pArr.length > 0) { 
+            h += `<div style="background:${window.COLORS[team]}; color:${(team==='Белые'||team==='Желтые')?'#000':'#fff'}; padding:6px 10px; font-size:10px; font-weight:900; border-radius:8px 8px 0 0; margin-top:10px;">${team.toUpperCase()}</div><table class="stats-table" style="background:rgba(255,255,255,0.02);"><tbody>${pArr.map(p=>{
+                let mvpBadge = currentMvp === p.name ? `<span style="background:var(--accent); color:var(--bg); padding:2px 4px; border-radius:4px; font-size:9px; font-weight:900; margin-left:6px; display:inline-flex; align-items:center; gap:2px; vertical-align:middle; line-height:1;"><svg class="icon" style="width:10px;height:10px;"><use href="#icon-star"></use></svg> MVP</span>` : '';
+                let ogText = p.og > 0 ? ` <span style="color:var(--danger); font-size:10px; font-weight:normal;">(${p.og}-АГ)</span>` : '';
+                return `<tr><td style="text-align:left; padding-left:10px;"><b>${p.name}</b>${mvpBadge}</td><td style="width:40px; text-align:center; font-weight:bold;"><svg class="icon-inline" style="width:12px; margin-right:4px;"><use href="#icon-ball"></use></svg>${p.g}${ogText}</td><td style="width:40px; text-align:center;"><svg class="icon-inline" style="width:12px; margin-right:4px;"><use href="#icon-pass-shoe"></use></svg>${p.a}</td></tr>`;
+            }).join('')}</tbody></table>`; 
+        }
+    });
+
+    h += `<div style="text-align:left; font-weight:800; color:var(--accent); font-size:12px; margin:15px 0 10px; text-transform:uppercase;">РЕЗУЛЬТАТЫ МАТЧЕЙ</div>`;
+    dayMatches.forEach(m => { 
+        const editBtn = window.currentRole==='admin'?`   <button class="pencil-btn border-blue" style="margin-left:12px; padding:3px 6px;" onclick="window.openMatchEditor(${m.id})"><svg class="icon" style="width:12px;"><use href="#icon-edit"></use></svg></button>`:''; 
+        const gl = m.events ? m.events.filter(e => e.side===1) : [];
+        const gr = m.events ? m.events.filter(e => e.side===2) : [];
+        h += `<div class="history-card"><div style="font-size: 9px; color: #64748b; text-align: center; margin-bottom: 4px;">${m.date} ${m.time}</div><div class="h-main-row"><div class="h-team-l">${m.t1}</div><div class="h-score" style="display:flex; align-items:center; justify-content:center;">${m.s1}:${m.s2}${editBtn}</div><div class="h-team-r">${m.t2}</div></div><div class="h-details-row"><div class="h-goals-l">${gl.map(e=>`<div><svg class="icon-inline"><use href="#icon-ball"></use></svg> ${window.formatGoal(e)}</div>`).join('')}</div><div class="h-goals-r">${gr.map(e=>`<div><svg class="icon-inline"><use href="#icon-ball"></use></svg> ${window.formatGoal(e)}</div>`).join('')}</div></div></div>`; 
+    });
+    
+    if (window.currentRole === 'admin') h += `<button class="btn-base icon-btn" style="margin-top:5px; width:100%; padding:14px; font-size:12px;" onclick="window.openAddPastMatch('${date}')"><svg class="icon"><use href="#icon-plus"></use></svg> ДОБАВИТЬ МАТЧ</button>`;
+
+    cont.innerHTML = h; window.openModal('statsModal');
+};
+
+window.openTourPlayerEditor = function(date) {
+    if (window.currentRole !== 'admin') return;
+    window.editingTourPlayerDate = date;
+    window.tempTourRosters = {};
+    window.updateGlobalPlayersList();
+    
+    if (window.tourRosters[date]) {
+        window.tempTourRosters = JSON.parse(JSON.stringify(window.tourRosters[date].rosters));
+    } else {
+        let playedTeams = new Set();
+        window.matches.filter(m => m.date === date).forEach(m => { playedTeams.add(m.t1); playedTeams.add(m.t2); });
+        if (window.customTours[date]) { Object.keys(window.customTours[date]).forEach(t => playedTeams.add(t)); }
+        window.config.teams.forEach(t => playedTeams.add(t)); 
+        
+        Array.from(playedTeams).forEach(t => {
+            window.tempTourRosters[t] = JSON.parse(JSON.stringify(window.config.rosters[t] || Array(5).fill("")));
+        });
+    }
+
+    let dayMatches = window.matches.filter(m => m.date === date);
+    dayMatches.forEach(m => {
+        if(m.events) {
+            m.events.forEach(e => {
+                let teamScoredFor = e.side === 1 ? m.t1 : m.t2;
+                let teamAgainst = e.side === 1 ? m.t2 : m.t1;
+                let isOG = e.s && (e.s === 'Автогол' || String(e.s).includes('(АГ)'));
+                let actualTeam = isOG ? teamAgainst : teamScoredFor;
+                
+                let sName = e.s ? String(e.s).replace(' (АГ)', '').trim() : null;
+                if (sName && sName !== 'Автогол' && !window.tempTourRosters[actualTeam].includes(sName)) {
+                    window.tempTourRosters[actualTeam].push(sName);
+                }
+                if (e.a) {
+                    let aName = String(e.a).trim();
+                    if (!window.tempTourRosters[teamScoredFor].includes(aName)) {
+                        window.tempTourRosters[teamScoredFor].push(aName);
+                    }
+                }
+            });
+        }
+    });
+
+    window.renderTourPlayerEditorUI();
+    window.openModal('tourPlayerEditorModal');
+};
+
+window.renderTourPlayerEditorUI = function() {
+    const c = document.getElementById('tourPlayerEditContainer');
+    c.innerHTML = "";
+    
+    Object.keys(window.tempTourRosters).forEach(t => {
+        let h = `<div style="margin-bottom:15px; background:rgba(0,0,0,0.1); border-radius:12px; overflow:hidden;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; background:${window.COLORS[t]}; color:${(t==='Белые'||t==='Желтые')?'#000':'#fff'}; padding:10px; font-weight:800; font-size:12px;">
+                        <span>${t}</span>
+                        <div style="display:flex; gap:6px;">
+                            <button style="background:rgba(0,0,0,0.2); border:none; color:inherit; width:24px; height:24px; border-radius:4px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:bold;" onclick="window.changeTourPlayerSize('${t}', -1)">-</button>
+                            <button style="background:rgba(0,0,0,0.2); border:none; color:inherit; width:24px; height:24px; border-radius:4px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:bold;" onclick="window.changeTourPlayerSize('${t}', 1)"><svg class="icon" style="font-size: 11px;"><use href="#icon-plus"></use></svg></button>
+                        </div>
+                    </div>`;
+        window.tempTourRosters[t].forEach((n, i) => {
+            h += `<div class="player-row"><span class="player-num">${i+1}.</span><input list="globalPlayersList" class="player-input tour-player-input" data-team="${t}" data-index="${i}" value="${n}" onchange="window.tempTourRosters['${t}'][${i}]=this.value"></div>`;
+        });
+        c.innerHTML += h + `</div>`;
+    });
+};
+
+window.changeTourPlayerSize = function(t, d) {
+    let r = window.tempTourRosters[t];
+    if (d > 0 && r.length < 15) r.push("");
+    else if (d < 0 && r.length > 1) r.pop();
+    window.renderTourPlayerEditorUI(); 
+};
+
+window.saveTourPlayerEdit = function() {
+    let oldRosters = {};
+    if (window.tourRosters[window.editingTourPlayerDate]) {
+        oldRosters = JSON.parse(JSON.stringify(window.tourRosters[window.editingTourPlayerDate].rosters));
+    } else {
+        oldRosters = JSON.parse(JSON.stringify(window.config.rosters));
+    }
+
+    Object.keys(window.tempTourRosters).forEach(t => {
+        let oldR = oldRosters[t] || [];
+        let newR = window.tempTourRosters[t];
+        for(let i=0; i<Math.min(oldR.length, newR.length); i++) {
+            let oName = oldR[i] ? String(oldR[i]).trim() : "";
+            let nName = newR[i] ? String(newR[i]).trim() : "";
+            if(oName && nName && oName !== nName) {
+                window.matches.forEach(m => {
+                    if (m.date === window.editingTourPlayerDate && m.events) {
+                        m.events.forEach(e => {
+                            if (e.s === oName) e.s = nName;
+                            if (e.s === oName + ' (АГ)') e.s = nName + ' (АГ)';
+                            if (e.a === oName) e.a = nName;
+                        });
+                    }
+                });
+                let mvps = window.getStore("tourMvps", {});
+                if (mvps[window.editingTourPlayerDate] === oName) {
+                    mvps[window.editingTourPlayerDate] = nName;
+                    window.setStore("tourMvps", mvps);
+                }
+            }
+        }
+    });
+
+    if(!window.tourRosters[window.editingTourPlayerDate]) {
+        window.tourRosters[window.editingTourPlayerDate] = { teams: Object.keys(window.tempTourRosters), rosters: {} };
+    }
+    window.tourRosters[window.editingTourPlayerDate].rosters = window.tempTourRosters;
+    
+    window.setStore("tourRosters", window.tourRosters);
+    window.setStore("matches", window.matches);
+    
+    window.updateGlobalPlayersList();
+    window.closeModal('tourPlayerEditorModal');
+    window.renderCombinedStats();
+};
+
+window.addNewTournament = function() {
+    if (window.currentRole !== 'admin') return;
+    window.showPrompt("Введите дату турнира (например: 01.01.2026):", new Date().toLocaleDateString('ru-RU'), (d) => {
+        if (!d) return;
+        if (!window.customTours[d] && !window.matches.some(m=>m.date===d)) {
+            window.customTours[d] = {};
+            window.setStore("customTours", window.customTours);
+            window.snapshotTourRoster(d);
+        }
+        const grouped = {}; 
+        window.matches.forEach(m => { if (!grouped[m.date]) grouped[m.date] = []; });
+        Object.keys(window.customTours).forEach(dt => { if (!grouped[dt]) grouped[dt] = []; });
+        const tempDates = Object.keys(grouped).sort((a,b) => b.split('.').reverse().join('') - a.split('.').reverse().join(''));
+        window.currentStatsPageIndex = tempDates.indexOf(d);
+        window.renderCombinedStats();
+        window.openTourEditor(d);
+    }, null, "ДОБАВИТЬ ПРОШЕДШИЙ ТУРНИР В СТАТИСТИКУ");
+};
+
+window.openTourEditor = function(date) {
+    if (window.currentRole !== 'admin') return;
+    window.editingTourDate = date;
+    document.getElementById('tourEditTitle').innerText = `ТУРНИР ${date}`;
+    
+    let stats = {};
+    if (window.customTours[date]) {
+        stats = JSON.parse(JSON.stringify(window.customTours[date]));
+    } else {
+        const dayMatches = window.matches.filter(m => m.date === date);
+        dayMatches.forEach(m => {
+            [m.t1, m.t2].forEach(t => { if(!stats[t]) stats[t] = {n:t,i:0,v:0,nch:0,p:0,gz:0,gp:0,o:0}; });
+            stats[m.t1].i++; stats[m.t2].i++; stats[m.t1].gz += m.s1; stats[m.t1].gp += m.s2; stats[m.t2].gz += m.s2; stats[m.t2].gp += m.s1;
+            if(m.s1 > m.s2) { stats[m.t1].o+=3; stats[m.t1].v++; stats[m.t2].p++; } 
+            else if(m.s2 > m.s1) { stats[m.t2].o+=3; stats[m.t2].v++; stats[m.t1].p++; } 
+            else { stats[m.t1].o++; stats[m.t2].o++; stats[m.t1].nch++; stats[m.t2].nch++; }
+        });
+    }
+
+    let h = `<div id="tourTeamsList">`;
+    Object.values(stats).forEach(t => { h += window.renderTourTeamRow(t); });
+    h += `</div>`;
+    
+    h += `<div style="margin-top:10px; display:flex; gap:5px;">
+        <select id="tourAddTeamSel" class="player-input" style="flex:1">
+            ${window.colorKeys.map(t=>`<option value="${t}">${t}</option>`).join('')}
+        </select>
+        <button class="btn-base icon-btn" onclick="window.addTeamToTourEdit()"><svg class="icon"><use href="#icon-plus"></use></svg> ДОБАВИТЬ КОМАНДУ</button>
+    </div>`;
+
+    document.getElementById('tourEditContainer').innerHTML = h;
+    window.openModal('tourEditorModal');
+};
+
+window.renderTourTeamRow = function(t) {
+    return `<div class="tour-edit-row" data-team="${t.n}" style="background:rgba(255,255,255,0.05); padding:10px; margin-bottom:6px; border-radius:8px;">
+        <div style="font-weight:bold; margin-bottom:6px; color:${window.COLORS[t.n]||'var(--text)'}; font-size:13px;">${t.n} <button onclick="this.parentElement.parentElement.remove()" style="float:right; background:none; border:none; color:var(--danger); cursor:pointer;"><svg class="icon"><use href="#icon-trash"></use></svg></button></div>
+        <div style="display:grid; grid-template-columns: repeat(7, 1fr); gap:2px; text-align:center; font-size:10px; color:var(--gray);">
+            <div>И</div><div>В</div><div>Н</div><div>П</div><div>ГЗ</div><div>ГП</div><div>О</div>
+        </div>
+        <div style="display:grid; grid-template-columns: repeat(7, 1fr); gap:2px;">
+            <input type="number" class="player-input i-val" value="${t.i||0}" style="padding:4px 2px; text-align:center;">
+            <input type="number" class="player-input v-val" value="${t.v||0}" style="padding:4px 2px; text-align:center;">
+            <input type="number" class="player-input nch-val" value="${t.nch||0}" style="padding:4px 2px; text-align:center;">
+            <input type="number" class="player-input p-val" value="${t.p||0}" style="padding:4px 2px; text-align:center;">
+            <input type="number" class="player-input gz-val" value="${t.gz||0}" style="padding:4px 2px; text-align:center;">
+            <input type="number" class="player-input gp-val" value="${t.gp||0}" style="padding:4px 2px; text-align:center;">
+            <input type="number" class="player-input o-val" value="${t.o||0}" style="padding:4px 2px; text-align:center;">
+        </div>
+    </div>`;
+};
+
+window.addTeamToTourEdit = function() {
+    const tName = document.getElementById('tourAddTeamSel').value;
+    const existing = document.querySelector(`.tour-edit-row[data-team="${tName}"]`);
+    if (existing) return window.showAlert("Команда уже в списке!");
+    const h = window.renderTourTeamRow({n: tName, i:0, v:0, nch:0, p:0, gz:0, gp:0, o:0});
+    document.getElementById('tourTeamsList').insertAdjacentHTML('beforeend', h);
+};
+
+window.saveTourEdit = function() {
+    let stats = {};
+    document.querySelectorAll('.tour-edit-row').forEach(row => {
+        const n = row.getAttribute('data-team');
+        stats[n] = {
+            n: n,
+            i: parseInt(row.querySelector('.i-val').value)||0,
+            v: parseInt(row.querySelector('.v-val').value)||0,
+            nch: parseInt(row.querySelector('.nch-val').value)||0,
+            p: parseInt(row.querySelector('.p-val').value)||0,
+            gz: parseInt(row.querySelector('.gz-val').value)||0,
+            gp: parseInt(row.querySelector('.gp-val').value)||0,
+            o: parseInt(row.querySelector('.o-val').value)||0,
+        };
+    });
+    window.customTours[window.editingTourDate] = stats;
+    window.setStore("customTours", window.customTours);
+    window.closeModal('tourEditorModal');
+    window.renderCombinedStats();
+};
+
+window.resetTourEdit = function() {
+    window.showConfirm("Удалить ручные изменения и вернуть автоматический подсчет?", () => {
+        delete window.customTours[window.editingTourDate];
+        window.setStore("customTours", window.customTours);
+        window.closeModal('tourEditorModal');
+        window.renderCombinedStats();
+    });
+};
+
+window.openShareModal = function(date) {
+    window.currentShareDate = date;
+    window.openModal('shareModal');
+};
+
+window.executeShare = function() {
+    if(!window.currentShareDate) return;
+    const date = window.currentShareDate;
+    
+    const incTable = document.getElementById('cbShareTable').classList.contains('checked');
+    const incMatches = document.getElementById('cbShareMatches').classList.contains('checked');
+    const incPlayers = document.getElementById('cbSharePlayers').classList.contains('checked');
+    
+    let t = `🏆 ТУРНИР ${date}\n📌 НАЗВАНИЕ: ${window.currentRoom}\n`;
+    
+    const dayMatches = window.matches.filter(m => m.date === date);
+    let tourMvps = window.getStore("tourMvps", {});
+    let currentMvp = tourMvps[date];
+    
+    if(incTable) {
+        let stats = {};
+        dayMatches.forEach(m => {
+            [m.t1, m.t2].forEach(team => { if(!stats[team]) stats[team] = {n:team,i:0,v:0,nch:0,p:0,gz:0,gp:0,o:0}; });
+            stats[m.t1].i++; stats[m.t2].i++; stats[m.t1].gz += m.s1; stats[m.t1].gp += m.s2; stats[m.t2].gz += m.s2; stats[m.t2].gp += m.s1;
+            if(m.s1 > m.s2) { stats[m.t1].o+=3; stats[m.t1].v++; stats[m.t2].p++; } 
+            else if(m.s2 > m.s1) { stats[m.t2].o+=3; stats[m.t2].v++; stats[m.t1].p++; } 
+            else { stats[m.t1].o++; stats[m.t2].o++; stats[m.t1].nch++; stats[m.t2].nch++; }
+        });
+        if (window.customTours[date]) stats = window.customTours[date];
+        
+        const sorted = Object.values(stats).sort((a,b)=>b.o-a.o || (b.gz-b.gp)-(a.gz-a.gp));
+        if(sorted.length > 0) {
+            t += `\n📊 ТАБЛИЦА:\n`;
+            sorted.forEach((team, idx) => {
+                t += `${idx+1}. ${team.n} | ${team.o} очков | ${team.gz}:${team.gp}\n`;
+            });
+        }
+    }
+    
+    if(incMatches && dayMatches.length > 0) {
+        t += `\n🥅 РЕЗУЛЬТАТЫ:\n`;
+        dayMatches.forEach(m => {
+            t += `• ${m.t1} ${m.s1}:${m.s2} ${m.t2}\n`;
+        });
+    }
+    
+    if(incPlayers) {
+        let playerStats = {};
+        let activeTeams = [];
+        let activeRosters = {};
+        
+        if (window.tourRosters[date]) {
+            activeTeams = window.tourRosters[date].teams || [];
+            activeRosters = window.tourRosters[date].rosters || {};
+        } else {
+            let playedTeams = new Set();
+            dayMatches.forEach(m => { playedTeams.add(m.t1); playedTeams.add(m.t2); });
+            if (window.customTours[date]) { Object.keys(window.customTours[date]).forEach(tm => playedTeams.add(tm)); }
+            window.config.teams.forEach(tm => playedTeams.add(tm)); 
+            activeTeams = Array.from(playedTeams);
+            activeRosters = window.config.rosters;
+        }
+        
+        activeTeams.forEach(team => {
+            if(activeRosters[team]) {
+                activeRosters[team].forEach(p => {
+                    let pName = (p || '').toString().trim();
+                    if(pName && pName !== '?') { playerStats[pName] = { name: pName, team: team, g: 0, a: 0, og: 0 }; }
+                });
+            }
+        });
+
+        dayMatches.forEach(m => {
+            if(m.events) {
+                m.events.forEach(e => {
+                    let team = e.side === 1 ? m.t1 : m.t2;
+                    let sName = e.s ? String(e.s).trim() : null;
+                    let isOG = false;
+
+                    if (sName) {
+                        if (sName === 'Автогол' || sName.includes('(АГ)')) {
+                            isOG = true; team = e.side === 1 ? m.t2 : m.t1; 
+                            if(sName !== 'Автогол') sName = sName.replace(' (АГ)', '').trim();
+                        }
+                        if (sName !== 'Автогол' && sName !== '?') {
+                            if (!playerStats[sName]) playerStats[sName] = { name: sName, team: team, g: 0, a: 0, og: 0 };
+                            if (isOG) playerStats[sName].og++; else playerStats[sName].g++;
+                        }
+                    }
+                    if (e.a && e.a !== '?') {
+                        let aName = String(e.a).trim();
+                        let aTeam = e.side === 1 ? m.t1 : m.t2;
+                        if (!playerStats[aName]) playerStats[aName] = { name: aName, team: aTeam, g: 0, a: 0, og: 0 };
+                        playerStats[aName].a++;
+                    }
+                });
+            }
+        });
+        
+        let pFound = Object.values(playerStats).filter(p => p.g > 0 || p.a > 0 || p.og > 0);
+        if(pFound.length > 0) {
+            t += `\n👟 СТАТИСТИКА ИГРОКОВ:\n`;
+            if(currentMvp) t += `⭐ MVP ТУРНИРА: ${currentMvp}\n\n`;
+            
+            let teamsWithPlayers = [...new Set(pFound.map(p => p.team))];
+            teamsWithPlayers.forEach(teamColor => {
+                let teamPlayers = pFound.filter(p => p.team === teamColor).sort((a,b) => (b.g + b.a) - (a.g + a.a) || b.g - a.g);
+                t += `[${teamColor}]\n`;
+                teamPlayers.forEach(p => {
+                    let acts = [];
+                    if(p.g > 0 || p.og > 0) {
+                        let ogStr = p.og > 0 ? ` (${p.og}-АГ)` : '';
+                        acts.push(`⚽${p.g}${ogStr}`);
+                    }
+                    if(p.a > 0) acts.push(`👟${p.a}`);
+                    let mvpSt = currentMvp === p.name ? ` ⭐` : ``;
+                    t += `${p.name}${mvpSt}: ${acts.join(' ')}\n`;
+                });
+                t += `\n`;
+            });
+        }
+    }
+    
+    t += `⚡ @antoni_bel`;
+    
+    if(navigator.share) { 
+        navigator.share({text: t}); 
+    } else { 
+        navigator.clipboard.writeText(t); 
+        window.showAlert("Текст скопирован в буфер обмена!"); 
+    }
+    window.closeModal('shareModal');
+};
+
+window.deleteDay = function(d) { 
+    if(window.currentRole === 'admin') {
+        window.showConfirm("Удалить турнир?", () => {
+            window.matches = window.matches.filter(m => m.date !== d); 
+            delete window.customTours[d]; delete window.tourRosters[d]; 
+            
+            window.setStore("matches", window.matches); 
+            window.setStore("customTours", window.customTours); 
+            window.setStore("tourRosters", window.tourRosters); 
+            
+            window.currentStatsPageIndex = 0; 
+            if (d === new Date().toLocaleDateString('ru-RU')) {
+                window.otActive = true; window.config.useOT = true; window.saveConfig();
+                document.getElementById('otToggle').parentElement.classList.toggle('active', true);
+            }
+            window.renderCombinedStats(); 
+        });
+    }
+};
+
+window.openMatchEditor = function(id) {
+    if (window.currentRole !== 'admin') return;
+    window.editingMatchId = id;
+    const m = window.matches.find(x => x.id === id);
+    if(!m) return;
+    window.updateGlobalPlayersList();
+    document.getElementById('adminEditTitle').innerText = `РЕДАКТИРОВАТЬ МАТЧ`;
+    document.getElementById('adminDelMatchBtn').style.display = 'block';
+    
+    let h = `<div style="display:flex; gap:10px; margin-bottom:10px;">
+        <div style="flex:1"><label style="color:var(--gray)">Дата:</label><input type="text" id="editMDate" class="player-input" value="${m.date}" style="width:100%"></div>
+        <div style="flex:1"><label style="color:var(--gray)">Время:</label><input type="text" id="editMTime" class="player-input" value="${m.time}" style="width:100%"></div>
+    </div>
+    <div style="display:flex; gap:10px; margin-bottom:10px; align-items:center;">
+        <div style="flex:1; text-align:right; font-weight:bold;">${m.t1}</div>
+        <input type="number" id="editMS1" class="player-input" value="${m.s1}" style="width:40px; text-align:center;"><span>:</span><input type="number" id="editMS2" class="player-input" value="${m.s2}" style="width:40px; text-align:center;">
+        <div style="flex:1; text-align:left; font-weight:bold;">${m.t2}</div>
+    </div>
+    <div class="settings-divider"></div>
+    <div style="font-weight:bold; margin-bottom:5px; color:var(--accent);">Голы:</div>`;
+
+    if(m.events) {
+        m.events.forEach((e, idx) => {
+            h += `<div style="background:rgba(255,255,255,0.03); padding:8px; border-radius:8px; margin-bottom:5px; display:flex; gap:8px; align-items:center;">
+                <select id="editESide_${idx}" class="player-input" style="padding:8px; max-width:80px; font-size:12px;">
+                    <option value="1" ${e.side===1?'selected':''}>${m.t1}</option>
+                    <option value="2" ${e.side===2?'selected':''}>${m.t2}</option>
+                </select>
+                <input list="globalPlayersList" type="text" id="editES_${idx}" class="player-input" value="${e.s||''}" placeholder="Гол" style="flex:1; padding:8px; font-size:12px;">
+                <input list="globalPlayersList" type="text" id="editEA_${idx}" class="player-input" value="${e.a||''}" placeholder="Пас" style="flex:1; padding:8px; font-size:12px;">
+                <button class="btn-base icon-btn" style="background:var(--danger); flex:0 0 36px; padding:8px;" onclick="window.removeEventFromEdit(${idx})"><svg class="icon"><use href="#icon-trash"></use></svg></button>
+            </div>`;
+        });
+    }
+
+    h += `<button class="btn-base icon-btn" style="width:100%; margin-top:10px; padding:10px;" onclick="window.addEventToEdit()"><svg class="icon"><use href="#icon-plus"></use></svg> ДОБАВИТЬ ГОЛ В ИСТОРИЮ</button>`;
+    document.getElementById('adminEditContainer').innerHTML = h;
+    window.openModal('adminEditorModal');
+};
+
+window.removeEventFromEdit = function(idx) { const m = window.matches.find(x => x.id === window.editingMatchId); m.events.splice(idx, 1); window.openMatchEditor(window.editingMatchId); };
+window.addEventToEdit = function() { const m = window.matches.find(x => x.id === window.editingMatchId); m.events.push({side: 1, s: '', a: ''}); window.openMatchEditor(window.editingMatchId); };
+
+window.openAddPastMatch = function(targetDate) {
+    if (window.currentRole !== 'admin') return;
+    window.editingMatchId = 'NEW';
+    document.getElementById('adminEditTitle').innerText = `ДОБАВИТЬ МАТЧ`;
+    document.getElementById('adminDelMatchBtn').style.display = 'none';
+    let teamsOptions = window.colorKeys.map(t => `<option value="${t}">${t}</option>`).join('');
+    
+    let defaultDate = targetDate || new Date().toLocaleDateString('ru-RU');
+
+    let h = `<div style="display:flex; gap:10px; margin-bottom:10px;">
+        <div style="flex:1"><label style="color:var(--gray)">Дата:</label><input type="text" id="newMDate" class="player-input" value="${defaultDate}" style="width:100%"></div>
+        <div style="flex:1"><label style="color:var(--gray)">Время:</label><input type="text" id="newMTime" class="player-input" value="${new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'})}" style="width:100%"></div>
+    </div>
+    <div style="display:flex; gap:10px; margin-bottom:10px; align-items:center;">
+        <select id="newMT1" class="player-input" style="flex:1">${teamsOptions}</select>
+        <input type="number" id="newMS1" class="player-input" value="0" style="width:40px; text-align:center;"><span>:</span><input type="number" id="newMS2" class="player-input" value="0" style="width:40px; text-align:center;">
+        <select id="newMT2" class="player-input" style="flex:1">${teamsOptions}</select>
+    </div>
+    <div style="font-size:11px; color:var(--gray); margin-bottom:10px; text-align:center;">Сначала сохраните матч, затем откройте его снова, чтобы добавить авторов голов.</div>`;
+    
+    document.getElementById('adminEditContainer').innerHTML = h;
+    window.openModal('adminEditorModal');
+};
+
+window.saveAdminEdit = function() {
+    if(window.editingMatchId === 'NEW') {
+        const d = document.getElementById('newMDate').value;
+        const newM = { id: Date.now(), date: d, time: document.getElementById('newMTime').value, t1: document.getElementById('newMT1').value, t2: document.getElementById('newMT2').value, s1: parseInt(document.getElementById('newMS1').value) || 0, s2: parseInt(document.getElementById('newMS2').value) || 0, events: [] };
+        window.matches.unshift(newM);
+        window.snapshotTourRoster(d);
+    } else {
+        const m = window.matches.find(x => x.id === window.editingMatchId);
+        if(!m) return;
+        m.date = document.getElementById('editMDate').value;
+        m.time = document.getElementById('editMTime').value;
+        m.s1 = parseInt(document.getElementById('editMS1').value) || 0;
+        m.s2 = parseInt(document.getElementById('editMS2').value) || 0;
+        m.events.forEach((e, idx) => {
+            const elSide = document.getElementById(`editESide_${idx}`), elS = document.getElementById(`editES_${idx}`), elA = document.getElementById(`editEA_${idx}`);
+            if(elSide) e.side = parseInt(elSide.value);
+            if(elS) e.s = elS.value.trim() || null;
+            if(elA) e.a = elA.value.trim() || null;
+        });
+    }
+    window.setStore("matches", window.matches);
+    window.updateGlobalPlayersList();
+    window.closeModal('adminEditorModal');
+    window.renderCombinedStats();
+};
+
+window.deleteAdminMatch = function() {
+    window.showConfirm("Точно удалить этот матч?", () => {
+        window.matches = window.matches.filter(x => x.id !== window.editingMatchId);
+        window.setStore("matches", window.matches);
+        window.closeModal('adminEditorModal');
+        window.renderCombinedStats();
+    });
+};
+
+window.openSettings = function() { 
+    if(window.interval || window.currentRole !== 'admin') return; 
+    window.tempConfig = JSON.parse(JSON.stringify(window.config)); 
+    window.currentSettingsTarget = 'settingsContainer';
+    window.renderSettingsList(window.currentSettingsTarget); 
+    window.openModal('settings'); 
+};
+
+window.renderSettingsList = function(targetId = window.currentSettingsTarget) {
+    window.currentSettingsTarget = targetId;
+    const c = document.getElementById(targetId);
+    if(!c) return;
+    
+    let h = '';
+    let goalLimitDisplay = window.tempConfig.goalLimit === 0 ? "∞" : window.tempConfig.goalLimit;
+    
+    h += window.createStepRow("Время (мин)", "time", window.tempConfig.time/60) + 
+         window.createStepRow("Лимит голов", "goalLimit", goalLimitDisplay) + 
+         window.createCheckRow("Выбор команд после каждой игры", "autoReset", window.tempConfig.autoReset);
+            
+    h += `<div class="settings-divider"></div>`;
+         
+    h += window.createStepRow("Всего команд", "teamsCount", window.tempConfig.teams.length);
+    window.tempConfig.teams.forEach((t, i) => h += window.createColorRow(`Команда ${i+1}`, i, t));
+    
+    h += `<div class="settings-divider"></div>`;
+    
+    h += window.createCheckRow("Игроки и составы", "usePlayers", window.tempConfig.usePlayers);
+    if(window.tempConfig.usePlayers) {
+        h += `<button class="full-btn icon-btn" style="margin:10px 0; font-size:12px;" onclick="window.openRosterEditor()"><svg class="icon"><use href="#icon-users"></use></svg> СОСТАВЫ КОМАНД</button>`;
+    }
+    
+    h += `<div class="settings-divider"></div>`;
+    
+    h += window.createCheckRow("Овертайм", "useOT", window.tempConfig.useOT) + 
+         window.createStepRow("Лимит овертайма (мин)", "otLimit", window.tempConfig.otLimit || "∞") +
+         window.createCheckRow("Золотой гол", "goldenGoal", window.tempConfig.goldenGoal);
+    
+    h += `<div class="settings-divider"></div>`;
+    
+    h += `<div style="background:rgba(255,255,255,0.03); padding:12px; border-radius:12px; margin-top:10px;"><div style="font-size:11px;color:var(--gray);margin-bottom:6px;">ЗВУК КОНЦА (URL):</div><input type="text" class="player-input" style="width:100%;" value="${window.tempConfig.soundUrl}" onchange="window.tempConfig.soundUrl=this.value"></div>`;
+
+    if (window.currentRole === 'admin' && targetId !== 'createSettingsContainer') {
+        h += `<div class="settings-divider"></div>`;
+        h += `<div class="settings-checkbox-row" onclick="window.changeRoomName()">
+                <div class="setting-label">НАЗВАНИЕ ТУРНИРА</div>
+                <div style="color:var(--gray); font-size:12px; font-weight:900; text-transform:uppercase;">ИЗМЕНИТЬ</div>
+              </div>`;
+        h += `<div class="settings-checkbox-row" onclick="window.changeViewerPass()">
+                <div class="setting-label">ПАРОЛЬ ИГРОКА</div>
+                <div style="color:var(--gray); font-size:12px; font-weight:900; text-transform:uppercase;">ИЗМЕНИТЬ</div>
+              </div>`;
+        h += `<div class="settings-checkbox-row" onclick="window.changeAdminPass()">
+                <div class="setting-label">ПАРОЛЬ АДМИНА</div>
+                <div style="color:var(--gray); font-size:12px; font-weight:900; text-transform:uppercase;">ИЗМЕНИТЬ</div>
+              </div>`;
+        h += `<button class="btn-base icon-btn" style="margin-top:15px; background:#1e293b; border:1px solid var(--success); color:var(--success); font-size:13px; padding:14px; width:100%;" onclick="window.openCreateRoomFromSettings()"><svg class="icon"><use href="#icon-plus"></use></svg> СОЗДАТЬ НОВЫЙ ЧЕМПИОНАТ</button>`;
+    }
+
+    c.innerHTML = h;
+};
+
+window.createStepRow = function(l, k, v) { return `<div class="settings-row"><div class="setting-label">${l}</div><button class="step-btn" onclick="window.stepS('${k}',-1)">-</button><div class="step-value">${v}</div><button class="step-btn" onclick="window.stepS('${k}',1)"><svg class="icon" style="font-size: 12px;"><use href="#icon-plus"></use></svg></button></div>`; };
+window.createCheckRow = function(l, k, c) { return `<div class="settings-checkbox-row ${c?'checked':''}" onclick="window.toggleS('${k}')"><div class="setting-label">${l}</div><div class="custom-checkbox"></div></div>`; };
+window.createColorRow = function(l, i, v) { return `<div class="settings-row"><div class="setting-label">${l}</div><button class="step-btn" onclick="window.stepColor(${i},-1)">←</button><div class="step-value" style="background:${window.COLORS[v]}; color:${(v==='Белые'||v==='Желтые')?'#000':'#fff'}">${v}</div><button class="step-btn" onclick="window.stepColor(${i},1)">→</button></div>`; };
+
+window.stepS = function(k, d) { 
+    if(k==='time') window.tempConfig.time = Math.max(60, window.tempConfig.time + d*60); 
+    if(k==='goalLimit') window.tempConfig.goalLimit = Math.max(0, window.tempConfig.goalLimit + d); 
+    if(k==='teamsCount') { if(d>0 && window.tempConfig.teams.length<7) window.tempConfig.teams.push(window.colorKeys.find(c=>!window.tempConfig.teams.includes(c))); else if(d<0 && window.tempConfig.teams.length>2) window.tempConfig.teams.pop(); }
+    if(k==='otLimit') window.tempConfig.otLimit = Math.max(0, (window.tempConfig.otLimit||0) + d);
+    window.renderSettingsList(window.currentSettingsTarget); 
+};
+
+window.toggleS = function(k) { window.tempConfig[k] = !window.tempConfig[k]; window.renderSettingsList(window.currentSettingsTarget); };
+
+window.stepColor = function(i, d) { let c=window.colorKeys.indexOf(window.tempConfig.teams[i]), n=(c+d+window.colorKeys.length)%window.colorKeys.length; while(window.tempConfig.teams.includes(window.colorKeys[n])) n=(n+d+window.colorKeys.length)%window.colorKeys.length; window.tempConfig.teams[i]=window.colorKeys[n]; window.renderSettingsList(window.currentSettingsTarget); };
+
+window.saveSettings = function() { 
+    window.setStore("config", window.tempConfig);
+
+    window.colorKeys.forEach(t => {
+        let oldR = window.config.rosters[t] || [];
+        let newR = window.tempConfig.rosters[t] || [];
+        for (let i = 0; i < Math.min(oldR.length, newR.length); i++) {
+            let oName = oldR[i] ? String(oldR[i]).trim() : "";
+            let nName = newR[i] ? String(newR[i]).trim() : "";
+            if (oName && nName && oName !== nName) {
+                window.matches.forEach(m => {
+                    if (!window.tourRosters[m.date]) { 
+                        m.events.forEach(e => {
+                            if (e.s === oName) e.s = nName;
+                            if (e.s === oName + ' (АГ)') e.s = nName + ' (АГ)';
+                            if (e.a === oName) e.a = nName;
+                        });
+                    }
+                });
+                let mvps = window.getStore("tourMvps", {});
+                let mvpChanged = false;
+                Object.keys(mvps).forEach(d => {
+                    if (!window.tourRosters[d] && mvps[d] === oName) {
+                        mvps[d] = nName; mvpChanged = true;
+                    }
+                });
+                if (mvpChanged) window.setStore("tourMvps", mvps);
+            }
+        }
+    });
+
+    window.config = window.tempConfig; 
+    window.setStore("matches", window.matches);
+    window.updateGlobalPlayersList();
+    location.reload(); 
+};
+
+window.changeRosterSize = function(t, d) {
+    let r = window.tempConfig.rosters[t];
+    if (d > 0 && r.length < 15) r.push("");
+    else if (d < 0 && r.length > 1) r.pop();
+    window.openRosterEditor(); 
+};
+
+window.openRosterEditor = function() {
+    window.updateGlobalPlayersList();
+    const c = document.getElementById('rosterContainer'); c.innerHTML = "";
+    window.tempConfig.teams.forEach(t => {
+        let h = `<div style="margin-bottom:15px; background:rgba(0,0,0,0.1); border-radius:12px; overflow:hidden;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; background:${window.COLORS[t]}; color:${(t==='Белые'||t==='Желтые')?'#000':'#fff'}; padding:10px; font-weight:800; font-size:12px;">
+                        <span>${t}</span>
+                        <div style="display:flex; gap:6px;">
+                            <button style="background:rgba(0,0,0,0.2); border:none; color:inherit; width:24px; height:24px; border-radius:4px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:bold;" onclick="window.changeRosterSize('${t}', -1)">-</button>
+                            <button style="background:rgba(0,0,0,0.2); border:none; color:inherit; width:24px; height:24px; border-radius:4px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:bold;" onclick="window.changeRosterSize('${t}', 1)"><svg class="icon" style="font-size: 11px;"><use href="#icon-plus"></use></svg></button>
+                        </div>
+                    </div>`;
+        if(!window.tempConfig.rosters[t]) window.tempConfig.rosters[t] = Array(5).fill("");
+        window.tempConfig.rosters[t].forEach((n, i) => h += `<div class="player-row"><span class="player-num">${i+1}.</span><input list="globalPlayersList" class="player-input" value="${n}" onchange="window.tempConfig.rosters['${t}'][${i}]=this.value"></div>`);
+        c.innerHTML += h + `</div>`;
+    });
+    window.openModal('rosterModal');
+};
+
+/* === HELPERS === */
+window.saveConfig = function() { window.setStore("config", window.config); };
+window.handleReset = function() { window.openModal('confirmReset'); };
+
+window.confirmReset = function(manual = true) { 
+    if(window.interval){clearInterval(window.interval); window.interval=null;} 
+    window.currentMatch=null; window.isOT=false; window.time=window.config.time; 
+    document.getElementById('score').innerText="0 : 0"; 
+    document.getElementById('startBtn').innerText="СТАРТ МАТЧА"; 
+    document.getElementById('otTimerPlate').style.display='none'; 
+    if(manual) { window.selL=null; window.selR=null; }
+    window.closeModal('confirmReset'); 
+    window.updateSelectionUI(); window.updateTimerDisplay(); window.updateUtilityBtns(); window.updateLastGoalDisplay();
+};
+
+window.openUndoModal = function() { window.openModal('confirmUndo'); };
+
+window.confirmUndo = function() { 
+    if(window.currentMatch?.events.length) { 
+        const e = window.currentMatch.events.pop(); 
+        if(e.side===1) window.currentMatch.s1--; else window.currentMatch.s2--; 
+        document.getElementById('score').innerText = window.currentMatch.s1 + " : " + window.currentMatch.s2; 
+        window.animateScore();
+    } 
+    window.closeModal('confirmUndo'); 
+    window.updateUtilityBtns(); window.updateLastGoalDisplay();
+};
+
+window.openFinish = function() { window.openModal('confirmFinish'); };
+
+window.confirmFinish = function() { window.terminateMatch(); window.closeModal('confirmFinish'); };
+
+window.closeWinner = function() { 
+    window.confirmReset(false); 
+    window.closeModal('winnerModal'); 
+    if(window.config.autoReset){window.selL=null; window.selR=null; window.updateSelectionUI();} 
+    window.otActive = false; window.config.useOT = false; window.saveConfig();
+    document.getElementById('otToggle').parentElement.classList.toggle('active', false);
+};
+
+window.toggleOTManual = function() { 
+    if (window.currentRole === 'viewer') return;
+    window.otActive = !window.otActive; window.config.useOT = window.otActive; window.saveConfig();
+    document.getElementById('otToggle').parentElement.classList.toggle('active', window.otActive); 
+};
+
+window.updateUtilityBtns = function() {
+    const r = document.getElementById('resetBtn'), u = document.getElementById('undoBtn'), f = document.getElementById('finishBtn'), g1 = document.getElementById('goal1'), g2 = document.getElementById('goal2');
+    r.disabled = (window.currentRole === 'viewer') || !(window.selL || window.selR || window.currentMatch);
+    u.disabled = (window.currentRole === 'viewer') || !window.currentMatch || !window.currentMatch.events.length;
+    f.disabled = (window.currentRole === 'viewer') || !window.currentMatch;
+    g1.disabled = (window.currentRole === 'viewer') || !window.interval; g2.disabled = (window.currentRole === 'viewer') || !window.interval;
+};
+
+window.announce = function(t) { if(!window.config.voiceEnabled) return; window.speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t); u.lang='ru-RU'; window.speechSynthesis.speak(u); };
+
+setInterval(() => { 
+    if(!window.currentRoom) return;
+    const todayStr = new Date().toLocaleDateString('ru-RU');
+    const todayCount = window.matches.filter(m => m.date === todayStr).length + 1;
+    document.getElementById("gameMeta").innerHTML = `Матч #${todayCount} • ${todayStr} • ${new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'})} • <span style="color:var(--accent); font-weight:bold;">${window.currentRoom}</span>`; 
+}, 1000);
+
+if (!window.appInitialized && typeof __firebase_config === 'undefined') {
+    window.initApp();
+}
+</script>
+</body>
+</html>
