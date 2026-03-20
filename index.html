@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0f172a">
-    <title>Футбол на Манеже v17.09</title>
+    <title>Футбол на Манеже v17.16</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
@@ -59,10 +59,11 @@
                 }
             } catch (error) {
                 console.error("Firebase Auth Error:", error);
+                localStorage.removeItem("mSmartPro_lastRoom");
+                window.currentRoom = null;
                 const loader = document.getElementById('loadingOverlay');
-                if (loader) {
-                    loader.innerHTML = `<span style="color:var(--danger); font-size:13px; text-align:center; padding:20px;">⚠️ Ошибка базы данных.<br><br>Перезагрузите страницу.</span>`;
-                }
+                if (loader) loader.style.display = 'none';
+                if(window.openWelcomeModal) window.openWelcomeModal();
             }
         }
         startAuth();
@@ -90,7 +91,7 @@
         .icon-btn { display: flex; align-items: center; justify-content: center; gap: 6px; }
 
         .header { display: flex; justify-content: space-between; align-items: center; flex: 0 0 auto; padding: 6px 0; position: relative; height: 50px; }
-        .header h1 { font-size: 1.3rem; margin: 0; color: var(--accent); font-weight: 800; position: absolute; left: 50%; transform: translateX(-50%); width: max-content; pointer-events: none; z-index: 1; text-transform: uppercase; } 
+        .header h1 { font-size: clamp(14px, 4.5vw, 20px); margin: 0; color: var(--accent); font-weight: 800; position: absolute; left: 50%; transform: translateX(-50%); width: 100%; max-width: 55vw; text-align: center; pointer-events: none; z-index: 1; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } 
         
         .head-icon { background: var(--card); border-radius: 10px; cursor: pointer; color: white; padding: 8px 12px; z-index: 10; display: flex; align-items: center; gap: 6px; transition: all 0.2s; border: 1px solid transparent; } 
         .head-icon span { font-size: 10px; font-weight: 800; text-transform: uppercase; } 
@@ -99,15 +100,18 @@
 
         .game-meta { flex: 0 0 auto; font-size: 12px; color: #94a3b8; text-align: center; margin: 5px 0; background: rgba(255,255,255,0.05); padding: 6px; border-radius: 8px; text-transform: uppercase; letter-spacing: 0.5px; } 
 
-        .scoreboard-area { flex: 1.6; display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
-        .score-plate { flex: 2; background: var(--card); border-radius: 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 20px rgba(0,0,0,0.3); position: relative; }
-        #score { font-size: clamp(60px, 14vh, 120px); font-weight: 900; font-variant-numeric: tabular-nums; transition: transform 0.1s; } 
+        .scoreboard-area { flex: 1.6; display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+        .score-plate { flex: 1.2; background: var(--card); border-radius: 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 20px rgba(0,0,0,0.3); position: relative; min-height: 70px; }
+        #score { font-size: clamp(55px, 12vh, 110px); font-weight: 900; font-variant-numeric: tabular-nums; transition: transform 0.1s; line-height: 1; margin-top: -4px;} 
         
         @keyframes scorePop { 0% { transform: scale(1); } 50% { transform: scale(1.15); color: var(--success); text-shadow: 0 0 20px rgba(34, 197, 94, 0.5); } 100% { transform: scale(1); } }
         .score-anim { animation: scorePop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 
-        #lastGoalInfo { position: absolute; bottom: 12px; left: 0; width: 100%; box-sizing: border-box; padding: 0 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 12px; color: #94a3b8; align-items: end; } 
-        .goal-bubble { background: rgba(255,255,255,0.08); padding: 5px 11px; border-radius: 12px; display: flex; align-items: center; gap: 5px; margin-top: 5px; border: 1px solid rgba(255,255,255,0.05); color: var(--text); font-weight: 600; font-size: 12px; } 
+        .events-plate { display: flex; justify-content: space-between; align-items: flex-start; min-height: 28px; width: 100%; padding: 0 5px; box-sizing: border-box; overflow: hidden; margin-top: 2px; }
+        .events-l, .events-r { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; white-space: nowrap; max-width: 48%; padding-bottom: 4px; }
+        .events-l::-webkit-scrollbar, .events-r::-webkit-scrollbar { display: none; }
+        .events-r { flex-direction: row-reverse; }
+        .goal-bubble { background: rgba(255,255,255,0.08); padding: 4px 8px; border-radius: 8px; display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text); border: 1px solid rgba(255,255,255,0.05); } 
         .h-goals-l { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
         .h-goals-r { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
 
@@ -252,7 +256,10 @@
     <div class="scoreboard-area">
         <div class="score-plate">
             <div id="score">0 : 0</div>
-            <div id="lastGoalInfo"><div id="lastGoalL" class="h-goals-l"></div><div id="lastGoalR" class="h-goals-r"></div></div>
+        </div>
+        <div class="events-plate" id="eventsPlate">
+            <div id="lastGoalL" class="events-l"></div>
+            <div id="lastGoalR" class="events-r"></div>
         </div>
         <div class="timer-row">
             <div class="timer-plate"><div id="timer">00:00</div></div>
@@ -1567,49 +1574,61 @@ window.formatGoal = function(e) {
 };
 
 window.updateLastGoalDisplay = function() {
-    const lL = document.getElementById('lastGoalL');
-    const lR = document.getElementById('lastGoalR');
-    if (!lL || !lR) return;
-    lL.innerHTML = ""; lR.innerHTML = "";
+    const lL = document.getElementById('lastGoalL'); const lR = document.getElementById('lastGoalR');
+    if (!lL || !lR) return; lL.innerHTML = ""; lR.innerHTML = "";
     if (!window.currentMatch || !window.currentMatch.events || !window.currentMatch.events.length) return;
     
-    const gl = window.currentMatch.events.filter(e => e.side === 1 && e.s).slice(-3);
-    const gr = window.currentMatch.events.filter(e => e.side === 2 && e.s).slice(-3);
+    const gl = window.currentMatch.events.filter(e => e.side === 1 && e.s); 
+    const gr = window.currentMatch.events.filter(e => e.side === 2 && e.s);
     
-    const fmtG = (e) => { 
-        let res = e.s || '?'; 
-        if(e.a) res += ` <span style="opacity:0.5; margin-left:3px;"><svg class="icon-inline"><use href="#icon-pass-shoe"></use></svg> ${e.a}</span>`; 
-        return `<div class="goal-bubble"><svg class="icon-inline"><use href="#icon-ball"></use></svg> ${res}</div>`; 
-    };
+    const fmtG = (e) => { return `<div class="goal-bubble"><svg class="icon-inline" style="width:11px; height:11px;"><use href="#icon-ball"></use></svg> ${window.formatGoal(e)}</div>`; };
     
-    lL.innerHTML = gl.map(e => fmtG(e)).join('');
+    lL.innerHTML = gl.map(e => fmtG(e)).join(''); 
     lR.innerHTML = gr.map(e => fmtG(e)).join('');
 };
 
 window.toggleTimer = function() {
     if (window.currentRole === 'viewer') return;
     if (navigator.vibrate) navigator.vibrate(40); 
-    
     if (window.audioCtx && window.audioCtx.state === 'suspended') window.audioCtx.resume();
-    if (window.interval) { clearInterval(window.interval); window.interval = null; document.getElementById('startBtn').innerText = "ПРОДОЛЖИТЬ"; }
-    else {
+    
+    if (window.interval) { 
+        clearInterval(window.interval); window.interval = null; document.getElementById('startBtn').innerText = "ПРОДОЛЖИТЬ"; 
+    } else {
         if (!window.currentMatch) { 
             window.currentMatch = { id: window.matches.length ? Math.max(...window.matches.map(m=>m.id||0))+1 : 1, t1: window.selL, t2: window.selR, s1: 0, s2: 0, date: new Date().toLocaleDateString('ru-RU'), time: new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'}), events: [] }; 
-            window.time = window.config.time; window.isFinishing = false; 
-            window.updateLastGoalDisplay();
+            window.time = window.config.time; window.isFinishing = false; window.updateLastGoalDisplay();
         }
+        
         window.interval = setInterval(() => {
+            if (window.isFinishing) { clearInterval(window.interval); window.interval = null; return; }
+            
             if(!window.isOT) { 
-                window.time -= 0.2; if(window.time<=0){ window.time=0; if(window.otActive && window.currentMatch.s1===window.currentMatch.s2){window.isOT=true; window.otTime=0; document.getElementById('otTimerPlate').style.display='flex';} else window.endMatch(); }
+                window.time -= 0.2; 
+                if(window.time <= 0){ 
+                    window.time = 0; 
+                    if(window.otActive && window.currentMatch.s1 === window.currentMatch.s2){
+                        window.isOT=true; window.otTime=0; document.getElementById('otTimerPlate').style.display='flex';
+                    } else { 
+                        if(window.interval){ clearInterval(window.interval); window.interval=null; }
+                        window.terminateMatch(); return;
+                    } 
+                }
             } else { window.otTime += 0.2; }
+            
             window.updateTimerDisplay();
-            const lim = parseInt(window.config.goalLimit);
-            if (lim > 0 && (window.currentMatch.s1 >= lim || window.currentMatch.s2 >= lim)) { if(window.interval){clearInterval(window.interval); window.interval=null;} window.endMatch(); }
+            
+            if (window.currentMatch && !window.isFinishing) {
+                const lim = parseInt(window.config.goalLimit);
+                if (lim > 0 && (window.currentMatch.s1 >= lim || window.currentMatch.s2 >= lim)) { 
+                    if(window.interval){ clearInterval(window.interval); window.interval=null; }
+                    window.terminateMatch(); 
+                }
+            }
         }, 200);
         document.getElementById('startBtn').innerText = "⏸ ПАУЗА";
     }
-    window.updateUtilityBtns();
-    window.updateMatchStatusLabel();
+    window.updateUtilityBtns(); window.updateMatchStatusLabel();
 };
 
 window.updateTimerDisplay = function() {
@@ -1693,12 +1712,18 @@ window.finishGoal = function(a) { window.closeModal('playerSelModal'); setTimeou
 window.processGoal = function(side, s, a) {
     if (window.isFinishing) return;
     if (side === 1) window.currentMatch.s1++; else window.currentMatch.s2++;
+    
+    if(!window.currentMatch.events) window.currentMatch.events = [];
     window.currentMatch.events.push({side, s, a});
+    
     document.getElementById('score').innerText = window.currentMatch.s1 + " : " + window.currentMatch.s2;
-    window.animateScore();
-    window.updateLastGoalDisplay();
+    window.animateScore(); window.updateLastGoalDisplay();
+    
     const lim = parseInt(window.config.goalLimit);
-    if (lim > 0 && (window.currentMatch.s1 >= lim || window.currentMatch.s2 >= lim)) { if(window.interval){clearInterval(window.interval); window.interval=null;} window.terminateMatch(); }
+    if (lim > 0 && (window.currentMatch.s1 >= lim || window.currentMatch.s2 >= lim)) { 
+        if(window.interval){ clearInterval(window.interval); window.interval=null; }
+        window.terminateMatch(); 
+    }
     window.updateUtilityBtns();
 };
 
