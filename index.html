@@ -4,18 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0f172a">
-    <title>Футбол на Манеже v17.03</title>
+    <title>Футбол на Манеже v17.04</title>
     
-    <!-- Telegram Web App API -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-    <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-        // Твои ключи из Firebase (переписал со скриншота)
         const firebaseConfig = {
             apiKey: "AIzaSyAV-2fy1NHbLonrxk4_85GwvnhkZ6DtkAM",
             authDomain: "fnm1-62e5a.firebaseapp.com",
@@ -49,11 +46,19 @@
         });
 
         async function startAuth() {
-            if (canvasToken) {
-                try { await signInWithCustomToken(auth, canvasToken); } 
-                catch(e) { await signInAnonymously(auth); }
-            } else {
-                await signInAnonymously(auth);
+            try {
+                if (canvasToken) {
+                    try { await signInWithCustomToken(auth, canvasToken); } 
+                    catch(e) { await signInAnonymously(auth); }
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Firebase Auth Error:", error);
+                const loader = document.getElementById('loadingOverlay');
+                if (loader) {
+                    loader.innerHTML = `<span style="color:var(--danger); font-size:14px; text-align:center; padding:20px;">⚠️ Ошибка доступа к базе данных.<br><br>Убедитесь, что провайдер Anonymous включен.</span>`;
+                }
             }
         }
         startAuth();
@@ -80,55 +85,62 @@
         .icon-btn { display: flex; align-items: center; justify-content: center; gap: 6px; }
 
         .header { display: flex; justify-content: space-between; align-items: center; flex: 0 0 auto; padding: 6px 0; position: relative; height: 50px; }
-        .header h1 { font-size: 1.1rem; margin: 0; color: var(--accent); font-weight: 800; position: absolute; left: 50%; transform: translateX(-50%); width: max-content; pointer-events: none; z-index: 1; text-transform: uppercase; } 
+        .header h1 { font-size: 1.1rem; margin: 0; color: var(--accent); font-weight: 800; position: absolute; left: 50%; transform: translateX(-50%); width: 100%; text-align: center; pointer-events: none; z-index: 1; text-transform: uppercase; } 
         
-        .head-icon { background: var(--card); border-radius: 10px; cursor: pointer; color: white; padding: 8px 12px; z-index: 10; display: flex; align-items: center; gap: 6px; transition: all 0.2s; border: 1px solid transparent; } 
+        .head-icon { background: var(--card); border-radius: 8px; cursor: pointer; color: white; padding: 6px 10px; z-index: 10; display: flex; align-items: center; gap: 6px; transition: all 0.2s; border: 1px solid transparent; } 
+        .head-icon:active { transform: scale(0.95); opacity: 0.8; }
         .head-icon span { font-size: 10px; font-weight: 800; text-transform: uppercase; } 
         
-        .border-blue { border-color: var(--accent) !important; color: var(--accent) !important; }
-        .border-yellow { border-color: var(--warning) !important; color: var(--warning) !important; }
+        .border-blue { border: 1px solid var(--accent) !important; color: var(--accent) !important; }
+        .border-yellow { border: 1px solid var(--warning) !important; color: var(--warning) !important; }
 
-        .game-meta { flex: 0 0 auto; font-size: 11px; color: #94a3b8; text-align: center; margin: 5px 0; background: rgba(255,255,255,0.05); padding: 6px; border-radius: 8px; text-transform: uppercase; letter-spacing: 0.5px; } 
+        .game-meta { flex: 0 0 auto; font-size: 12px; color: #94a3b8; text-align: center; margin: 5px 0; background: rgba(255,255,255,0.05); padding: 6px; border-radius: 8px; text-transform: uppercase; letter-spacing: 0.5px; } 
 
         .scoreboard-area { flex: 1.6; display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
         .score-plate { flex: 2; background: var(--card); border-radius: 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 20px rgba(0,0,0,0.3); position: relative; }
         #score { font-size: clamp(60px, 14vh, 120px); font-weight: 900; font-variant-numeric: tabular-nums; } 
+        
+        #lastGoalInfo { position: absolute; bottom: 12px; left: 0; width: 100%; box-sizing: border-box; padding: 0 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 12px; color: #94a3b8; align-items: end; } 
+        .goal-bubble { background: rgba(255,255,255,0.08); padding: 5px 11px; border-radius: 12px; display: flex; align-items: center; gap: 5px; margin-top: 5px; border: 1px solid rgba(255,255,255,0.05); color: var(--text); font-weight: 600; font-size: 11px; } 
 
         .timer-row { display: flex; align-items: stretch; justify-content: center; gap: 10px; margin: 0 10px; flex: 1; }
         .timer-plate { flex: 2; background: rgba(255,255,255,0.05); border-radius: 15px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); }
         #timer { font-size: clamp(24px, 5vh, 48px); font-family: monospace; color: var(--accent); font-weight: 700; } 
         
         .ot-wrapper { display: flex; flex-direction: column; align-items: center; flex: 0 0 55px; justify-content: center; } 
-        .ot-toggle-btn { width: 42px; height: 42px; background: #2d3748; border: 1px solid #475569; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: white; transition: 0.2s; } 
-        .active .ot-toggle-btn { background: rgba(59, 130, 246, 0.15); border-color: #3b82f6; color: #3b82f6; box-shadow: 0 0 10px rgba(59, 130, 246, 0.3); }
+        .ot-toggle-btn { width: 40px; height: 40px; background: #2d3748; border: 1px solid #475569; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; color: white; } 
+        .active .ot-toggle-btn { background: rgba(59, 130, 246, 0.15); border-color: #3b82f6; color: #3b82f6; }
 
         .game-main-area { display: flex; flex-direction: column; flex: 4; overflow: hidden; gap: 10px; }
         .selection-section { display: flex; flex: 3; gap: 12px; align-items: center; }
         .selection-section.viewer-empty { opacity: 0.15; pointer-events: none; filter: grayscale(1); }
-        .side-container { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; transition: all 0.5s; }
+        .side-container { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
         .circles-grid { display: flex; flex-wrap: wrap; justify-content: center; align-content: center; gap: 12px; width: 100%; }
         .circle-select { width: clamp(45px, 10vw, 80px); height: clamp(45px, 10vw, 80px); border-radius: 50%; border: 3px solid rgba(255,255,255,0.2); cursor: pointer; } 
-        .chosen-team-btn { width: 100%; height: 90%; border-radius: 20px; border: none; font-weight: 900; font-size: clamp(14px, 3.2vw, 22px); cursor: pointer; text-transform: uppercase; animation: popIn 0.3s ease-out; }
+        .chosen-team-btn { width: 100%; height: 90%; border-radius: 20px; border: none; font-weight: 900; font-size: clamp(14px, 3.2vw, 22px); cursor: pointer; text-transform: uppercase; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 
-        .goal-section { display: flex; flex: 0.001; gap: 12px; opacity: 0; pointer-events: none; overflow: hidden; transition: all 0.5s; }
+        .goal-section { display: flex; flex: 0.001; gap: 12px; opacity: 0; pointer-events: none; overflow: hidden; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .goal-btn { flex: 1; border: none; border-radius: 20px; cursor: pointer; font-weight: 900; font-size: 34px; box-shadow: 0 6px 0 rgba(0,0,0,0.3); } 
+        .goal-btn:disabled { opacity: var(--disabled-opacity) !important; filter: grayscale(0.8); box-shadow: none; transform: translateY(6px); }
+
+        .is-ready .selection-section { flex: 1.2; }
         .is-ready .goal-section { flex: 3; opacity: 1; display: flex; pointer-events: auto; }
-        .goal-btn { flex: 1; border: none; border-radius: 20px; cursor: pointer; font-weight: 900; font-size: 32px; box-shadow: 0 6px 0 rgba(0,0,0,0.3); } 
 
         .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.98); z-index: 1000; padding: 10px; display: flex; align-items: center; justify-content: center; }
         .modal-content { position: relative; background: var(--card); border-radius: 25px; padding: 25px; text-align: center; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); width: 95%; max-width: 500px; max-height: 94vh; display: flex; flex-direction: column; overflow: hidden; }
         .scrollable { flex: 1; overflow-y: auto; overflow-x: hidden; margin-top: 10px; padding-right: 5px; }
 
         .btn-base { background: #1e293b; border: 1px solid #334155; color: white; border-radius: 10px; font-size: 12px; padding: 15px 4px; flex: 1; cursor: pointer; text-transform: uppercase; font-weight: 700; } 
-        .full-btn { width: 100%; background: var(--accent); color: var(--bg); border: none; border-radius: 16px; padding: 18px 15px; font-size: 18px; font-weight: 900; cursor: pointer; text-transform: uppercase; } 
+        .full-btn { width: 100%; background: var(--accent); color: var(--bg); border: none; border-radius: 16px; padding: 20px 15px; font-size: 20px; font-weight: 900; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: all 0.1s; } 
 
-        .pencil-btn { background: var(--card); border: 1px solid var(--accent); color: var(--accent); border-radius: 8px; padding: 3px 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .pencil-btn { background: var(--card); border: 1px solid var(--accent); color: var(--accent); border-radius: 8px; padding: 4px 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s; }
         .pencil-btn:active { transform: scale(0.9); }
 
         .stats-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 20px; } 
         .stats-table th { color: var(--gray); font-size: 9px; padding: 8px 2px; border-bottom: 1px solid #334155; text-transform: uppercase; } 
         .stats-table td { padding: 8px 2px; border-bottom: 1px solid rgba(255,255,255,0.05); text-align: center; } 
         
-        .player-link { color: var(--accent); cursor: pointer; font-weight: 800; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 4px; }
+        .player-link { color: var(--accent); cursor: pointer; font-weight: bold; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 4px; }
         .player-input { width: 100%; background: #0f172a; border: 1px solid #475569; color: #fff; padding: 10px; border-radius: 8px; font-size: 13px; box-sizing: border-box; outline: none; margin-bottom: 5px; } 
 
         .footer-area { flex: 0 0 auto; display: flex; flex-direction: column; gap: 8px; padding-top: 6px; }
@@ -136,6 +148,9 @@
         #loadingOverlay { position: fixed; inset: 0; background: var(--bg); z-index: 20000; display: flex; align-items: center; justify-content: center; flex-direction: column; color: var(--accent); font-weight: 900; font-size: 20px; text-transform: uppercase; letter-spacing: 2px; }
         .spinner { width: 40px; height: 40px; border: 4px solid rgba(56, 189, 248, 0.2); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
+        
+        .row-3 { display: flex; gap: 8px; width: 100%; }
+        .hidden { display: none !important; }
 
         @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
     </style>
@@ -226,7 +241,7 @@
             <div id="logoutBtnContainer" style="display:none; margin-top: 10px;">
                 <button class="btn-base" style="border: 1px solid var(--danger); color: var(--danger); width: 100%;" onclick="window.logout()">ВЫЙТИ ИЗ ЧЕМПИОНАТА</button>
             </div>
-            <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">v17.03 Pro • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel</div>
+            <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">v17.04 Pro • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel</div>
         </div>
     </div>
 
@@ -243,14 +258,11 @@
         <div class="modal-content">
             <h2 style="color: var(--success); margin-top:0; margin-bottom:5px;">СОЗДАТЬ ЧЕМПИОНАТ</h2>
             <div style="font-size:11px; color:var(--gray); margin-bottom:15px;">Задайте НАЗВАНИЕ чемпионата и придумайте пароли (для администратора и для игроков).</div>
-            
             <input type="text" id="createPinInput" class="player-input" placeholder="ПРИДУМАЙТЕ НАЗВАНИЕ (напр. LIGA24)" style="font-size:15px; text-align:center; margin-bottom:10px; padding:12px; width:100%; box-sizing:border-box;">
             <input type="password" id="createAdminPassInput" class="player-input" placeholder="ПРИДУМАЙТЕ ПАРОЛЬ АДМИНА" style="font-size:15px; text-align:center; margin-bottom:10px; padding:12px; width:100%; box-sizing:border-box;">
             <input type="password" id="createViewerPassInput" class="player-input" placeholder="ПРИДУМАЙТЕ ПАРОЛЬ ИГРОКА" style="font-size:15px; text-align:center; margin-bottom:15px; padding:12px; width:100%; box-sizing:border-box;">
-            
             <div style="font-weight:bold; color:var(--accent); font-size:12px; text-align:left; margin-bottom:8px; text-transform:uppercase;">Настройки турнира</div>
             <div class="scrollable" id="createSettingsContainer" style="margin-bottom:15px;"></div>
-            
             <div class="row-3">
                 <button class="btn-base" style="background:var(--success)" onclick="window.confirmCreateRoom()">НАЧАТЬ</button>
                 <button class="btn-base" onclick="window.cancelCreateRoom()">ОТМЕНА</button>
@@ -320,9 +332,7 @@
         <div class="modal-content" style="max-width:600px; width: 98%;">
             <h2 style="color:var(--accent); margin-top:0; margin-bottom:15px; text-transform:uppercase;"><svg class="icon-inline"><use href="#icon-run"></use></svg> БАЗА ИГРОКОВ</h2>
             <button class="full-btn icon-btn" style="margin-bottom: 15px; font-size:14px; padding:12px; background:var(--success);" onclick="window.addGlobalPlayer()"><svg class="icon"><use href="#icon-plus"></use></svg> ДОБАВИТЬ НОВОГО ИГРОКА</button>
-            
             <div class="scrollable" id="playerDBContainer" style="text-align:left; padding-right:5px;"></div>
-            
             <button class="btn-base" style="margin-top:15px;" onclick="window.closeModal('playerDBModal')">ЗАКРЫТЬ</button>
         </div>
     </div>
@@ -503,15 +513,59 @@ window.openModal = function(id) { const m = document.getElementById(id); if(m){ 
 window.closeModal = function(id) { const m = document.getElementById(id); if(m){ m.style.display = 'none'; m.classList.add('hidden'); } };
 
 window.getStore = function(key, def) {
-    if(!window.currentRoom) return def;
-    const v = localStorage.getItem("mSmartPro_" + key + "_" + window.currentRoom);
-    return v ? JSON.parse(v) : def;
+    if (window[key] !== undefined && window[key] !== null && window[key] !== '') return window[key];
+    return def;
 };
 
 window.setStore = function(key, val) {
-    if(!window.currentRoom) return;
-    localStorage.setItem("mSmartPro_" + key + "_" + window.currentRoom, JSON.stringify(val));
-    if (typeof window.syncToFirebase === 'function') window.syncToFirebase();
+    window[key] = val;
+    if (window.syncToFirebase) window.syncToFirebase();
+};
+
+window.applyDataFromFirebase = function(data) {
+    window.config = data.config || JSON.parse(JSON.stringify(window.defaultConfig));
+    window.matches = data.matches || [];
+    window.customTours = data.customTours || {};
+    window.tourRosters = data.tourRosters || {};
+    window.globalPlayers = data.globalPlayers || [];
+    window.tourMvps = data.tourMvps || {};
+    
+    if (window.currentRole !== 'viewer') {
+        window.ensureDefaultRosters();
+    }
+};
+
+window.syncToFirebase = async function() {
+    if(!window.currentRoom || !window.dbUser) return;
+    const roomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', window.currentRoom);
+    await window.setDoc(roomRef, {
+        config: window.config,
+        matches: window.matches,
+        customTours: window.customTours,
+        tourRosters: window.tourRosters,
+        globalPlayers: window.globalPlayers,
+        tourMvps: window.tourMvps || {}
+    });
+};
+
+window.roomUnsubscribe = null;
+window.listenToRoom = function() {
+    if (window.roomUnsubscribe) window.roomUnsubscribe();
+    if(!window.currentRoom || !window.dbUser) return;
+    
+    const roomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', window.currentRoom);
+    window.roomUnsubscribe = window.onSnapshot(roomRef, (doc) => {
+        if (doc.exists()) {
+            window.applyDataFromFirebase(doc.data());
+            
+            if (!document.getElementById('statsModal').classList.contains('hidden')) window.renderCombinedStats();
+            if (!document.getElementById('playerDBModal').classList.contains('hidden')) window.openPlayerDB();
+            window.updateTimerDisplay();
+            window.updateLastGoalDisplay();
+            window.checkReady();
+            window.updateMatchStatusLabel();
+        }
+    });
 };
 
 function getDefaultPlayerName(team, index) {
@@ -535,7 +589,7 @@ window.ensureDefaultRosters = function() {
             return name;
         });
     });
-    if (changed) window.setStore("config", window.config);
+    if (changed && typeof window.syncToFirebase === 'function') window.syncToFirebase();
 };
 
 window.loadRoomData = function() {
@@ -1065,7 +1119,6 @@ window.confirmJoinAdmin = async function() {
         }
         
         window.currentRoom = pin;
-        
         localStorage.setItem("mSmartPro_lastRoom", window.currentRoom);
         localStorage.setItem("mSmartPro_lastRole", window.currentRole);
         
@@ -1260,7 +1313,6 @@ window.submitPass = async function() {
                 });
             }
             
-            let oldRoom = window.currentRoom;
             window.currentRoom = newP;
             localStorage.setItem("mSmartPro_lastRoom", window.currentRoom);
             
@@ -1704,12 +1756,12 @@ window.renderCombinedStats = function() {
 
     let h = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><button class="stats-page-btn" ${window.currentStatsPageIndex === statsDates.length - 1 ? 'disabled' : ''} onclick="window.changeStatsPageIndex(1)">◀</button><div style="font-weight:900; font-size:16px; display:flex; align-items:center; gap:6px; color:var(--text); text-transform:uppercase;"><svg class="icon-inline" style="width:20px;"><use href="#icon-calendar"></use></svg> ТУРНИР ${date}</div><button class="stats-page-btn" ${window.currentStatsPageIndex === 0 ? 'disabled' : ''} onclick="window.changeStatsPageIndex(-1)">▶</button></div>`;
     
-    if (window.currentRole === 'admin') h += `<div style="display:flex; gap:5px; margin-bottom:15px; justify-content:center; flex-wrap:wrap;"><button class="pencil-btn border-yellow" style="padding:6px 12px; font-size:11px;" onclick="window.openPlayerDB()"><svg class="icon" style="margin-right:4px;"><use href="#icon-run"></use></svg> ВСЕ ИГРОКИ</button><button class="pencil-btn" style="padding:6px 12px; color:var(--success); border-color:var(--success); font-size:11px;" onclick="window.addNewTournament()"><svg class="icon"><use href="#icon-plus"></use></svg> ТУРНИР</button><button class="pencil-btn" style="padding:6px 12px;" onclick="window.openShareModal('${date}')"><svg class="icon"><use href="#icon-share"></use></svg></button><button class="pencil-btn" style="padding:6px 12px; color:var(--danger); border-color:var(--danger);" onclick="window.deleteDay('${date}')"><svg class="icon"><use href="#icon-trash"></use></svg></button></div>`;
+    if (window.currentRole === 'admin') h += `<div style="display:flex; gap:5px; margin-bottom:15px; justify-content:center; flex-wrap:wrap;"><button class="pencil-btn border-yellow" style="padding:6px 12px; font-size:11px;" onclick="window.openPlayerDB()"><svg class="icon" style="margin-right:4px;"><use href="#icon-run"></use></svg> ВСЕ ИГРОКИ</button><button class="pencil-btn border-blue" style="padding:6px 12px; color:var(--success); font-size:11px;" onclick="window.addNewTournament()"><svg class="icon"><use href="#icon-plus"></use></svg> ТУРНИР</button><button class="pencil-btn border-blue" style="padding:6px 12px;" onclick="window.openShareModal('${date}')"><svg class="icon"><use href="#icon-share"></use></svg></button><button class="pencil-btn" style="padding:6px 12px; color:var(--danger); border-color:var(--danger);" onclick="window.deleteDay('${date}')"><svg class="icon"><use href="#icon-trash"></use></svg></button></div>`;
     
-    h += `<div style="text-align:left; font-weight:800; color:var(--accent); font-size:12px; margin-bottom:10px; text-transform:uppercase;">ТАБЛИЦА ТУРНИРА   ${window.currentRole === 'admin' ? `<button class="pencil-btn" style="padding:3px 6px;" onclick="window.openTourEditor('${date}')"><svg class="icon" style="width:12px;"><use href="#icon-edit"></use></svg></button>` : ''}</div>`;
+    h += `<div style="text-align:left; font-weight:800; color:var(--accent); font-size:12px; margin-bottom:10px; text-transform:uppercase;">ТАБЛИЦА ТУРНИРА   ${window.currentRole === 'admin' ? `<button class="pencil-btn border-blue" style="padding:3px 6px;" onclick="window.openTourEditor('${date}')"><svg class="icon" style="width:12px;"><use href="#icon-edit"></use></svg></button>` : ''}</div>`;
     h += `<table class="stats-table"><thead><tr><th style="text-align:left">КОМАНДА</th><th>И</th><th>В</th><th>Н</th><th>П</th><th>ГЗ</th><th>ГП</th><th>+/-</th><th>О</th></tr></thead><tbody>${Object.values(stats).sort((a,b)=>b.o-a.o || (b.gz-b.gp)-(a.gz-a.gp)).map(t=>`<tr><td style="text-align:left"><div class="team-dot" style="background:${window.COLORS[t.n]||'var(--gray)'}"></div><b>${t.n}</b></td><td>${t.i}</td><td>${t.v}</td><td>${t.nch}</td><td>${t.p}</td><td>${t.gz}</td><td>${t.gp}</td><td>${t.gz-t.gp}</td><td style="color:var(--accent); font-weight:900; font-size: 14px;">${t.o}</td></tr>`).join('')}</tbody></table>`;
     
-    h += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;"><div style="font-weight:800; color:var(--accent); font-size:12px; text-transform:uppercase;">СТАТИСТИКА ИГРОКОВ   ${window.currentRole === 'admin' ? `<button class="pencil-btn" style="padding:3px 6px;" onclick="window.openTourPlayerEditor('${date}')"><svg class="icon" style="width:12px;"><use href="#icon-edit"></use></svg></button>` : ''}</div>`;
+    h += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;"><div style="font-weight:800; color:var(--accent); font-size:12px; text-transform:uppercase;">СТАТИСТИКА ИГРОКОВ   ${window.currentRole === 'admin' ? `<button class="pencil-btn border-blue" style="padding:3px 6px;" onclick="window.openTourPlayerEditor('${date}')"><svg class="icon" style="width:12px;"><use href="#icon-edit"></use></svg></button>` : ''}</div>`;
     if (window.currentRole === 'admin') h += `<button class="pencil-btn border-yellow" style="padding:4px 8px; font-size:10px;" onclick="window.openMvpSelector('${date}')"><svg class="icon"><use href="#icon-star"></use></svg> MVP ТУРНИРА</button>`;
     h += `</div>`;
 
@@ -2046,8 +2098,7 @@ window.executeShare = function() {
 
                     if (sName) {
                         if (sName === 'Автогол' || sName.includes('(АГ)')) {
-                            isOG = true; team = e.side === 1 ? m.t2 : m.t1; 
-                            if(sName !== 'Автогол') sName = sName.replace(' (АГ)', '').trim();
+                            isOG = true; team = e.side === 1 ? m.t2 : m.t1; sName = sName.replace(' (АГ)', '').trim();
                         }
                         if (sName !== 'Автогол' && sName !== '?') {
                             if (!playerStats[sName]) playerStats[sName] = { name: sName, team: team, g: 0, a: 0, og: 0 };
@@ -2362,7 +2413,6 @@ window.openRosterEditor = function() {
     window.openModal('rosterModal');
 };
 
-/* === HELPERS === */
 window.saveConfig = function() { window.setStore("config", window.config); };
 window.handleReset = function() { window.openModal('confirmReset'); };
 
@@ -2422,7 +2472,7 @@ setInterval(() => {
     if(!window.currentRoom) return;
     const todayStr = new Date().toLocaleDateString('ru-RU');
     const todayCount = window.matches.filter(m => m.date === todayStr).length + 1;
-    document.getElementById("gameMeta").innerHTML = `Матч #${todayCount} • ${todayStr} • ${new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'})} • <span style="color:var(--accent); font-weight:bold;">${window.currentRoom}</span>`; 
+    document.getElementById("gameMeta").innerHTML = `Матч #${todayCount} • ${todayStr} • ${new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'})} • <span style="color:var(--gray); font-weight:bold;">${window.currentRoom}</span>`; 
 }, 1000);
 
 if (!window.appInitialized && typeof __firebase_config === 'undefined') {
