@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0f172a">
-    <title>Футбол на Манеже v17.07</title>
+    <title>Футбол на Манеже v17.08</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
@@ -61,7 +61,7 @@
                 console.error("Firebase Auth Error:", error);
                 const loader = document.getElementById('loadingOverlay');
                 if (loader) {
-                    loader.innerHTML = `<span style="color:var(--danger); font-size:13px; text-align:center; padding:20px;">⚠️ Ошибка доступа к базе данных.<br><br>Проверьте соединение с интернетом.</span>`;
+                    loader.innerHTML = `<span style="color:var(--danger); font-size:13px; text-align:center; padding:20px;">⚠️ Ошибка базы данных.<br><br>Перезагрузите страницу.</span>`;
                 }
             }
         }
@@ -85,27 +85,36 @@
         html, body { height: 100%; width: 100%; margin: 0; padding: 0; overflow: hidden; background-color: var(--bg); }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: var(--text); display: flex; flex-direction: column; padding: 12px; box-sizing: border-box; user-select: none; font-size: 15px; } 
 
-        .icon, .icon-inline { width: 1.1em; height: 1.1em; fill: currentColor; vertical-align: middle; display: inline-block; }
+        /* Иконки SVG */
+        .icon { width: 1.1em; height: 1.1em; fill: currentColor; vertical-align: middle; display: inline-block; }
+        .icon-inline { width: 1.3em; height: 1.3em; fill: currentColor; vertical-align: -0.2em; display: inline-block; }
         .icon-btn { display: flex; align-items: center; justify-content: center; gap: 6px; }
 
+        /* Header */
         .header { display: flex; justify-content: space-between; align-items: center; flex: 0 0 auto; padding: 6px 0; position: relative; height: 50px; }
-        .header h1 { font-size: 1.1rem; margin: 0; color: var(--accent); font-weight: 800; position: absolute; left: 50%; transform: translateX(-50%); width: 100%; text-align: center; pointer-events: none; z-index: 1; text-transform: uppercase; } 
-        
-        .head-icon { background: var(--card); border-radius: 8px; cursor: pointer; color: white; padding: 6px 10px; z-index: 10; display: flex; align-items: center; gap: 6px; transition: all 0.2s; border: 1px solid transparent; } 
-        .head-icon:active { transform: scale(0.95); opacity: 0.8; }
-        .head-icon span { font-size: 10px; font-weight: 800; text-transform: uppercase; } 
-        
-        .border-blue { border: 1px solid var(--accent) !important; color: var(--accent) !important; }
-        .border-yellow { border: 1px solid var(--warning) !important; color: var(--warning) !important; }
+        .header h1 { font-size: 1.3rem; margin: 0; color: var(--accent); font-weight: 800; position: absolute; left: 50%; transform: translateX(-50%); width: max-content; pointer-events: none; } 
+        .head-icon { background: none; border: none; font-size: 22px; cursor: pointer; color: white; padding: 6px; z-index: 10; display: flex; align-items: center; gap: 5px; } 
+        .head-icon span { font-size: 12px; font-weight: 800; text-transform: uppercase; } 
 
-        .game-meta { flex: 0 0 auto; font-size: 12px; color: #94a3b8; text-align: center; margin: 5px 0; background: rgba(255,255,255,0.05); padding: 6px; border-radius: 8px; text-transform: uppercase; letter-spacing: 0.5px; } 
+        .game-meta { flex: 0 0 auto; font-size: 12px; color: #94a3b8; text-align: center; margin: 5px 0; background: rgba(255,255,255,0.05); padding: 6px; border-radius: 8px; text-transform: uppercase; } 
 
+        /* Scoreboard */
         .scoreboard-area { flex: 1.6; display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
         .score-plate { flex: 2; background: var(--card); border-radius: 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 20px rgba(0,0,0,0.3); position: relative; }
-        #score { font-size: clamp(60px, 14vh, 120px); font-weight: 900; font-variant-numeric: tabular-nums; } 
+        #score { font-size: clamp(60px, 14vh, 120px); font-weight: 900; font-variant-numeric: tabular-nums; transition: transform 0.1s; } 
         
+        @keyframes scorePop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); color: var(--success); text-shadow: 0 0 20px rgba(34, 197, 94, 0.5); }
+            100% { transform: scale(1); }
+        }
+        .score-anim { animation: scorePop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
         #lastGoalInfo { position: absolute; bottom: 12px; left: 0; width: 100%; box-sizing: border-box; padding: 0 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 12px; color: #94a3b8; align-items: end; } 
-        .goal-bubble { background: rgba(255,255,255,0.08); padding: 5px 11px; border-radius: 12px; display: flex; align-items: center; gap: 5px; margin-top: 5px; border: 1px solid rgba(255,255,255,0.05); color: var(--text); font-weight: 600; font-size: 11px; } 
+        
+        .goal-bubble { background: rgba(255,255,255,0.08); padding: 5px 11px; border-radius: 12px; display: flex; align-items: center; gap: 5px; margin-top: 5px; border: 1px solid rgba(255,255,255,0.05); color: var(--text); font-weight: 600; font-size: 12px; } 
+        .h-goals-l { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+        .h-goals-r { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
 
         .timer-row { display: flex; align-items: stretch; justify-content: center; gap: 10px; margin: 0 10px; flex: 1; }
         .timer-plate { flex: 2; background: rgba(255,255,255,0.05); border-radius: 15px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); }
@@ -113,97 +122,137 @@
         
         .ot-wrapper { display: flex; flex-direction: column; align-items: center; flex: 0 0 55px; justify-content: center; } 
         .ot-toggle-btn { width: 40px; height: 40px; background: #2d3748; border: 1px solid #475569; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; color: white; } 
-        .active .ot-toggle-btn { background: rgba(59, 130, 246, 0.15); border-color: #3b82f6; color: #3b82f6; }
+        .ot-icon { font-size: 18px; opacity: 0.3; transition: all 0.2s; } 
+        .ot-label { font-size: 9px; margin-top: 5px; color: var(--gray); font-weight: 800; text-transform: uppercase; transition: all 0.2s; } 
+        
+        .active .ot-toggle-btn { background: rgba(59, 130, 246, 0.15); border-color: #3b82f6; box-shadow: 0 0 8px rgba(59, 130, 246, 0.4); color: #3b82f6; }
+        .active .ot-icon { opacity: 1; }
+        .active .ot-label { color: #3b82f6; }
+        
+        #otTimerPlate { display: none; background: rgba(239, 68, 68, 0.1); border-color: var(--danger); }
+        #otTimer { color: var(--danger); font-size: clamp(20px, 4vh, 38px); } 
 
+        /* Game Area */
         .game-main-area { display: flex; flex-direction: column; flex: 4; overflow: hidden; gap: 10px; }
-        .selection-section { display: flex; flex: 3; gap: 12px; align-items: center; }
+        
+        .selection-section { display: flex; flex: 3; gap: 12px; align-items: center; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        
+        /* Бледный неактивный режим для зрителя */
         .selection-section.viewer-empty { opacity: 0.15; pointer-events: none; filter: grayscale(1); }
+
         .side-container { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
         .circles-grid { display: flex; flex-wrap: wrap; justify-content: center; align-content: center; gap: 12px; width: 100%; }
-        .circle-select { width: clamp(45px, 10vw, 80px); height: clamp(45px, 10vw, 80px); border-radius: 50%; border: 3px solid rgba(255,255,255,0.2); cursor: pointer; } 
-        .chosen-team-btn { width: 100%; height: 90%; border-radius: 20px; border: none; font-weight: 900; font-size: clamp(14px, 3.2vw, 22px); cursor: pointer; text-transform: uppercase; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .circle-select { width: clamp(50px, 11vw, 85px); height: clamp(50px, 11vw, 85px); border-radius: 50%; border: 3px solid rgba(255,255,255,0.2); cursor: pointer; } 
+        .circle-select.blocked { opacity: 0.05 !important; cursor: not-allowed; pointer-events: none; }
+        
+        /* Анимация выбора команд */
+        .chosen-team-btn { 
+            width: 100%; height: 90%; border-radius: 20px; border: none; font-weight: 900; 
+            font-size: clamp(16px, 3.5vw, 24px); cursor: pointer; text-transform: uppercase; 
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        body.viewer-mode .chosen-team-btn { cursor: default; }
+
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
 
         .goal-section { display: flex; flex: 0.001; gap: 12px; opacity: 0; pointer-events: none; overflow: hidden; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
         .goal-btn { flex: 1; border: none; border-radius: 20px; cursor: pointer; font-weight: 900; font-size: 34px; box-shadow: 0 6px 0 rgba(0,0,0,0.3); } 
         .goal-btn:disabled { opacity: var(--disabled-opacity) !important; filter: grayscale(0.8); box-shadow: none; transform: translateY(6px); }
+        .goal-btn:active:not(:disabled) { box-shadow: 0 0 0 rgba(0,0,0,0); transform: translateY(6px); }
 
         .is-ready .selection-section { flex: 1.2; }
         .is-ready .goal-section { flex: 3; opacity: 1; display: flex; pointer-events: auto; }
 
+        /* Footer */
+        .footer-area { flex: 0 0 auto; display: flex; flex-direction: column; gap: 8px; padding-top: 6px; }
+        .row-3 { display: flex; gap: 8px; width: 100%; }
+        .btn-base { background: #1e293b; border: 1px solid #334155; color: white; border-radius: 10px; font-size: 12px; padding: 15px 4px; flex: 1; cursor: pointer; text-transform: uppercase; font-weight: 700; } 
+        .btn-base:disabled { opacity: var(--disabled-opacity) !important; cursor: default; pointer-events: none; }
+        .full-btn { width: 100%; background: var(--accent); color: var(--bg); border: none; border-radius: 16px; padding: 20px 15px; font-size: 20px; font-weight: 900; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: all 0.1s; } 
+        .full-btn:active:not(:disabled) { transform: scale(0.98); box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        
+        .btn-main-text { display: block; font-size: 1.1em; margin-bottom: 4px; } 
+        .btn-subtext { display: block; font-size: 11px; font-weight: normal; opacity: 0.6; text-transform: none; margin-top: 4px; line-height: 1.2; letter-spacing: 0; color: inherit; } 
+
+        /* Modals & Lobby Background */
         .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.98); z-index: 1000; padding: 10px; display: flex; align-items: center; justify-content: center; }
+        
+        .lobby-bg { background: radial-gradient(circle at 50% 0%, #1e3a8a 0%, var(--bg) 80%); }
+        .lobby-bg::before { content: ''; position: absolute; inset: 0; opacity: 0.03; pointer-events: none; background-image: linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px); background-size: 20px 20px; }
+        
+        .hidden { display: none !important; }
         .modal-content { position: relative; background: var(--card); border-radius: 25px; padding: 25px; text-align: center; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); width: 95%; max-width: 500px; max-height: 94vh; display: flex; flex-direction: column; overflow: hidden; }
         .scrollable { flex: 1; overflow-y: auto; overflow-x: hidden; margin-top: 10px; padding-right: 5px; }
-
-        .btn-base { background: #1e293b; border: 1px solid #334155; color: white; border-radius: 10px; font-size: 12px; padding: 15px 4px; flex: 1; cursor: pointer; text-transform: uppercase; font-weight: 700; } 
-        .full-btn { width: 100%; background: var(--accent); color: var(--bg); border: none; border-radius: 16px; padding: 20px 15px; font-size: 20px; font-weight: 900; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: all 0.1s; } 
-
-        .pencil-btn { background: var(--card); border: 1px solid var(--accent); color: var(--accent); border-radius: 8px; padding: 4px 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s; }
-        .pencil-btn:active { transform: scale(0.9); }
-
+        
+        /* Stats Styles */
         .stats-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 20px; } 
-        .stats-table th { color: var(--gray); font-size: 9px; padding: 8px 2px; border-bottom: 1px solid #334155; text-transform: uppercase; } 
-        .stats-table td { padding: 8px 2px; border-bottom: 1px solid rgba(255,255,255,0.05); text-align: center; } 
+        .stats-table th { color: var(--gray); font-size: 9px; padding: 10px 2px; border-bottom: 1px solid #334155; } 
+        .stats-table td { padding: 10px 2px; border-bottom: 1px solid rgba(255,255,255,0.05); text-align: center; } 
+        .team-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; border: 1px solid rgba(255,255,255,0.1); } 
         
-        .player-link { color: var(--accent); cursor: pointer; font-weight: bold; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 4px; }
-        .player-input { width: 100%; background: #0f172a; border: 1px solid #475569; color: #fff; padding: 10px; border-radius: 8px; font-size: 13px; box-sizing: border-box; outline: none; margin-bottom: 5px; } 
+        .stats-page-btn { background: none; border: none; color: var(--accent); font-size: 28px; cursor: pointer; padding: 0 12px; } 
+        .stats-page-btn:disabled { color: var(--gray); cursor: default; opacity: 0.3; }
 
-        .footer-area { flex: 0 0 auto; display: flex; flex-direction: column; gap: 8px; padding-top: 6px; }
+        /* History Card */
+        .history-card { background: rgba(255,255,255,0.02); border-radius: 12px; padding: 10px 14px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.05); position: relative; } 
+        .h-main-row { display: grid; grid-template-columns: 1fr 60px 1fr; align-items: center; margin-bottom: 6px; }
+        .h-team-l { text-align: left; font-weight: 800; font-size: 12px; } 
+        .h-team-r { text-align: right; font-weight: 800; font-size: 12px; } 
+        .h-score { text-align: center; font-weight: 900; font-size: 20px; color: var(--accent); } 
+        .h-details-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 11px; color: #94a3b8; } 
         
+        /* Кнопки редактора */
+        .admin-edit-btn { color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: center; background: var(--card); border: 1px solid var(--accent); border-radius: 8px; color: var(--accent); font-size: 11px; padding: 8px 14px;}
+        .admin-edit-match { background: var(--card); border: 1px solid var(--accent); border-radius: 8px; color: var(--accent); font-size: 14px; cursor: pointer; padding: 4px 8px; display: inline-flex; align-items: center; justify-content: center; margin-left: 12px;} 
+
+        /* Settings Grid */
+        .settings-row { display: grid; grid-template-columns: 2.5fr 35px 50px 35px; align-items: center; gap: 4px; margin-bottom: 10px; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 12px; width: 100%; box-sizing: border-box; } 
+        .settings-checkbox-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; background: rgba(255,255,255,0.03); padding: 14px; border-radius: 12px; cursor: pointer; } 
+        .setting-label { font-size: 12px; color: #94a3b8; text-align: left; font-weight: 700; text-transform: uppercase; } 
+        .step-btn { background: #2d3748; border: 1px solid #475569; color: white; border-radius: 6px; height: 36px; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; } 
+        .step-value { background: #0f172a; height: 36px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; } 
+        .custom-checkbox { width: 26px; height: 26px; border: 2px solid var(--gray); border-radius: 6px; display: flex; align-items: center; justify-content: center; } 
+        .checked .custom-checkbox { background: var(--success); border-color: var(--success); }
+        .checked .custom-checkbox::after { content: '✔'; font-size: 16px; font-weight: 900; color: var(--bg); } 
+        .settings-divider { height: 1px; border-bottom: 1px dashed #334155; margin: 16px 0; opacity: 0.4; } 
+
+        /* Rosters */
+        .player-row { display: flex; gap: 10px; padding: 6px 10px; align-items: center; } 
+        .player-num { font-size: 11px; color: var(--accent); font-weight: 800; min-width: 20px; display: inline-block; } 
+        .player-input { flex: 1; background: #0f172a; border: 1px solid #475569; color: #fff; padding: 10px; border-radius: 8px; font-size: 12px; box-sizing: border-box; outline: none; } 
+        .player-input:focus { border-color: var(--accent); }
+        .p-btn { background: #2d3748; border: 1px solid #475569; color: #fff; padding: 14px 6px; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s;} 
+        .p-btn:active { transform: scale(0.95); }
+
         #loadingOverlay { position: fixed; inset: 0; background: var(--bg); z-index: 20000; display: flex; align-items: center; justify-content: center; flex-direction: column; color: var(--accent); font-weight: 900; font-size: 20px; text-transform: uppercase; letter-spacing: 2px; }
         .spinner { width: 40px; height: 40px; border: 4px solid rgba(56, 189, 248, 0.2); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
-        
-        .row-3 { display: flex; gap: 8px; width: 100%; }
-        .hidden { display: none !important; }
-
-        @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-
-        /* ВОССТАНОВЛЕННЫЕ СТИЛИ (Дизайн 16 версии) */
-        .p-btn { background: var(--card); border: 1px solid rgba(255,255,255,0.1); color: var(--text); border-radius: 12px; padding: 15px 5px; font-size: 14px; font-weight: bold; cursor: pointer; text-transform: uppercase; transition: all 0.2s; }
-        .p-btn:active { transform: scale(0.95); }
-        
-        .history-card { background: rgba(255,255,255,0.03); border-radius: 16px; padding: 15px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.05); }
-        .h-main-row { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: center; margin-bottom: 10px; }
-        .h-score { font-size: 24px; font-weight: 900; color: var(--accent); background: rgba(0,0,0,0.2); padding: 5px 15px; border-radius: 12px; }
-        .h-team-l { text-align: right; font-weight: bold; font-size: 14px; }
-        .h-team-r { text-align: left; font-weight: bold; font-size: 14px; }
-        .h-details-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 11px; color: var(--gray); }
-        .h-goals-l { text-align: right; }
-        .h-goals-r { text-align: left; }
-        .team-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 6px; }
-        
-        .settings-row { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 10px 15px; border-radius: 12px; margin-bottom: 8px; }
-        .settings-checkbox-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; cursor: pointer; background: rgba(255,255,255,0.03); border-radius: 12px; margin-bottom: 8px; }
-        .custom-checkbox { width: 24px; height: 24px; border-radius: 6px; border: 2px solid var(--gray); transition: all 0.2s; position: relative; }
-        .settings-checkbox-row.checked .custom-checkbox { background: var(--success); border-color: var(--success); }
-        .settings-checkbox-row.checked .custom-checkbox::after { content: ''; position: absolute; left: 7px; top: 3px; width: 6px; height: 12px; border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg); }
-        
-        .step-btn { background: rgba(255,255,255,0.1); border: none; color: white; width: 32px; height: 32px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .step-value { font-weight: 900; font-size: 16px; min-width: 40px; text-align: center; }
-        .setting-label { font-weight: bold; font-size: 13px; }
-        .settings-divider { height: 1px; background: rgba(255,255,255,0.05); margin: 15px 0; }
-        
-        .stats-page-btn { background: var(--card); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 5px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .stats-page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-        
-        .player-row { display: flex; gap: 10px; padding: 6px 10px; align-items: center; } 
-        .player-num { font-size: 11px; color: var(--accent); font-weight: 800; min-width: 20px; } 
     </style>
 </head>
 <body class="viewer-mode">
 
-    <div id="loadingOverlay"><div class="spinner"></div><span>Синхронизация...</span></div>
+    <div id="loadingOverlay"><div class="spinner"></div><span>Загрузка...</span></div>
     <datalist id="globalPlayersList"></datalist>
 
     <svg style="display: none;">
         <symbol id="icon-eye" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></symbol>
         <symbol id="icon-lock" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm9 14H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/></symbol>
         <symbol id="icon-settings" viewBox="0 0 24 24"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.73,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.06,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.43-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.49-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></symbol>
+        <!-- Sports Soccer -->
         <symbol id="icon-ball" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm6.2 5.09c1.02 1.34 1.64 2.99 1.76 4.77l-4.32 1.77-1.53-3.69 4.09-2.85zm-4.34-1.39l-4.14 2.89L8.14 5.7c1.2-.5 2.52-.77 3.86-.77 1.33 0 2.62.27 3.86.76zM4.04 7.09l4.08 2.85-1.52 3.69L2.28 11.8c.11-1.74.72-3.37 1.76-4.71zm.88 10.3c-.78-1.08-1.36-2.36-1.66-3.75l4.5-1.55 2.05 3.66-2.52 3.49c-.89-.47-1.69-1.09-2.37-1.85zm7.08 3.53c-1.31 0-2.57-.26-3.75-.73l2.42-3.34 2.42 3.34c-1.18.47-2.44.73-3.09.73zm4.61-1.68c-.68.76-1.48 1.38-2.37 1.85l-2.52-3.49 2.05-3.66 4.5 1.55c-.3 1.39-.88 2.67-1.66 3.75zM12 14.86l-2.37-4.27 2.37-1.65 2.37 1.65L12 14.86z"/></symbol>
+        <!-- Shoe Cleats -->
         <symbol id="icon-pass-shoe" viewBox="0 0 24 24"><path d="M21.41 12.31L13 3.9C12.35 3.25 11.23 3 10.29 3.42L4 6.2C3.12 6.59 2.59 7.54 2.81 8.49L3 9.3C3.17 10 3.73 10.5 4.43 10.65L9.63 11.72L12.57 14.65C12.92 15 13.43 15.07 13.84 14.83L15.5 13.86L18.42 16.78C18.81 17.17 19.45 17.17 19.84 16.78L21.41 15.15C21.8 14.75 21.8 14.12 21.41 13.73L19.5 12.06L21.41 12.31ZM9.5 18C8.67 18 8 18.67 8 19.5C8 20.33 8.67 21 9.5 21C10.33 21 11 20.33 11 19.5C11 18.67 10.33 18 9.5 18ZM13.5 18C12.67 18 12 18.67 12 19.5C12 20.33 12.67 21 13.5 21C14.33 21 15 20.33 15 19.5C15 18.67 14.33 18 13.5 18ZM5.5 18C4.67 18 4 18.67 4 19.5C4 20.33 4.67 21 5.5 21C6.33 21 7 20.33 7 19.5C7 18.67 6.33 18 5.5 18ZM17.5 18C16.67 18 16 18.67 16 19.5C16 20.33 16.67 21 17.5 21C18.33 21 19 20.33 19 19.5C19 18.67 18.33 18 17.5 18Z"/></symbol>
+        <!-- Calendar -->
         <symbol id="icon-calendar" viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM9 14H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2zm-8 4H7v-2h2v2zm4 0h-2v-2h2v2zm4 0h-2v-2h2v2z"/></symbol>
+        <!-- Run -->
         <symbol id="icon-run" viewBox="0 0 24 24"><path d="M13.49 5.48c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm-3.6 13.9l1-4.4 2.1 2v6h2v-7.5l-2.1-2 .6-3c1.3 1.5 3.3 2.5 5.5 2.5v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1l-5.2 2.2v4.7h2v-3.4l1.8-.7-1.6 8.1-4.9-1-.4 2 7 1.4z"/></symbol>
-        <symbol id="icon-stopwatch" viewBox="0 0 24 24"><path d="M15 1H9v2h6V1zm-4 13h2V8h-2v6zm8.03-6.61l1.42-1.42c-.43-.51-.9-.99-1.41-1.41l-1.42 1.42C16.07 4.74 14.12 4 12 4c-4.97 0-9 4.03-9 9s4.02 9 9 9 9-4.03 9-9c0-2.12-.74-4.07-1.97-5.61zM12 20c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></symbol>
+        <!-- Stopwatch -->
+        <symbol id="icon-timer" viewBox="0 0 24 24"><path d="M15 1H9v2h6V1zm-4 13h2V8h-2v6zm8.03-6.61l1.42-1.42c-.43-.51-.9-.99-1.41-1.41l-1.42 1.42C16.07 4.74 14.12 4 12 4c-4.97 0-9 4.03-9 9s4.02 9 9 9 9-4.03 9-9c0-2.12-.74-4.07-1.97-5.61zM12 20c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></symbol>
+        <!-- Telegram -->
         <symbol id="icon-telegram" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 6.63 5.37 12 12 12s12-5.37 12-12C24 5.37 18.63 0 12 0zm5.89 8.22l-1.97 9.28c-.14.66-.54.82-1.08.51l-3-2.21-1.45 1.39c-.14.18-.36.22-.55.22l.19-2.85 5.18-4.68c.22-.2-.05-.31-.35-.12l-6.4 4.02-2.76-.86c-.6-.18-.62-.6.12-.89l10.79-4.16c.5-.18.94.1.77.84z"/></symbol>
         <symbol id="icon-trash" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></symbol>
         <symbol id="icon-edit" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></symbol>
@@ -217,67 +266,27 @@
         <symbol id="icon-star" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></symbol>
     </svg>
 
-    <div class="header">
-        <button id="lockBtn" class="head-icon border-blue" onclick="window.openWelcomeModal()">
-            <svg class="icon" id="lockEmoji"><use href="#icon-eye"></use></svg><span id="lockText">ИГРОК</span>
-        </button>
-        <h1>Футбол на Манеже</h1>
-        <button id="settingsBtn" class="head-icon border-yellow" onclick="window.openSettings()">
-            <svg class="icon"><use href="#icon-settings"></use></svg>
-        </button>
-    </div>
-
-    <div class="game-meta" id="gameMeta">Загрузка...</div>
-    <div id="matchStatusLabel" style="display: none;"></div>
-
-    <div class="scoreboard-area">
-        <div class="score-plate">
-            <div id="score">0 : 0</div>
-            <div id="lastGoalInfo"><div id="lastGoalL" class="h-goals-l"></div><div id="lastGoalR" class="h-goals-r"></div></div>
-        </div>
-        <div class="timer-row">
-            <div class="timer-plate"><div id="timer">00:00</div></div>
-            <div id="otTimerPlate" class="timer-plate"><div id="otTimer">00:00</div></div>
-            <div class="ot-wrapper">
-                <button id="otToggle" class="ot-toggle-btn" onclick="window.toggleOTManual()">
-                    <svg class="icon ot-icon"><use href="#icon-stopwatch"></use></svg>
-                </button>
-                <div class="ot-label">ОВЕРТАЙМ</div>
-            </div>
-        </div>
-        <div id="noGamesMessage" style="display: none; text-align: center; font-weight: 900; font-size: 20px; color: var(--gray); margin-top: 20px; padding: 25px; background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px dashed rgba(255,255,255,0.15);">⚪ В данный момент игр нет</div>
-    </div>
-
-    <div class="game-main-area" id="mainGameContainer">
-        <div class="selection-section">
-            <div class="side-container"><div id="leftCircles" class="circles-grid"></div><div id="leftActive" class="hidden"></div></div>
-            <div class="side-container"><div id="rightCircles" class="circles-grid"></div><div id="rightActive" class="hidden"></div></div>
-        </div>
-        <div id="goalControls" class="goal-section">
-            <button id="goal1" class="goal-btn" onclick="window.addGoal(1)" disabled>ГОЛ</button>
-            <button id="goal2" class="goal-btn" onclick="window.addGoal(2)" disabled>ГОЛ</button>
-        </div>
-    </div>
-
-    <div class="footer-area">
-        <div class="row-3" id="adminControlsRow">
-            <button id="resetBtn" class="btn-base" onclick="window.handleReset()" disabled>сброс</button>
-            <button id="undoBtn" class="btn-base" onclick="window.openUndoModal()" disabled>отменить</button>
-            <button id="finishBtn" class="btn-base" style="color:var(--danger)" onclick="window.openFinish()" disabled>завершить</button>
-        </div>
-        <button id="startBtn" class="full-btn" onclick="window.toggleTimer()" disabled>ВЫБЕРИТЕ КОМАНДЫ</button>
-        <button id="statsBtn" class="full-btn icon-btn" style="margin-top:5px; background:var(--card); color:var(--text); font-size:14px; padding: 14px;" onclick="window.renderCombinedStats()"><svg class="icon"><use href="#icon-stats"></use></svg> СТАТИСТИКА</button>
-    </div>
-
+    <!-- Главный хаб (Лобби) -->
     <div id="welcomeOverlay" class="overlay lobby-bg" style="z-index: 9999;">
         <div class="modal-content">
             <h2 style="color: var(--accent); margin-bottom: 25px; text-transform: uppercase; font-size: 24px;">Футбол на Манеже</h2>
-            <button class="full-btn" style="margin-bottom: 15px;" onclick="window.selectWelcomeMode('viewer')">ИГРОК</button>
-            <button class="full-btn" style="margin-bottom: 15px;" onclick="window.selectWelcomeMode('admin')">АДМИН</button>
+            
+            <button id="welcomeViewerBtn" class="full-btn" style="margin-bottom: 15px; padding: 18px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;" onclick="window.selectWelcomeMode('viewer')">
+                <span style="display: flex; align-items: center; gap: 6px;"><svg class="icon"><use href="#icon-eye"></use></svg> ИГРОК</span>
+                <span class="btn-subtext">Вам доступен просмотр игр и статистики</span>
+            </button>
+            <button id="welcomeAdminBtn" class="full-btn" style="margin-bottom: 15px; padding: 18px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;" onclick="window.selectWelcomeMode('admin')">
+                <span style="display: flex; align-items: center; gap: 6px;"><svg class="icon"><use href="#icon-lock"></use></svg> АДМИН</span>
+                <span class="btn-subtext">Создать чемпионат или войти для управления</span>
+            </button>
+            
             <div id="logoutBtnContainer" style="display:none; margin-top: 10px;">
                 <button class="btn-base" style="border: 1px solid var(--danger); color: var(--danger); width: 100%;" onclick="window.logout()">ВЫЙТИ ИЗ ЧЕМПИОНАТА</button>
             </div>
-            <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">v17.07 Pro • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel</div>
+            
+            <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
+                v17.08 Pro • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
+            </div>
         </div>
     </div>
 
@@ -457,7 +466,6 @@
             <h2 id="tourPlayerEditTitle" style="color:var(--accent); margin-top:0; margin-bottom:5px;">РЕДАКТОР ИГРОКОВ</h2>
             <div style="font-size:12px; color:var(--gray); margin-bottom:15px;">Изменения имен автоматически обновят историю матчей турнира. Если видите "?", замените на настоящее имя.</div>
             <button class="btn-base icon-btn" style="width:100%; margin-bottom:15px; background:var(--card); border:1px solid var(--accent); color:var(--accent);" onclick="window.openPlayerDB()"><svg class="icon"><use href="#icon-run"></use></svg> ВСЕ ИГРОКИ ТУРНИРА</button>
-            
             <div class="scrollable" id="tourPlayerEditContainer" style="text-align: left;"></div>
             <div class="row-3" style="margin-top: 15px;">
                 <button class="btn-base" style="background:var(--success)" onclick="window.saveTourPlayerEdit()">💾 СОХРАНИТЬ</button>
@@ -494,7 +502,18 @@
         </div>
     </div>
 
+    <div class="header">
+        <button id="lockBtn" class="head-icon" onclick="window.openWelcomeModal()">
+            <svg class="icon" id="lockEmoji"><use href="#icon-eye"></use></svg><span id="lockText">ИГРОК</span>
+        </button>
+        <h1>Футбол на Манеже</h1>
+        <button id="settingsBtn" class="head-icon" onclick="window.openSettings()">
+            <svg class="icon"><use href="#icon-settings"></use></svg>
+        </button>
+    </div>
+
 <script>
+/* === ENGINE CORE === */
 window.COLORS = { "Черные": "#000000", "Белые": "#ffffff", "Желтые": "#facc15", "Зеленые": "#22c55e", "Красные": "#ef4444", "Синие": "#3b82f6", "Разноцветные": "linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" };
 window.colorKeys = Object.keys(window.COLORS);
 window.audioCtx = null;
@@ -528,6 +547,7 @@ window.isFinishing = false;
 window.tSide = null; 
 window.tScorer = null; 
 
+// Состояние UI
 window.currentMvpDate = null;
 window.currentStatsPageIndex = 0;
 window.currentShareDate = null;
@@ -541,6 +561,7 @@ window._confirmCallback = null;
 window._promptCallback = null;
 window._promptDeleteCallback = null;
 
+// Сортировка БД игроков
 window.playerDbSortCol = 'points';
 window.playerDbSortDesc = true;
 window.playerDbStats = [];
@@ -665,37 +686,7 @@ window.startApp = function() {
     window.updateMatchStatusLabel();
 };
 
-window.initApp = async function() {
-    window.currentRoom = localStorage.getItem("mSmartPro_lastRoom");
-    window.currentRole = localStorage.getItem("mSmartPro_lastRole") || 'viewer';
-    
-    if (window.currentRoom) {
-        try {
-            const roomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', window.currentRoom);
-            const snap = await window.getDoc(roomRef);
-            if (snap.exists()) {
-                window.applyDataFromFirebase(snap.data());
-                document.getElementById('loadingOverlay').style.display = 'none';
-                window.listenToRoom();
-                window.startApp();
-            } else {
-                localStorage.removeItem("mSmartPro_lastRoom");
-                window.currentRoom = null;
-                window.config = JSON.parse(JSON.stringify(window.defaultConfig));
-                document.getElementById('loadingOverlay').style.display = 'none';
-                window.openWelcomeModal();
-            }
-        } catch(e) {
-            console.error("Fetch error:", e);
-            document.getElementById('loadingOverlay').innerHTML = `<span style="color:var(--danger); font-size:13px; text-align:center; padding:20px;">⚠️ Ошибка загрузки турнира.<br><br>Проверьте права доступа Firebase (Rules).</span><button onclick="localStorage.removeItem('mSmartPro_lastRoom'); location.reload();" style="margin-top:15px; padding:10px; background:var(--card); color:white; border:1px solid var(--gray); border-radius:8px;">Сбросить вход</button>`;
-        }
-    } else {
-        window.config = JSON.parse(JSON.stringify(window.defaultConfig));
-        document.getElementById('loadingOverlay').style.display = 'none';
-        window.openWelcomeModal();
-    }
-};
-
+/* --- СИСТЕМНЫЕ ОКНА --- */
 window.showConfirm = function(msg, callback) {
     document.getElementById('sysConfirmMsg').innerText = msg;
     window._confirmCallback = callback;
@@ -748,6 +739,7 @@ window.snapshotTourRoster = function(date) {
     window.setStore("tourRosters", window.tourRosters);
 };
 
+/* --- БАЗА ИГРОКОВ --- */
 window.updateGlobalPlayersList = function() {
     let names = new Set(window.globalPlayers || []);
     const addName = (n) => { 
@@ -974,6 +966,18 @@ window.addGlobalPlayer = function() {
     });
 };
 
+window.logout = function() {
+    window.showConfirm("Выйти из аккаунта и покинуть чемпионат?", () => {
+        window.currentRoom = null;
+        window.currentRole = 'viewer';
+        localStorage.removeItem("mSmartPro_lastRoom");
+        localStorage.removeItem("mSmartPro_lastRole");
+        window.config = JSON.parse(JSON.stringify(window.defaultConfig));
+        window.updateWelcomeButtons();
+        window.openWelcomeModal();
+    });
+};
+
 window.updateWelcomeButtons = function() {
     const adminBtn = document.getElementById('welcomeAdminBtn');
     const viewerBtn = document.getElementById('welcomeViewerBtn');
@@ -985,9 +989,6 @@ window.updateWelcomeButtons = function() {
         logoutContainer.style.display = window.currentRoom ? 'block' : 'none';
     }
     
-    viewerBtn.innerHTML = `<span style="display: flex; align-items: center; gap: 6px;"><svg class="icon"><use href="#icon-eye"></use></svg> ИГРОК</span><span class="btn-subtext" style="margin-top: 0; opacity: 0.8; font-size: 12px; color: inherit;">Вам доступен просмотр игр и статистики</span>`;
-    adminBtn.innerHTML = `<span style="display: flex; align-items: center; gap: 6px;"><svg class="icon"><use href="#icon-lock"></use></svg> АДМИН</span><span class="btn-subtext" style="margin-top: 0; opacity: 0.9; font-size: 12px; color: inherit;">Создать чемпионат или войти для управления</span>`;
-
     if (!window.currentRoom) {
         viewerBtn.style.background = 'var(--card)';
         viewerBtn.style.color = 'var(--text)';
@@ -1465,8 +1466,8 @@ window.updateLockUI = function() {
         if(statsBtn) {
             statsBtn.style.background = 'var(--accent)';
             statsBtn.style.color = 'var(--bg)';
-            statsBtn.style.fontSize = '18px';
-            statsBtn.style.padding = '18px 15px';
+            statsBtn.style.fontSize = '20px';
+            statsBtn.style.padding = '20px 15px';
         }
     } else {
         document.body.classList.remove('viewer-mode');
@@ -1767,44 +1768,84 @@ window.setMvp = function(name) {
     window.renderCombinedStats();
 };
 
-window.changeStatsPageIndex = (dir) => { 
-    window.currentStatsPageIndex = (window.currentStatsPageIndex || 0) + dir; 
-    window.renderCombinedStats(); 
+window.changeStatsPage = function(dir) {
+    window.currentStatsPageIndex += dir;
+    window.renderCombinedStats();
 };
 
 window.renderCombinedStats = function() {
-    const cont = document.getElementById('combinedStatsContainer');
+    const cont = document.getElementById('combinedStatsContainer'); 
     cont.innerHTML = "";
+
     const grouped = {}; 
     window.matches.forEach(m => { if (!grouped[m.date]) grouped[m.date] = []; grouped[m.date].push(m); });
     Object.keys(window.customTours).forEach(dt => { if (!grouped[dt]) grouped[dt] = []; });
+
     const statsDates = Object.keys(grouped).sort((a,b) => b.split('.').reverse().join('') - a.split('.').reverse().join(''));
-    if (!statsDates.length) { cont.innerHTML = "<p style='color:var(--gray); margin-top:30px;'>История пуста</p>"; window.openModal('statsModal'); return; }
-    
+
+    if (!statsDates.length) { 
+        let emptyHTML = "<p style='opacity:0.3; margin-top:30px;'>История пуста</p>";
+        if (window.currentRole === 'admin') { emptyHTML += `<button class="btn-base icon-btn" style="margin-top:15px; width:100%; padding:12px;" onclick="window.addNewTournament()"><svg class="icon"><use href="#icon-plus"></use></svg> ДОБАВИТЬ ТУРНИР</button>`; }
+        cont.innerHTML = emptyHTML;
+        window.openModal('statsModal');
+        return; 
+    }
+
     if (window.currentStatsPageIndex < 0) window.currentStatsPageIndex = 0;
     if (window.currentStatsPageIndex >= statsDates.length) window.currentStatsPageIndex = statsDates.length - 1;
 
-    const date = statsDates[window.currentStatsPageIndex || 0];
+    const date = statsDates[window.currentStatsPageIndex];
     const dayMatches = grouped[date] || [];
     let tourMvps = window.getStore("tourMvps", {});
-    
+
+    const allDatesAsc = Object.keys(grouped).sort((a,b) => a.split('.').reverse().join('') - b.split('.').reverse().join(''));
+    const tourNumber = allDatesAsc.indexOf(date) + 1;
+
     let stats = {};
     dayMatches.forEach(m => {
         [m.t1, m.t2].forEach(t => { if(!stats[t]) stats[t] = {n:t,i:0,v:0,nch:0,p:0,gz:0,gp:0,o:0}; });
-        stats[m.t1].i++; stats[m.t2].i++; stats[m.t1].gz += m.s1; stats[m.t1].gp += m.s2; stats[m.t2].gz += m.s2; stats[m.t2].gp += m.s1;
-        if(m.s1 > m.s2) { stats[m.t1].o+=3; stats[m.t1].v++; stats[m.t2].p++; } else if(m.s2 > m.s1) { stats[m.t2].o+=3; stats[m.t2].v++; stats[m.t1].p++; } else { stats[m.t1].o++; stats[m.t2].o++; stats[m.t1].nch++; stats[m.t2].nch++; }
+        if(stats[m.t1]) { stats[m.t1].i++; stats[m.t1].gz += m.s1; stats[m.t1].gp += m.s2; }
+        if(stats[m.t2]) { stats[m.t2].i++; stats[m.t2].gz += m.s2; stats[m.t2].gp += m.s1; }
+        if(m.s1 > m.s2) { 
+            if(stats[m.t1]) { stats[m.t1].o+=3; stats[m.t1].v++; }
+            if(stats[m.t2]) { stats[m.t2].p++; }
+        } 
+        else if(m.s2 > m.s1) { 
+            if(stats[m.t2]) { stats[m.t2].o+=3; stats[m.t2].v++; }
+            if(stats[m.t1]) { stats[m.t1].p++; }
+        } 
+        else { 
+            if(stats[m.t1]) { stats[m.t1].o++; stats[m.t1].nch++; }
+            if(stats[m.t2]) { stats[m.t2].o++; stats[m.t2].nch++; }
+        }
     });
+
     if (window.customTours[date]) stats = window.customTours[date];
 
     let playerStats = {};
     let currentMvp = tourMvps[date];
-    let activeRosters = window.tourRosters[date] ? window.tourRosters[date].rosters : window.config.rosters;
+    let activeTeams = [];
+    let activeRosters = {};
     
-    Object.keys(activeRosters).forEach(team => {
-        activeRosters[team].forEach(p => {
-            let pName = (p || '').toString().trim();
-            if(pName && pName !== '?') { playerStats[pName] = { name: pName, team: team, g: 0, a: 0, og: 0 }; }
-        });
+    if (window.tourRosters[date]) {
+        activeTeams = window.tourRosters[date].teams || [];
+        activeRosters = window.tourRosters[date].rosters || {};
+    } else {
+        let playedTeams = new Set();
+        dayMatches.forEach(m => { playedTeams.add(m.t1); playedTeams.add(m.t2); });
+        if (window.customTours[date]) { Object.keys(window.customTours[date]).forEach(t => playedTeams.add(t)); }
+        window.config.teams.forEach(t => playedTeams.add(t)); 
+        activeTeams = Array.from(playedTeams);
+        activeRosters = window.config.rosters || {};
+    }
+    
+    activeTeams.forEach(team => {
+        if(activeRosters[team]) {
+            activeRosters[team].forEach(p => {
+                let pName = (p || '').toString().trim();
+                if(pName && pName !== '?') { playerStats[pName] = { name: pName, team: team, g: 0, a: 0, og: 0 }; }
+            });
+        }
     });
 
     dayMatches.forEach(m => {
@@ -1834,39 +1875,91 @@ window.renderCombinedStats = function() {
         }
     });
 
-    let h = `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;"><button class="stats-page-btn" ${window.currentStatsPageIndex === statsDates.length - 1 ? 'disabled' : ''} onclick="window.changeStatsPageIndex(1)">◀</button><div style="font-weight:900; font-size:16px; display:flex; align-items:center; gap:6px; color:var(--text); text-transform:uppercase;"><svg class="icon-inline" style="width:20px;"><use href="#icon-calendar"></use></svg> ТУРНИР ${date}</div><button class="stats-page-btn" ${window.currentStatsPageIndex === 0 ? 'disabled' : ''} onclick="window.changeStatsPageIndex(-1)">▶</button></div>`;
+    let h = `<div>`;
     
-    if (window.currentRole === 'admin') h += `<div style="display:flex; gap:5px; margin-bottom:15px; justify-content:center; flex-wrap:wrap;"><button class="pencil-btn border-yellow" style="padding:6px 12px; font-size:11px;" onclick="window.openPlayerDB()"><svg class="icon" style="margin-right:4px;"><use href="#icon-run"></use></svg> ВСЕ ИГРОКИ</button><button class="pencil-btn border-blue" style="padding:6px 12px; color:var(--success); font-size:11px;" onclick="window.addNewTournament()"><svg class="icon"><use href="#icon-plus"></use></svg> ТУРНИР</button><button class="pencil-btn border-blue" style="padding:6px 12px;" onclick="window.openShareModal('${date}')"><svg class="icon"><use href="#icon-share"></use></svg></button><button class="pencil-btn" style="padding:6px 12px; color:var(--danger); border-color:var(--danger);" onclick="window.deleteDay('${date}')"><svg class="icon"><use href="#icon-trash"></use></svg></button></div>`;
-    
-    h += `<div style="text-align:left; font-weight:800; color:var(--accent); font-size:12px; margin-bottom:10px; text-transform:uppercase;">ТАБЛИЦА ТУРНИРА   ${window.currentRole === 'admin' ? `<button class="pencil-btn border-blue" style="padding:3px 6px;" onclick="window.openTourEditor('${date}')"><svg class="icon" style="width:12px;"><use href="#icon-edit"></use></svg></button>` : ''}</div>`;
-    h += `<table class="stats-table"><thead><tr><th style="text-align:left">КОМАНДА</th><th>И</th><th>В</th><th>Н</th><th>П</th><th>ГЗ</th><th>ГП</th><th>+/-</th><th>О</th></tr></thead><tbody>${Object.values(stats).sort((a,b)=>b.o-a.o || (b.gz-b.gp)-(a.gz-a.gp)).map(t=>`<tr><td style="text-align:left"><div class="team-dot" style="background:${window.COLORS[t.n]||'var(--gray)'}"></div><b>${t.n}</b></td><td>${t.i}</td><td>${t.v}</td><td>${t.nch}</td><td>${t.p}</td><td>${t.gz}</td><td>${t.gp}</td><td>${t.gz-t.gp}</td><td style="color:var(--accent); font-weight:900; font-size: 14px;">${t.o}</td></tr>`).join('')}</tbody></table>`;
-    
-    h += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;"><div style="font-weight:800; color:var(--accent); font-size:12px; text-transform:uppercase;">СТАТИСТИКА ИГРОКОВ   ${window.currentRole === 'admin' ? `<button class="pencil-btn border-blue" style="padding:3px 6px;" onclick="window.openTourPlayerEditor('${date}')"><svg class="icon" style="width:12px;"><use href="#icon-edit"></use></svg></button>` : ''}</div>`;
-    if (window.currentRole === 'admin') h += `<button class="pencil-btn border-yellow" style="padding:4px 8px; font-size:10px;" onclick="window.openMvpSelector('${date}')"><svg class="icon"><use href="#icon-star"></use></svg> MVP ТУРНИРА</button>`;
-    h += `</div>`;
+    h += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <button class="stats-page-btn" ${window.currentStatsPageIndex === statsDates.length - 1 ? 'disabled' : ''} onclick="window.changeStatsPage(1)">◀</button>
+            <div style="font-size:18px; font-weight:900; text-transform:uppercase; color:var(--text); display:flex; align-items:center; gap:6px;"><svg class="icon-inline" style="width:24px;height:24px;"><use href="#icon-calendar"></use></svg> ТУРНИР #${tourNumber} <span style="color:var(--accent); font-size:14px; margin-left:4px;">${date}</span></div>
+            <button class="stats-page-btn" ${window.currentStatsPageIndex === 0 ? 'disabled' : ''} onclick="window.changeStatsPage(-1)">▶</button>
+          </div>`;
 
-    Object.keys(activeRosters).forEach(team => {
-        let pArr = Object.values(playerStats).filter(p => p.team === team).sort((a,b)=>(b.g+b.a)-(a.g+a.a) || b.g-a.g);
-        if(pArr.length > 0) { 
-            h += `<div style="background:${window.COLORS[team]}; color:${(team==='Белые'||team==='Желтые')?'#000':'#fff'}; padding:6px 10px; font-size:10px; font-weight:900; border-radius:8px 8px 0 0; margin-top:10px;">${team.toUpperCase()}</div><table class="stats-table" style="background:rgba(255,255,255,0.02);"><tbody>${pArr.map(p=>{
-                let mvpBadge = currentMvp === p.name ? `<span style="background:var(--accent); color:var(--bg); padding:2px 4px; border-radius:4px; font-size:9px; font-weight:900; margin-left:6px; display:inline-flex; align-items:center; gap:2px; vertical-align:middle; line-height:1;"><svg class="icon" style="width:10px;height:10px;"><use href="#icon-star"></use></svg> MVP</span>` : '';
-                let ogText = p.og > 0 ? ` <span style="color:var(--danger); font-size:10px; font-weight:normal;">(${p.og}-АГ)</span>` : '';
-                return `<tr><td style="text-align:left; padding-left:10px;"><b>${p.name}</b>${mvpBadge}</td><td style="width:40px; text-align:center; font-weight:bold;"><svg class="icon-inline" style="width:12px; margin-right:4px;"><use href="#icon-ball"></use></svg>${p.g}${ogText}</td><td style="width:40px; text-align:center;"><svg class="icon-inline" style="width:12px; margin-right:4px;"><use href="#icon-pass-shoe"></use></svg>${p.a}</td></tr>`;
-            }).join('')}</tbody></table>`; 
+    if (window.currentRole === 'admin') {
+        h += `<div style="display:flex; gap:5px; margin-bottom:15px; justify-content:center; flex-wrap:wrap;">
+                <button class="admin-edit-btn icon-btn" style="width:auto; padding:8px 14px; font-size:11px; background:var(--card); border:1px solid #facc15; border-radius:8px; color:#facc15;" onclick="window.openPlayerDB()"><svg class="icon"><use href="#icon-run"></use></svg> ВСЕ ИГРОКИ ТУРНИРА</button>
+                <button class="admin-edit-btn icon-btn" style="width:auto; padding:8px 14px; font-size:11px; background:var(--card); border:1px solid var(--success); border-radius:8px; color:var(--success);" onclick="window.addNewTournament()"><svg class="icon"><use href="#icon-plus"></use></svg> ТУРНИР</button>
+                <button class="admin-edit-btn icon-btn" style="width:auto; padding:8px 14px; font-size:11px; background:var(--card); border:1px solid var(--accent); border-radius:8px; color:var(--accent);" onclick="window.openShareModal('${date}')"><svg class="icon"><use href="#icon-share"></use></svg> ПОДЕЛИТЬСЯ</button>
+                <button class="admin-edit-btn icon-btn" style="width:auto; padding:8px 14px; font-size:13px; background:var(--card); border:1px solid var(--danger); border-radius:8px; color:var(--danger);" onclick="window.deleteDay('${date}')"><svg class="icon"><use href="#icon-trash"></use></svg></button>
+              </div>`;
+    }
+
+    if (Object.keys(stats).length > 0) {
+        h += `<div style="border: 1px dashed var(--gray); border-radius: 12px; padding: 12px; margin-bottom: 15px;">`;
+        h += `<div style="font-weight:800; color:var(--accent); font-size:12px; text-align:left; margin-bottom:10px; text-transform:uppercase;">Таблица турнира`;
+        if (window.currentRole === 'admin') h += `&nbsp;&nbsp;&nbsp;<button class="admin-edit-btn icon-btn" style="background:var(--card); border:1px solid var(--accent); border-radius:8px; padding:4px 10px; color:var(--accent); display:inline-flex; vertical-align:middle; cursor:pointer;" onclick="window.openTourEditor('${date}')"><svg class="icon" style="width:14px; height:14px;"><use href="#icon-edit"></use></svg></button>`;
+        h += `</div>`;
+        h += `<table class="stats-table" style="margin-bottom:0;"><thead><tr><th style="text-align:left">КОМАНДА</th><th>И</th><th>В</th><th>Н</th><th>П</th><th>ГЗ</th><th>ГП</th><th>+/-</th><th>О</th></tr></thead>
+        <tbody>${Object.values(stats).sort((a,b)=>b.o-a.o || (b.gz-b.gp)-(a.gz-a.gp)).map(t => `<tr><td style="text-align:left"><div class="team-dot" style="background:${window.COLORS[t.n]||'var(--gray)'}"></div><b>${t.n}</b></td><td>${t.i}</td><td>${t.v}</td><td>${t.nch}</td><td>${t.p}</td><td>${t.gz}</td><td>${t.gp}</td><td>${t.gz-t.gp}</td><td style="color:var(--accent); font-weight:900; font-size: 14px;">${t.o}</td></tr>`).join('')}</tbody></table>`;
+        h += `</div>`;
+    } else {
+        h += `<div style="text-align:center; font-size:11px; color:var(--gray); margin-bottom:20px;">Нет данных таблицы</div>`;
+    }
+
+    if (dayMatches.length > 0) {
+        h += `<div style="border: 1px dashed var(--gray); border-radius: 12px; padding: 12px; margin-bottom: 15px;">`;
+        h += `<div style="font-weight:800; color:var(--accent); font-size:12px; text-align:left; margin-bottom:10px; text-transform:uppercase;">Результаты матчей</div>`;
+        dayMatches.forEach(m => {
+            const gl = m.events ? m.events.filter(e => e.side===1) : [];
+            const gr = m.events ? m.events.filter(e => e.side===2) : [];
+            const adminMatchBtn = (window.currentRole === 'admin') ? `&nbsp;&nbsp;&nbsp;<button class="admin-edit-btn icon-btn" style="background:var(--card); border:1px solid var(--accent); border-radius:8px; padding:4px 10px; color:var(--accent); display:inline-flex; vertical-align:middle; cursor:pointer;" onclick="window.openMatchEditor(${m.id})"><svg class="icon" style="width:14px; height:14px;"><use href="#icon-edit"></use></svg></button>` : '';
+            
+            h += `<div class="history-card">
+            <div style="font-size: 9px; color: #64748b; text-align: center; margin-bottom: 4px;">${m.date} ${m.time}</div>
+            <div class="h-main-row"><div class="h-team-l">${m.t1}</div><div class="h-score" style="display:flex; justify-content:center; align-items:center;">${m.s1}:${m.s2}${adminMatchBtn}</div><div class="h-team-r">${m.t2}</div></div>
+            <div class="h-details-row"><div class="h-goals-l">${gl.map(e=>`<div><svg class="icon-inline"><use href="#icon-ball"></use></svg> ${window.formatGoal(e)}</div>`).join('')}</div><div class="h-goals-r">${gr.map(e=>`<div><svg class="icon-inline"><use href="#icon-ball"></use></svg> ${window.formatGoal(e)}</div>`).join('')}</div></div></div>`;
+        });
+        
+        if (window.currentRole === 'admin') {
+            h += `<button class="btn-base icon-btn" style="margin-top:5px; width:100%; padding:14px; font-size:12px;" onclick="window.openAddPastMatch('${date}')"><svg class="icon"><use href="#icon-plus"></use></svg> ДОБАВИТЬ МАТЧ</button>`;
         }
-    });
+        h += `</div>`;
+    }
 
-    h += `<div style="text-align:left; font-weight:800; color:var(--accent); font-size:12px; margin:15px 0 10px; text-transform:uppercase;">РЕЗУЛЬТАТЫ МАТЧЕЙ</div>`;
-    dayMatches.forEach(m => { 
-        const editBtn = window.currentRole==='admin'?`   <button class="pencil-btn border-blue" style="margin-left:12px; padding:3px 6px;" onclick="window.openMatchEditor(${m.id})"><svg class="icon" style="width:12px;"><use href="#icon-edit"></use></svg></button>`:''; 
-        const gl = m.events ? m.events.filter(e => e.side===1) : [];
-        const gr = m.events ? m.events.filter(e => e.side===2) : [];
-        h += `<div class="history-card"><div style="font-size: 9px; color: #64748b; text-align: center; margin-bottom: 4px;">${m.date} ${m.time}</div><div class="h-main-row"><div class="h-team-l">${m.t1}</div><div class="h-score" style="display:flex; align-items:center; justify-content:center;">${m.s1}:${m.s2}${editBtn}</div><div class="h-team-r">${m.t2}</div></div><div class="h-details-row"><div class="h-goals-l">${gl.map(e=>`<div><svg class="icon-inline"><use href="#icon-ball"></use></svg> ${window.formatGoal(e)}</div>`).join('')}</div><div class="h-goals-r">${gr.map(e=>`<div><svg class="icon-inline"><use href="#icon-ball"></use></svg> ${window.formatGoal(e)}</div>`).join('')}</div></div></div>`; 
-    });
-    
-    if (window.currentRole === 'admin') h += `<button class="btn-base icon-btn" style="margin-top:5px; width:100%; padding:14px; font-size:12px;" onclick="window.openAddPastMatch('${date}')"><svg class="icon"><use href="#icon-plus"></use></svg> ДОБАВИТЬ МАТЧ</button>`;
+    if (Object.keys(playerStats).length > 0) {
+        h += `<div style="border: 1px dashed var(--gray); border-radius: 12px; padding: 12px; margin-bottom: 15px;">`;
+        h += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <div style="font-weight:800; color:var(--accent); font-size:12px; text-transform:uppercase;">Статистика игроков`;
+        if (window.currentRole === 'admin') h += `&nbsp;&nbsp;&nbsp;<button class="admin-edit-btn icon-btn" style="background:var(--card); border:1px solid var(--accent); border-radius:8px; padding:4px 10px; color:var(--accent); display:inline-flex; vertical-align:middle; cursor:pointer;" onclick="window.openTourPlayerEditor('${date}')"><svg class="icon" style="width:14px; height:14px;"><use href="#icon-edit"></use></svg></button>`;
+        h += `</div>`;
+        
+        if (window.currentRole === 'admin' && activeTeams.length > 0) {
+            h += `<button class="admin-edit-btn icon-btn" style="padding:5px 10px; font-size:10px; background:var(--card); border:1px solid #facc15; border-radius:8px; color:#facc15;" onclick="window.openMvpSelector('${date}')"><svg class="icon"><use href="#icon-star"></use></svg> MVP ТУРНИРА</button>`;
+        }
+        h += `</div>`;
+        
+        let teamsWithPlayers = [...new Set(Object.values(playerStats).map(p => p.team))];
+        
+        teamsWithPlayers.forEach(teamColor => {
+            let teamPlayers = Object.values(playerStats).filter(p => p.team === teamColor).sort((a,b) => (b.g + b.a) - (a.g + a.a) || b.g - a.g);
+            
+            h += `<div style="margin-bottom:12px; border-radius:10px; overflow:hidden; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05);">`;
+            h += `<div style="background:${window.COLORS[teamColor]}; color:${(teamColor==='Белые'||teamColor==='Желтые')?'#000':'#fff'}; padding:8px 12px; font-weight:900; font-size:11px; text-transform:uppercase; display:flex; align-items:center; gap:5px;">
+                    <div class="team-dot" style="background:currentColor; opacity:0.5;"></div>${teamColor}
+                  </div>`;
+            h += `<table class="stats-table" style="margin-bottom:0;"><thead><tr><th style="text-align:left; padding-left:12px;">ИГРОК</th><th style="width:75px; text-align:center;"><svg class="icon-inline"><use href="#icon-ball"></use></svg></th><th style="width:45px; text-align:center;"><svg class="icon-inline"><use href="#icon-pass-shoe"></use></svg></th></tr></thead><tbody>`;
+            
+            teamPlayers.forEach(p => {
+                let mvpBadge = currentMvp === p.name ? `<span style="background:var(--accent); color:var(--bg); padding:3px 5px; border-radius:5px; font-size:10px; font-weight:900; margin-left:6px; display:inline-flex; align-items:center; gap:2px; vertical-align:middle; line-height:1;"><svg class="icon" style="width:10px;height:10px;"><use href="#icon-star"></use></svg> MVP</span>` : '';
+                let ogText = p.og > 0 ? ` <span style="color:var(--danger); font-size:11px; font-weight:normal;">(${p.og}-АГ)</span>` : '';
+                h += `<tr><td style="text-align:left; padding-left:12px;"><b>${p.name}</b>${mvpBadge}</td><td style="text-align:center; font-weight:bold;">${p.g}${ogText}</td><td style="text-align:center;">${p.a}</td></tr>`;
+            });
+            h += `</tbody></table></div>`;
+        });
+        h += `</div>`;
+    }
 
-    cont.innerHTML = h; window.openModal('statsModal');
+    h += `</div>`;
+    cont.innerHTML = h;
+    window.openModal('statsModal');
 };
 
 window.openTourPlayerEditor = function(date) {
@@ -1875,7 +1968,9 @@ window.openTourPlayerEditor = function(date) {
     window.tempTourRosters = {};
     window.updateGlobalPlayersList();
     
+    let activeTeams = [];
     if (window.tourRosters[date]) {
+        activeTeams = window.tourRosters[date].teams || [];
         window.tempTourRosters = JSON.parse(JSON.stringify(window.tourRosters[date].rosters));
     } else {
         let playedTeams = new Set();
@@ -1883,7 +1978,8 @@ window.openTourPlayerEditor = function(date) {
         if (window.customTours[date]) { Object.keys(window.customTours[date]).forEach(t => playedTeams.add(t)); }
         window.config.teams.forEach(t => playedTeams.add(t)); 
         
-        Array.from(playedTeams).forEach(t => {
+        activeTeams = Array.from(playedTeams);
+        activeTeams.forEach(t => {
             window.tempTourRosters[t] = JSON.parse(JSON.stringify(window.config.rosters[t] || Array(5).fill("")));
         });
     }
@@ -2431,7 +2527,34 @@ window.toggleS = function(k) { window.tempConfig[k] = !window.tempConfig[k]; win
 window.stepColor = function(i, d) { let c=window.colorKeys.indexOf(window.tempConfig.teams[i]), n=(c+d+window.colorKeys.length)%window.colorKeys.length; while(window.tempConfig.teams.includes(window.colorKeys[n])) n=(n+d+window.colorKeys.length)%window.colorKeys.length; window.tempConfig.teams[i]=window.colorKeys[n]; window.renderSettingsList(window.currentSettingsTarget); };
 
 window.saveSettings = function() { 
-    window.setStore("config", window.tempConfig);
+    if (window.tempConfig._pin && window.tempConfig._pin !== window.currentRoom) {
+        let newPin = window.tempConfig._pin.trim();
+        if (!newPin) newPin = window.currentRoom;
+        
+        if (newPin !== window.currentRoom) {
+            if (localStorage.getItem("mSmartPro_config_" + newPin)) {
+                return window.showAlert("Этот PIN уже существует! Придумайте другой.");
+            }
+            let oldRoom = window.currentRoom;
+            window.currentRoom = newPin;
+            
+            window.setStore("config", window.tempConfig);
+            window.setStore("matches", window.matches);
+            window.setStore("customTours", window.customTours);
+            window.setStore("tourRosters", window.tourRosters);
+            
+            localStorage.removeItem("mSmartPro_config_" + oldRoom);
+            localStorage.removeItem("mSmartPro_matches_" + oldRoom);
+            localStorage.removeItem("mSmartPro_customTours_" + oldRoom);
+            localStorage.removeItem("mSmartPro_tourRosters_" + oldRoom);
+            
+            localStorage.setItem("mSmartPro_lastRoom", window.currentRoom);
+        } else {
+            window.setStore("config", window.tempConfig);
+        }
+    } else {
+        window.setStore("config", window.tempConfig);
+    }
 
     window.colorKeys.forEach(t => {
         let oldR = window.config.rosters[t] || [];
@@ -2493,6 +2616,7 @@ window.openRosterEditor = function() {
     window.openModal('rosterModal');
 };
 
+/* === HELPERS === */
 window.saveConfig = function() { window.setStore("config", window.config); };
 window.handleReset = function() { window.openModal('confirmReset'); };
 
@@ -2510,7 +2634,7 @@ window.confirmReset = function(manual = true) {
 window.openUndoModal = function() { window.openModal('confirmUndo'); };
 
 window.confirmUndo = function() { 
-    if(window.currentMatch && window.currentMatch.events && window.currentMatch.events.length) { 
+    if(window.currentMatch?.events.length) { 
         const e = window.currentMatch.events.pop(); 
         if(e.side===1) window.currentMatch.s1--; else window.currentMatch.s2--; 
         document.getElementById('score').innerText = window.currentMatch.s1 + " : " + window.currentMatch.s2; 
@@ -2552,11 +2676,9 @@ setInterval(() => {
     if(!window.currentRoom) return;
     const todayStr = new Date().toLocaleDateString('ru-RU');
     const todayCount = window.matches.filter(m => m.date === todayStr).length + 1;
-    const meta = document.getElementById("gameMeta");
-    if(meta) meta.innerHTML = `Матч #${todayCount} • ${todayStr} • ${new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'})} • <span style="color:var(--gray); font-weight:bold;">${window.currentRoom}</span>`; 
+    document.getElementById("gameMeta").innerHTML = `Матч #${todayCount} • ${todayStr} • ${new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'})} • <span style="color:var(--gray); font-weight:bold;">${window.currentRoom}</span>`; 
 }, 1000);
 
-// Если нет конфигурации от Firebase (то есть мы не в превью, а на реальном хостинге)
 if (!window.appInitialized && typeof __firebase_config === 'undefined') {
     window.initApp();
 }
