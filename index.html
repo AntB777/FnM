@@ -13,6 +13,7 @@
         import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
+        // Твои ключи Firebase (интегрированы)
         const firebaseConfig = {
             apiKey: "AIzaSyAV-2fy1NHbLonrxk4_85GwvnhkZ6DtkAM",
             authDomain: "fnm1-62e5a.firebaseapp.com",
@@ -57,7 +58,7 @@
                 console.error("Firebase Auth Error:", error);
                 const loader = document.getElementById('loadingOverlay');
                 if (loader) {
-                    loader.innerHTML = `<span style="color:var(--danger); font-size:14px; text-align:center; padding:20px;">⚠️ Ошибка доступа к базе данных.<br><br>Убедитесь, что провайдер Anonymous включен.</span>`;
+                    loader.innerHTML = `<span style="color:var(--danger); font-size:13px; text-align:center; padding:20px;">⚠️ Ошибка доступа к базе данных.<br><br>Убедитесь, что домен <b>antb777.github.io</b> добавлен в Authorized Domains (в Authentication -> Settings) в Firebase.</span>`;
                 }
             }
         }
@@ -461,7 +462,7 @@
 <script>
 window.COLORS = { "Черные": "#000000", "Белые": "#ffffff", "Желтые": "#facc15", "Зеленые": "#22c55e", "Красные": "#ef4444", "Синие": "#3b82f6", "Разноцветные": "linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" };
 window.colorKeys = Object.keys(window.COLORS);
-window.audioCtx = window.audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+window.audioCtx = null;
 
 window.currentRoom = null;
 window.currentRole = 'viewer';
@@ -1487,7 +1488,7 @@ window.toggleTimer = function() {
     if (window.currentRole === 'viewer') return;
     if (navigator.vibrate) navigator.vibrate(40); 
     
-    if (window.audioCtx.state === 'suspended') window.audioCtx.resume();
+    if (window.audioCtx && window.audioCtx.state === 'suspended') window.audioCtx.resume();
     if (window.interval) { clearInterval(window.interval); window.interval = null; document.getElementById('startBtn').innerText = "ПРОДОЛЖИТЬ"; }
     else {
         if (!window.currentMatch) { 
@@ -1514,7 +1515,20 @@ window.updateTimerDisplay = function() {
     document.getElementById('otTimer').innerText = `${Math.floor(window.otTime/60).toString().padStart(2,'0')}:${Math.floor(window.otTime%60).toString().padStart(2,'0')}`;
 };
 
-window.playGoalSound = function() { const o = window.audioCtx.createOscillator(), g = window.audioCtx.createGain(); o.type='sine'; o.frequency.value=800; g.gain.value=0.1; o.connect(g); g.connect(window.audioCtx.destination); o.start(); o.stop(window.audioCtx.currentTime+0.2); };
+window.playGoalSound = function() { 
+    try {
+        if (!window.audioCtx) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (AudioContext) window.audioCtx = new AudioContext();
+        }
+        if (window.audioCtx) {
+            const o = window.audioCtx.createOscillator(), g = window.audioCtx.createGain(); 
+            o.type='sine'; o.frequency.value=800; g.gain.value=0.1; 
+            o.connect(g); g.connect(window.audioCtx.destination); 
+            o.start(); o.stop(window.audioCtx.currentTime+0.2); 
+        }
+    } catch(e) { console.error("Audio error", e); }
+};
 
 window.animateScore = function() {
     const scoreEl = document.getElementById('score');
@@ -2430,7 +2444,7 @@ window.confirmReset = function(manual = true) {
 window.openUndoModal = function() { window.openModal('confirmUndo'); };
 
 window.confirmUndo = function() { 
-    if(window.currentMatch?.events.length) { 
+    if(window.currentMatch && window.currentMatch.events && window.currentMatch.events.length) { 
         const e = window.currentMatch.events.pop(); 
         if(e.side===1) window.currentMatch.s1--; else window.currentMatch.s2--; 
         document.getElementById('score').innerText = window.currentMatch.s1 + " : " + window.currentMatch.s2; 
@@ -2472,7 +2486,8 @@ setInterval(() => {
     if(!window.currentRoom) return;
     const todayStr = new Date().toLocaleDateString('ru-RU');
     const todayCount = window.matches.filter(m => m.date === todayStr).length + 1;
-    document.getElementById("gameMeta").innerHTML = `Матч #${todayCount} • ${todayStr} • ${new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'})} • <span style="color:var(--gray); font-weight:bold;">${window.currentRoom}</span>`; 
+    const meta = document.getElementById("gameMeta");
+    if(meta) meta.innerHTML = `Матч #${todayCount} • ${todayStr} • ${new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'})} • <span style="color:var(--gray); font-weight:bold;">${window.currentRoom}</span>`; 
 }, 1000);
 
 if (!window.appInitialized && typeof __firebase_config === 'undefined') {
