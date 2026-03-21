@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0f172a">
-    <title>Футбол на Манеже v17.22 Pro</title>
+    <title>Футбол на Манеже v17.23 Pro</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
@@ -307,7 +307,7 @@
                 <button class="btn-base" style="border: 1px solid var(--danger); color: var(--danger); width: 100%;" onclick="window.logout()">ВЫЙТИ ИЗ ЧЕМПИОНАТА</button>
             </div>
             <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
-                v17.20 Pro • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
+                v17.21 Pro • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
             </div>
         </div>
     </div>
@@ -551,7 +551,7 @@
     </div>
 
 <script>
-/* JS LOGIC v17.20 Pro */
+/* JS LOGIC v17.21 Pro */
 window.COLORS = { "Черные": "#000000", "Белые": "#ffffff", "Желтые": "#facc15", "Зеленые": "#22c55e", "Красные": "#ef4444", "Синие": "#3b82f6", "Разноцветные": "linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" };
 window.colorKeys = Object.keys(window.COLORS);
 window.audioCtx = null;
@@ -567,6 +567,16 @@ window.closeModal = function(id) { const m = document.getElementById(id); if (m)
 window.getStore = function(key, def) { if (window[key] !== undefined && window[key] !== null && window[key] !== '') return window[key]; return def; };
 
 window.setStore = function(key, val) { window[key] = val; };
+
+window.applyDataFromFirebase = function(data) {
+    window.config = data.config || JSON.parse(JSON.stringify(window.defaultConfig));
+    window.matches = data.matches || []; 
+    window.customTours = data.customTours || {}; 
+    window.tourRosters = data.tourRosters || {}; 
+    window.globalPlayers = data.globalPlayers || []; 
+    window.tourMvps = data.tourMvps || {};
+    if (window.currentRole !== 'viewer') window.ensureDefaultRosters();
+};
 
 window.syncTimeout = null;
 window.syncToFirebase = async function(force = false) {
@@ -1089,7 +1099,6 @@ window.endMatch = async function() {
         window.matches.unshift({...window.currentMatch}); window.setStore("matches", window.matches);
         window.snapshotTourRoster(window.currentMatch.date); window.updateGlobalPlayersList(); window.updateMatchStatusLabel();
         
-        // Принудительно отправляем данные в базу после окончания матча
         await window.syncToFirebase(true);
     } catch (err) { console.error("Ошибка завершения матча:", err); window.showAlert("Сбой сохранения."); }
 };
@@ -1113,7 +1122,6 @@ window.openMvpSelector = function(date) {
 window.setMvp = function(name) { let tourMvps = window.getStore("tourMvps", {}); if (name) { tourMvps[window.currentMvpDate] = name; } else { delete tourMvps[window.currentMvpDate]; } window.setStore("tourMvps", tourMvps); window.syncToFirebase(true); window.closeModal('mvpSelectModal'); window.renderCombinedStats(); };
 window.changeStatsPage = function(dir) { window.currentStatsPageIndex += dir; window.renderCombinedStats(); };
 
-// Функция удаления турнира целиком
 window.deleteDay = function(date) { 
     if (window.currentRole !== 'admin') return;
     window.showConfirm(`Вы действительно хотите удалить турнир за ${date}?`, async () => { 
