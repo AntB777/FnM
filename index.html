@@ -482,7 +482,7 @@
 
     <div id="settings" class="overlay hidden">
         <div class="modal-content">
-            <h2 style="color:var(--accent); margin-top:0; font-size:17px; margin-bottom:15px; text-transform:uppercase;"><svg class="icon-inline"><use href="#icon-settings"></use></svg> Настройки текущего чемпионата</h2>
+            <h2 style="color:var(--accent); margin-top:0; font-size:17px; margin-bottom:15px; text-transform:uppercase;"><svg class="icon-inline"><use href="#icon-settings"></use></svg> Настройки чемпионата</h2>
             <div class="scrollable" id="settingsContainer"></div>
             <button class="full-btn" style="margin-top:12px;" onclick="window.saveSettings()">💾 СОХРАНИТЬ</button>
             <button class="btn-base" style="margin-top:10px;" onclick="window.closeModal('settings')">✖ ОТМЕНА</button>
@@ -491,8 +491,8 @@
     
     <div id="rosterModal" class="overlay hidden" style="z-index: 10003;">
         <div class="modal-content">
-            <h2><svg class="icon-inline"><use href="#icon-run"></use></svg> Составы команд</h2>
-            <button class="btn-base icon-btn" style="width:100%; margin-bottom:15px; background:var(--card); border:1px solid var(--accent); color:var(--accent);" onclick="window.openPlayerDB()"><svg class="icon"><use href="#icon-run"></use></svg> ВСЕ ИГРОКИ ТУРНИРА</button>
+            <h2>Составы команд</h2>
+            <button class="btn-base icon-btn" style="width:100%; margin-bottom:15px; background:var(--card); border:1px solid var(--accent); color:var(--accent);" onclick="window.openPlayerDB()"><svg class="icon"><use href="#icon-run"></use></svg> ВСЕ ИГРОКИ</button>
             <div class="scrollable" id="rosterContainer"></div>
             <button class="full-btn" style="margin-top: 10px;" onclick="window.closeModal('rosterModal')">ГОТОВО</button>
         </div>
@@ -501,8 +501,8 @@
     <div id="tourPlayerEditorModal" class="overlay hidden" style="z-index: 10000;">
         <div class="modal-content">
             <h2 id="tourPlayerEditTitle" style="color:var(--accent); margin-top:0; margin-bottom:5px;">РЕДАКТОР ИГРОКОВ</h2>
-            <div style="font-size:12px; color:var(--gray); margin-bottom:15px;">Изменения имен автоматически обновят историю матчей турнира. Если видите "?", замените на настоящее имя.</div>
-            <button class="btn-base icon-btn" style="width:100%; margin-bottom:15px; background:var(--card); border:1px solid var(--accent); color:var(--accent);" onclick="window.openPlayerDB()"><svg class="icon"><use href="#icon-run"></use></svg> ВСЕ ИГРОКИ ТУРНИРА</button>
+            <div style="font-size:12px; color:var(--gray); margin-bottom:15px;">Изменения обновят историю матчей турнира.</div>
+            <button class="btn-base icon-btn" style="width:100%; margin-bottom:15px; background:var(--card); border:1px solid var(--accent); color:var(--accent);" onclick="window.openPlayerDB()"><svg class="icon"><use href="#icon-run"></use></svg> ВСЕ ИГРОКИ</button>
             <div class="scrollable" id="tourPlayerEditContainer" style="text-align: left;"></div>
             <div class="row-3" style="margin-top: 15px;">
                 <button class="btn-base" style="background:var(--success)" onclick="window.saveTourPlayerEdit()">💾 СОХРАНИТЬ</button>
@@ -520,7 +520,7 @@
 
     <div id="statsModal" class="overlay hidden">
         <div class="modal-content" style="width:98%; max-width:600px; padding:20px 15px;">
-            <h2><svg class="icon-inline"><use href="#icon-stats"></use></svg> Статистика</h2>
+            <h2>Статистика</h2>
             <div class="scrollable" id="combinedStatsContainer" style="margin-top:0;"></div>
             <button class="full-btn" style="margin-top: 15px;" onclick="window.closeModal('statsModal')">ЗАКРЫТЬ</button>
         </div>
@@ -550,12 +550,8 @@
             </div>
         </div>
     </div>
-    <script>
-/* ==========================================
- * ФУТБОЛ НА МАНЕЖЕ - ИГРОВАЯ ЛОГИКА
- * Версия 17.18 Pro
- * ========================================== */
 
+<script>
 window.COLORS = { "Черные": "#000000", "Белые": "#ffffff", "Желтые": "#facc15", "Зеленые": "#22c55e", "Красные": "#ef4444", "Синие": "#3b82f6", "Разноцветные": "linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" };
 window.colorKeys = Object.keys(window.COLORS);
 window.audioCtx = null;
@@ -572,13 +568,16 @@ window.getStore = function(key, def) { if (window[key] !== undefined && window[k
 
 window.setStore = function(key, val) { window[key] = val; };
 
-// Отправка в облако одним пакетом, без спама
+window.syncTimeout = null;
 window.syncToFirebase = async function() {
     if (!window.currentRoom || !window.dbUser) return;
-    try {
-        const roomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', window.currentRoom);
-        await window.setDoc(roomRef, { config: window.config, matches: window.matches, customTours: window.customTours, tourRosters: window.tourRosters, globalPlayers: window.globalPlayers, tourMvps: window.tourMvps || {} });
-    } catch(e) { console.error("Firebase Sync Error:", e); }
+    if (window.syncTimeout) clearTimeout(window.syncTimeout);
+    window.syncTimeout = setTimeout(async () => {
+        try {
+            const roomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', window.currentRoom);
+            await window.setDoc(roomRef, { config: window.config, matches: window.matches, customTours: window.customTours, tourRosters: window.tourRosters, globalPlayers: window.globalPlayers, tourMvps: window.tourMvps || {} });
+        } catch(e) {}
+    }, 500);
 };
 
 window.roomUnsubscribe = null;
@@ -906,57 +905,41 @@ window.checkReady = function() {
 
 window.formatGoal = function(e) { let res = e.s || '?'; if(e.a) res += ` <span style="opacity:0.5; margin-left:3px;"><svg class="icon-inline" style="width:11px; height:11px;"><use href="#icon-pass-shoe"></use></svg> ${e.a}</span>`; return res; };
 
-// Панель голов - новый горизонтальный дизайн
 window.updateLastGoalDisplay = function() {
     const lL = document.getElementById('lastGoalL'); const lR = document.getElementById('lastGoalR');
     if (!lL || !lR) return; lL.innerHTML = ""; lR.innerHTML = "";
     if (!window.currentMatch || !window.currentMatch.events || !window.currentMatch.events.length) return;
-    
-    const gl = window.currentMatch.events.filter(e => e.side === 1 && e.s); 
-    const gr = window.currentMatch.events.filter(e => e.side === 2 && e.s);
-    
+    const gl = window.currentMatch.events.filter(e => e.side === 1 && e.s); const gr = window.currentMatch.events.filter(e => e.side === 2 && e.s);
     const fmtG = (e) => { return `<div class="goal-bubble"><svg class="icon-inline" style="width:11px; height:11px;"><use href="#icon-ball"></use></svg> ${window.formatGoal(e)}</div>`; };
-    
-    lL.innerHTML = gl.map(e => fmtG(e)).join(''); 
-    lR.innerHTML = gr.map(e => fmtG(e)).join('');
+    lL.innerHTML = gl.map(e => fmtG(e)).join(''); lR.innerHTML = gr.map(e => fmtG(e)).join('');
 };
 
-// Жесткая блокировка зависания таймера
 window.toggleTimer = function() {
     if (window.currentRole === 'viewer') return;
     if (navigator.vibrate) navigator.vibrate(40); 
     if (window.audioCtx && window.audioCtx.state === 'suspended') window.audioCtx.resume();
     
     if (window.interval) { 
-        clearInterval(window.interval); window.interval = null; 
-        document.getElementById('startBtn').innerText = "ПРОДОЛЖИТЬ"; 
+        clearInterval(window.interval); window.interval = null; document.getElementById('startBtn').innerText = "ПРОДОЛЖИТЬ"; 
     } else {
         if (!window.currentMatch) { 
             window.currentMatch = { id: window.matches.length ? Math.max(...window.matches.map(m=>m.id||0))+1 : 1, t1: window.selL, t2: window.selR, s1: 0, s2: 0, date: new Date().toLocaleDateString('ru-RU'), time: new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'}), events: [] }; 
-            window.time = window.config.time; window.isFinishing = false; 
-            window.updateLastGoalDisplay();
+            window.time = window.config.time; window.isFinishing = false; window.updateLastGoalDisplay();
         }
         
         window.interval = setInterval(() => {
-            if (window.isFinishing) return; 
-            
+            if (window.isFinishing) { clearInterval(window.interval); window.interval = null; return; }
             if(!window.isOT) { 
                 window.time -= 0.2; 
                 if(window.time <= 0){ 
                     window.time = 0; 
-                    if(window.otActive && window.currentMatch.s1 === window.currentMatch.s2){
-                        window.isOT=true; window.otTime=0; document.getElementById('otTimerPlate').style.display='flex';
-                    } else { 
-                        if(window.interval){ clearInterval(window.interval); window.interval=null; }
-                        window.terminateMatch(); 
-                        return;
-                    } 
+                    if(window.otActive && window.currentMatch.s1 === window.currentMatch.s2){ window.isOT=true; window.otTime=0; document.getElementById('otTimerPlate').style.display='flex'; } 
+                    else { if(window.interval){ clearInterval(window.interval); window.interval=null; } window.terminateMatch(); return; } 
                 }
             } else { window.otTime += 0.2; }
             
             window.updateTimerDisplay();
             
-            // Блокировка зависания по лимиту голов
             if (window.currentMatch && !window.isFinishing) {
                 const lim = parseInt(window.config.goalLimit);
                 if (lim > 0 && (window.currentMatch.s1 >= lim || window.currentMatch.s2 >= lim)) { 
@@ -1038,15 +1021,9 @@ window.processGoal = function(side, s, a) {
 window.terminateMatch = function() {
     if (window.isFinishing) return;
     window.isFinishing = true;
-    
     if (window.interval) { clearInterval(window.interval); window.interval = null; }
-    
     document.querySelectorAll('.overlay').forEach(ov => { if(ov.id !== 'winnerModal') window.closeModal(ov.id); });
-    
-    if (window.config.voiceEnabled) {
-        window.announce(window.currentMatch.s1 > window.currentMatch.s2 ? "Победа " + window.currentMatch.t1 : (window.currentMatch.s2 > window.currentMatch.s1 ? "Победа " + window.currentMatch.t2 : "Ничья"));
-    }
-    
+    if (window.config.voiceEnabled) { window.announce(window.currentMatch.s1 > window.currentMatch.s2 ? "Победа " + window.currentMatch.t1 : (window.currentMatch.s2 > window.currentMatch.s1 ? "Победа " + window.currentMatch.t2 : "Ничья")); }
     setTimeout(window.endMatch, 600); 
 };
 
@@ -1066,18 +1043,10 @@ window.endMatch = function() {
         window.openModal('winnerModal');
         
         if (!window.currentMatch.events) window.currentMatch.events = [];
-        
-        window.matches.unshift({...window.currentMatch}); 
-        window.setStore("matches", window.matches);
-        
-        window.snapshotTourRoster(window.currentMatch.date); 
-        window.updateGlobalPlayersList(); 
-        window.updateMatchStatusLabel();
+        window.matches.unshift({...window.currentMatch}); window.setStore("matches", window.matches);
+        window.snapshotTourRoster(window.currentMatch.date); window.updateGlobalPlayersList(); window.updateMatchStatusLabel();
         window.syncToFirebase();
-    } catch (err) {
-        console.error("Ошибка при завершении матча:", err);
-        window.showAlert("Сбой сохранения. Попробуйте обновить страницу.");
-    }
+    } catch (err) { console.error("Ошибка завершения матча:", err); window.showAlert("Сбой сохранения."); }
 };
 
 window.openMvpSelector = function(date) {
@@ -1099,7 +1068,6 @@ window.openMvpSelector = function(date) {
 window.setMvp = function(name) { let tourMvps = window.getStore("tourMvps", {}); if (name) { tourMvps[window.currentMvpDate] = name; } else { delete tourMvps[window.currentMvpDate]; } window.setStore("tourMvps", tourMvps); window.syncToFirebase(); window.closeModal('mvpSelectModal'); window.renderCombinedStats(); };
 window.changeStatsPage = function(dir) { window.currentStatsPageIndex += dir; window.renderCombinedStats(); };
 
-// Защита m.events в статистике
 window.renderCombinedStats = function() {
     const cont = document.getElementById('combinedStatsContainer'); cont.innerHTML = "";
     const grouped = {}; window.matches.forEach(m => { if (!grouped[m.date]) grouped[m.date] = []; grouped[m.date].push(m); });
@@ -1219,7 +1187,6 @@ window.renderCombinedStats = function() {
     cont.innerHTML = h; window.openModal('statsModal');
 };
 
-// Защита m.events в редакторах
 window.openTourPlayerEditor = function(date) {
     if (window.currentRole !== 'admin') return;
     window.editingTourPlayerDate = date; window.tempTourRosters = {}; window.updateGlobalPlayersList();
