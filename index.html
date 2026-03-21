@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0f172a">
-    <title>Футбол на Манеже v17.18 Pro</title>
+    <title>Футбол на Манеже v17.21 Pro</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
@@ -30,56 +30,45 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        window.db = db;
-        window.appId = canvasAppId;
-        window.doc = doc;
-        window.setDoc = setDoc;
-        window.getDoc = getDoc;
-        window.onSnapshot = onSnapshot;
+        window.db = db; window.auth = auth; window.appId = canvasAppId; 
+        window.doc = doc; window.setDoc = setDoc; window.getDoc = getDoc; window.onSnapshot = onSnapshot;
+        window.signInAnonymously = signInAnonymously; window.signInWithCustomToken = signInWithCustomToken;
 
         onAuthStateChanged(auth, (user) => {
             window.dbUser = user;
             if(user && !window.appInitialized) {
                 window.appInitialized = true;
-                if(window.initApp) {
-                    window.initApp(); 
-                } else {
-                    window.addEventListener('DOMContentLoaded', () => { if(window.initApp) window.initApp(); });
-                }
+                if(window.initApp) window.initApp(); 
+                else window.addEventListener('DOMContentLoaded', () => { if(window.initApp) window.initApp(); });
             }
         });
 
-        async function startAuth() {
+        window.startAuth = async function() {
+            if (window.dbUser) return window.dbUser;
             try {
+                let cred;
                 if (canvasToken) {
-                    try { await signInWithCustomToken(auth, canvasToken); } 
-                    catch(e) { await signInAnonymously(auth); }
+                    try { cred = await signInWithCustomToken(auth, canvasToken); } 
+                    catch(e) { cred = await signInAnonymously(auth); }
                 } else {
-                    await signInAnonymously(auth);
+                    cred = await signInAnonymously(auth);
                 }
+                window.dbUser = cred.user;
+                return window.dbUser;
             } catch (error) {
-                console.error("Firebase Auth Error:", error);
-                localStorage.removeItem("mSmartPro_lastRoom");
-                window.currentRoom = null;
-                const loader = document.getElementById('loadingOverlay');
-                if (loader) loader.style.display = 'none';
-                if(window.openWelcomeModal) window.openWelcomeModal();
+                console.error("Auth Error:", error);
+                return null;
             }
-        }
-        startAuth();
+        };
+        
+        // Запускаем аутентификацию в фоне при старте
+        window.startAuth();
     </script>
 
     <style>
         :root { 
-            --bg: #0f172a; 
-            --card: #1e293b; 
-            --accent: #38bdf8; 
-            --danger: #ef4444; 
-            --text: #f8fafc; 
-            --gray: #94a3b8;
-            --success: #22c55e;
-            --warning: #facc15;
-            --fs-main: clamp(16px, 2.8vh, 22px); 
+            --bg: #0f172a; --card: #1e293b; --accent: #38bdf8; --danger: #ef4444; 
+            --text: #f8fafc; --gray: #94a3b8; --success: #22c55e; --warning: #facc15; 
             --disabled-opacity: 0.20;
         }
 
@@ -90,10 +79,16 @@
         .icon-inline { width: 1.3em; height: 1.3em; fill: currentColor; vertical-align: -0.2em; display: inline-block; }
         .icon-btn { display: flex; align-items: center; justify-content: center; gap: 6px; }
 
-        .header { display: flex; justify-content: space-between; align-items: center; flex: 0 0 auto; padding: 6px 0; position: relative; height: 50px; }
-        .header h1 { font-size: clamp(14px, 4.5vw, 20px); margin: 0; color: var(--accent); font-weight: 800; position: absolute; left: 50%; transform: translateX(-50%); width: 100%; max-width: 55vw; text-align: center; pointer-events: none; z-index: 1; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } 
+        .header { display: flex; justify-content: space-between; align-items: center; flex: 0 0 auto; padding: 6px 0; height: 50px; position: relative; }
+        .header h1 { 
+            flex: 1; text-align: center; margin: 0 10px; color: var(--accent); font-weight: 800; 
+            font-size: clamp(14px, 4.5vw, 20px); text-transform: uppercase; white-space: nowrap; 
+            overflow: hidden; text-overflow: ellipsis; position: absolute; left: 50%; transform: translateX(-50%); 
+            width: auto; max-width: 55vw; pointer-events: none; z-index: 1;
+        } 
         
-        .head-icon { background: var(--card); border-radius: 10px; cursor: pointer; color: white; padding: 8px 12px; z-index: 10; display: flex; align-items: center; gap: 6px; transition: all 0.2s; border: 1px solid transparent; } 
+        .head-icon { background: var(--card); border-radius: 10px; cursor: pointer; color: white; padding: 8px 12px; z-index: 10; display: flex; align-items: center; gap: 6px; transition: all 0.2s; border: 1px solid transparent; flex-shrink: 0; } 
+        .head-icon:active { transform: scale(0.95); opacity: 0.8; }
         .head-icon span { font-size: 10px; font-weight: 800; text-transform: uppercase; } 
         .border-blue { border-color: var(--accent) !important; color: var(--accent) !important; }
         .border-yellow { border-color: var(--warning) !important; color: var(--warning) !important; }
@@ -112,6 +107,8 @@
         .events-l::-webkit-scrollbar, .events-r::-webkit-scrollbar { display: none; }
         .events-r { flex-direction: row-reverse; }
         .goal-bubble { background: rgba(255,255,255,0.08); padding: 4px 8px; border-radius: 8px; display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text); border: 1px solid rgba(255,255,255,0.05); } 
+        .h-goals-l { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+        .h-goals-r { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
 
         .timer-row { display: flex; align-items: stretch; justify-content: center; gap: 10px; margin: 0 10px; flex: 1; }
         .timer-plate { flex: 2; background: rgba(255,255,255,0.05); border-radius: 15px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); }
@@ -165,7 +162,7 @@
         
         .hidden { display: none !important; }
         .modal-content { position: relative; background: var(--card); border-radius: 25px; padding: 25px; text-align: center; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); width: 95%; max-width: 500px; max-height: 94vh; display: flex; flex-direction: column; overflow: hidden; }
-        .scrollable { flex: 1; overflow-y: auto; overflow-x: hidden; margin-top: 10px; padding-right: 5px; }
+        .scrollable { flex: 1; overflow-y: auto; overflow-x: hidden; margin-top: 10px; padding-right: 5px; scrollbar-width: none; }
 
         .stats-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 20px; } 
         .stats-table th { color: var(--gray); font-size: 9px; padding: 10px 2px; border-bottom: 1px solid #334155; text-transform: uppercase; } 
@@ -174,7 +171,7 @@
         .stats-page-btn { background: none; border: none; color: var(--accent); font-size: 28px; cursor: pointer; padding: 0 12px; } 
         .stats-page-btn:disabled { color: var(--gray); cursor: default; opacity: 0.3; }
 
-        .history-card { background: rgba(255,255,255,0.02); border-radius: 12px; padding: 10px 14px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.05); position: relative; } 
+        .history-card { background: rgba(255,255,255,0.02); border-radius: 12px; padding: 10px 14px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.05); position: relative; text-align: left; } 
         .h-main-row { display: grid; grid-template-columns: 1fr 60px 1fr; align-items: center; margin-bottom: 6px; }
         .h-team-l { text-align: left; font-weight: 800; font-size: 12px; } 
         .h-team-r { text-align: right; font-weight: 800; font-size: 12px; } 
@@ -198,7 +195,7 @@
         .player-num { font-size: 11px; color: var(--accent); font-weight: 800; min-width: 20px; display: inline-block; } 
         .player-input { flex: 1; background: #0f172a; border: 1px solid #475569; color: #fff; padding: 10px; border-radius: 8px; font-size: 13px; box-sizing: border-box; outline: none; margin-bottom: 5px; } 
         .player-input:focus { border-color: var(--accent); }
-        .player-link { color: var(--accent); cursor: pointer; font-weight: bold; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 4px; }
+        .player-link { color: var(--accent); cursor: pointer; font-weight: 800; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 4px; }
 
         .pencil-btn { background: var(--card); border: 1px solid var(--accent); color: var(--accent); border-radius: 8px; padding: 3px 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s; }
         .pencil-btn:active { transform: scale(0.9); }
@@ -213,7 +210,7 @@
 </head>
 <body class="viewer-mode">
 
-    <div id="loadingOverlay"><div class="spinner"></div><span>Синхронизация...</span></div>
+    <div id="loadingOverlay"><div class="spinner"></div><span>Загрузка...</span></div>
     <datalist id="globalPlayersList"></datalist>
 
     <svg style="display: none;">
@@ -255,10 +252,12 @@
         <div class="score-plate">
             <div id="score">0 : 0</div>
         </div>
+        
         <div class="events-plate" id="eventsPlate">
             <div id="lastGoalL" class="events-l"></div>
             <div id="lastGoalR" class="events-r"></div>
         </div>
+
         <div class="timer-row">
             <div class="timer-plate"><div id="timer">00:00</div></div>
             <div id="otTimerPlate" class="timer-plate"><div id="otTimer">00:00</div></div>
@@ -308,7 +307,7 @@
                 <button class="btn-base" style="border: 1px solid var(--danger); color: var(--danger); width: 100%;" onclick="window.logout()">ВЫЙТИ ИЗ ЧЕМПИОНАТА</button>
             </div>
             <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
-                v17.18 Pro • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
+                v17.21 Pro • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
             </div>
         </div>
     </div>
@@ -491,7 +490,7 @@
     
     <div id="rosterModal" class="overlay hidden" style="z-index: 10003;">
         <div class="modal-content">
-            <h2>Составы команд</h2>
+            <h2><svg class="icon-inline"><use href="#icon-run"></use></svg> Составы команд</h2>
             <button class="btn-base icon-btn" style="width:100%; margin-bottom:15px; background:var(--card); border:1px solid var(--accent); color:var(--accent);" onclick="window.openPlayerDB()"><svg class="icon"><use href="#icon-run"></use></svg> ВСЕ ИГРОКИ</button>
             <div class="scrollable" id="rosterContainer"></div>
             <button class="full-btn" style="margin-top: 10px;" onclick="window.closeModal('rosterModal')">ГОТОВО</button>
@@ -520,7 +519,7 @@
 
     <div id="statsModal" class="overlay hidden">
         <div class="modal-content" style="width:98%; max-width:600px; padding:20px 15px;">
-            <h2>Статистика</h2>
+            <h2><svg class="icon-inline"><use href="#icon-stats"></use></svg> Статистика</h2>
             <div class="scrollable" id="combinedStatsContainer" style="margin-top:0;"></div>
             <button class="full-btn" style="margin-top: 15px;" onclick="window.closeModal('statsModal')">ЗАКРЫТЬ</button>
         </div>
@@ -552,12 +551,13 @@
     </div>
 
 <script>
+/* JS LOGIC v17.21 Pro */
 window.COLORS = { "Черные": "#000000", "Белые": "#ffffff", "Желтые": "#facc15", "Зеленые": "#22c55e", "Красные": "#ef4444", "Синие": "#3b82f6", "Разноцветные": "linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" };
 window.colorKeys = Object.keys(window.COLORS);
 window.audioCtx = null;
 window.currentRoom = null; window.currentRole = 'viewer';
 window.defaultConfig = { time: 420, goalLimit: 2, teams: ["Зеленые", "Красные", "Белые"], autoReset: true, useOT: true, goldenGoal: true, otLimit: 0, voiceEnabled: true, usePlayers: true, rosters: {}, adminPass: "123", viewerPass: "000", soundUrl: "", otInitializedDate: "" };
-window.config = null; window.tempConfig = null; window.matches = []; window.customTours = {}; window.tourRosters = {}; window.globalPlayers = []; 
+window.config = null; window.tempConfig = null; window.matches = []; window.customTours = {}; window.tourRosters = {}; window.globalPlayers = []; window.tourMvps = {};
 window.time = 0; window.interval = null; window.currentMatch = null; window.selL = null; window.selR = null; window.otActive = false; window.isOT = false; window.otTime = 0; window.isFinishing = false; window.tSide = null; window.tScorer = null; 
 window.currentMvpDate = null; window.currentStatsPageIndex = 0; window.currentShareDate = null; window.editingMatchId = null; window.passMode = ''; window.editingTourPlayerDate = null; window.tempTourRosters = {}; window.editingTourDate = null; window.currentSettingsTarget = 'settingsContainer';
 window.playerDbSortCol = 'points'; window.playerDbSortDesc = true; window.playerDbStats = [];
@@ -569,15 +569,23 @@ window.getStore = function(key, def) { if (window[key] !== undefined && window[k
 window.setStore = function(key, val) { window[key] = val; };
 
 window.syncTimeout = null;
-window.syncToFirebase = async function() {
+window.syncToFirebase = async function(force = false) {
     if (!window.currentRoom || !window.dbUser) return;
-    if (window.syncTimeout) clearTimeout(window.syncTimeout);
-    window.syncTimeout = setTimeout(async () => {
+    
+    const doSync = async () => {
         try {
             const roomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', window.currentRoom);
             await window.setDoc(roomRef, { config: window.config, matches: window.matches, customTours: window.customTours, tourRosters: window.tourRosters, globalPlayers: window.globalPlayers, tourMvps: window.tourMvps || {} });
-        } catch(e) {}
-    }, 500);
+        } catch(e) { console.error("Sync Error:", e); }
+    };
+
+    if (force) {
+        if (window.syncTimeout) { clearTimeout(window.syncTimeout); window.syncTimeout = null; }
+        await doSync();
+    } else {
+        if (window.syncTimeout) clearTimeout(window.syncTimeout);
+        window.syncTimeout = setTimeout(doSync, 500);
+    }
 };
 
 window.roomUnsubscribe = null;
@@ -607,7 +615,7 @@ window.ensureDefaultRosters = function() {
 };
 
 window.loadRoomData = function() {
-    window.matches = window.getStore("matches", []); window.customTours = window.getStore("customTours", {}); window.tourRosters = window.getStore("tourRosters", {}); window.globalPlayers = window.getStore("globalPlayers", []);
+    window.matches = window.getStore("matches", []); window.customTours = window.getStore("customTours", {}); window.tourRosters = window.getStore("tourRosters", {}); window.globalPlayers = window.getStore("globalPlayers", []); window.tourMvps = window.getStore("tourMvps", {});
     const todayStr = new Date().toLocaleDateString('ru-RU');
     if (window.config.otInitializedDate !== todayStr) { const playedToday = window.matches.some(m => m.date === todayStr); window.config.useOT = !playedToday; window.config.otInitializedDate = todayStr; window.setStore("config", window.config); window.syncToFirebase(); }
 };
@@ -621,9 +629,36 @@ window.startApp = function() {
 };
 
 window.initApp = async function() {
+    document.getElementById('loadingOverlay').style.display = 'flex';
+    await window.startAuth(); // ОЖИДАНИЕ АВТОРИЗАЦИИ
+
     window.currentRoom = localStorage.getItem("mSmartPro_lastRoom"); window.currentRole = localStorage.getItem("mSmartPro_lastRole") || 'viewer';
-    if (window.currentRoom) { document.getElementById('loadingOverlay').style.display = 'none'; window.listenToRoom(); window.startApp(); } 
-    else { window.config = JSON.parse(JSON.stringify(window.defaultConfig)); document.getElementById('loadingOverlay').style.display = 'none'; window.openWelcomeModal(); }
+    
+    if (window.currentRoom) {
+        try {
+            const roomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', window.currentRoom);
+            const snap = await window.getDoc(roomRef);
+            if (snap.exists()) {
+                window.applyDataFromFirebase(snap.data());
+                document.getElementById('loadingOverlay').style.display = 'none';
+                window.listenToRoom();
+                window.startApp();
+            } else {
+                throw new Error("Room not found");
+            }
+        } catch (e) {
+            console.error("Fetch error:", e);
+            localStorage.removeItem("mSmartPro_lastRoom");
+            window.currentRoom = null;
+            window.config = JSON.parse(JSON.stringify(window.defaultConfig));
+            document.getElementById('loadingOverlay').style.display = 'none';
+            window.openWelcomeModal();
+        }
+    } else {
+        window.config = JSON.parse(JSON.stringify(window.defaultConfig));
+        document.getElementById('loadingOverlay').style.display = 'none';
+        window.openWelcomeModal();
+    }
 };
 
 window.showConfirm = function(msg, callback) { document.getElementById('sysConfirmMsg').innerText = msg; window._confirmCallback = callback; window.openModal('sysConfirmModal'); };
@@ -744,12 +779,13 @@ window.confirmCreateRoom = async function() {
     if(!pin || !aPass || !vPass) return window.showAlert("Заполните Название и Пароли!"); if(aPass === vPass) return window.showAlert("Пароли админа и игрока должны различаться!");
     document.getElementById('loadingOverlay').style.display = 'flex';
     try {
+        await window.startAuth();
         if (typeof window.getDoc === 'function' && typeof window.db !== 'undefined') {
             const roomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', pin); const snap = await window.getDoc(roomRef);
-            if(snap.exists()) { document.getElementById('loadingOverlay').style.display = 'none'; return window.showAlert("Это название уже занято! Придумайте другое."); }
+            if(snap.exists()) { document.getElementById('loadingOverlay').style.display = 'none'; return window.showAlert("Это название уже занято!"); }
         }
         window.currentRoom = pin; window.currentRole = 'admin'; window.tempConfig.adminPass = aPass; window.tempConfig.viewerPass = vPass; window.config = JSON.parse(JSON.stringify(window.tempConfig)); window.matches = []; window.customTours = {}; window.tourRosters = {}; window.globalPlayers = []; window.tourMvps = {};
-        if (typeof window.syncToFirebase === 'function') await window.syncToFirebase();
+        await window.syncToFirebase(true);
         localStorage.setItem("mSmartPro_lastRoom", window.currentRoom); localStorage.setItem("mSmartPro_lastRole", window.currentRole);
         window.closeModal('createRoomModal'); window.startApp(); if (typeof window.listenToRoom === 'function') window.listenToRoom();
     } catch(e) { console.error("Ошибка создания:", e); window.showAlert("Ошибка при создании чемпионата."); } finally { document.getElementById('loadingOverlay').style.display = 'none'; }
@@ -760,6 +796,7 @@ window.confirmJoinAdmin = async function() {
     if(!pin || !pass) return window.showAlert("Введите Название и Пароль!");
     document.getElementById('loadingOverlay').style.display = 'flex';
     try {
+        await window.startAuth();
         let c = null;
         if (typeof window.getDoc === 'function' && typeof window.db !== 'undefined') {
             const roomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', pin); const snap = await window.getDoc(roomRef);
@@ -780,6 +817,7 @@ window.confirmJoinViewer = async function() {
     if(!pin) return window.showAlert("Введите Название чемпионата!");
     document.getElementById('loadingOverlay').style.display = 'flex';
     try {
+        await window.startAuth();
         let c = null;
         if (typeof window.getDoc === 'function' && typeof window.db !== 'undefined') {
             const roomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', pin); const snap = await window.getDoc(roomRef);
@@ -828,6 +866,7 @@ window.submitPass = async function() {
         if (oldP !== window.currentRoom) return document.getElementById('passError').innerText = 'Неверное текущее название!'; if (newP === '') return document.getElementById('passError').innerText = 'Новое название не может быть пустым!'; if (newP !== confP) return document.getElementById('passError').innerText = 'Новые названия не совпадают!'; if (newP === window.currentRoom) return document.getElementById('passError').innerText = 'Новое название совпадает со старым!';
         document.getElementById('loadingOverlay').style.display = 'flex';
         try {
+            await window.startAuth();
             if (typeof window.getDoc === 'function' && typeof window.db !== 'undefined') {
                 const newRoomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', newP); const snap = await window.getDoc(newRoomRef);
                 if(snap.exists()) { document.getElementById('loadingOverlay').style.display = 'none'; return document.getElementById('passError').innerText = 'Это название уже занято!'; }
@@ -1027,7 +1066,7 @@ window.terminateMatch = function() {
     setTimeout(window.endMatch, 600); 
 };
 
-window.endMatch = function() {
+window.endMatch = async function() {
     try {
         const dayMatchesCount = window.matches.filter(m => m.date === window.currentMatch.date).length + 1;
         document.getElementById('winMatchNum').innerText = "МАТЧ #" + dayMatchesCount + " • " + window.currentMatch.date + " " + window.currentMatch.time;
@@ -1045,7 +1084,9 @@ window.endMatch = function() {
         if (!window.currentMatch.events) window.currentMatch.events = [];
         window.matches.unshift({...window.currentMatch}); window.setStore("matches", window.matches);
         window.snapshotTourRoster(window.currentMatch.date); window.updateGlobalPlayersList(); window.updateMatchStatusLabel();
-        window.syncToFirebase();
+        
+        // Принудительно отправляем данные в базу после окончания матча
+        await window.syncToFirebase(true);
     } catch (err) { console.error("Ошибка завершения матча:", err); window.showAlert("Сбой сохранения."); }
 };
 
@@ -1067,6 +1108,38 @@ window.openMvpSelector = function(date) {
 
 window.setMvp = function(name) { let tourMvps = window.getStore("tourMvps", {}); if (name) { tourMvps[window.currentMvpDate] = name; } else { delete tourMvps[window.currentMvpDate]; } window.setStore("tourMvps", tourMvps); window.syncToFirebase(); window.closeModal('mvpSelectModal'); window.renderCombinedStats(); };
 window.changeStatsPage = function(dir) { window.currentStatsPageIndex += dir; window.renderCombinedStats(); };
+
+// ИСПРАВЛЕННАЯ ФУНКЦИЯ УДАЛЕНИЯ ТУРНИРА
+window.deleteDay = function(date) {
+    if (window.currentRole !== 'admin') return;
+    window.showConfirm(`Удалить весь турнир за ${date}?`, async () => {
+        // Очищаем матчи за этот день
+        window.matches = window.matches.filter(m => m.date !== date);
+        // Очищаем ручные правки, составы и MVP
+        if (window.customTours[date]) delete window.customTours[date];
+        if (window.tourRosters[date]) delete window.tourRosters[date];
+        if (window.tourMvps[date]) delete window.tourMvps[date];
+        
+        // Обновляем локальные хранилища
+        window.setStore("matches", window.matches);
+        window.setStore("customTours", window.customTours);
+        window.setStore("tourRosters", window.tourRosters);
+        window.setStore("tourMvps", window.tourMvps);
+        
+        window.currentStatsPageIndex = 0;
+        
+        // Если удаляем сегодняшний турнир, возвращаем кнопку ОТ включенной
+        if (date === new Date().toLocaleDateString('ru-RU')) {
+            window.otActive = window.config.useOT; 
+            const otBtn = document.getElementById('otToggle');
+            if (otBtn && otBtn.parentElement) otBtn.parentElement.classList.toggle('active', window.otActive);
+        }
+        
+        // ПРИНУДИТЕЛЬНО отправляем данные в базу сразу (force = true)
+        await window.syncToFirebase(true);
+        window.renderCombinedStats();
+    });
+};
 
 window.renderCombinedStats = function() {
     const cont = document.getElementById('combinedStatsContainer'); cont.innerHTML = "";
