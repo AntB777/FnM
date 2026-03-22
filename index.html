@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0f172a">
-    <title>Футбол на Манеже v18.02 Pro</title>
+    <title>Футбол на Манеже v18.03 Pro</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
@@ -209,7 +209,7 @@
 </head>
 <body class="viewer-mode">
 
-    <div id="loadingOverlay"><div class="spinner"></div><span>Загрузка...</span></div>
+    <div id="loadingOverlay"><div class="spinner"></div><span>Синхронизация...</span></div>
 
     <svg style="display: none;">
         <symbol id="icon-eye" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></symbol>
@@ -305,7 +305,7 @@
                 <button class="btn-base" style="border: 1px solid var(--danger); color: var(--danger); width: 100%;" onclick="window.logout()">ВЫЙТИ ИЗ ЧЕМПИОНАТА</button>
             </div>
             <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
-                v18.02 Pro 
+                v18.03 Pro • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
             </div>
         </div>
     </div>
@@ -460,12 +460,13 @@
         </div>
     </div>
 
+    <!-- Модальное окно победителя, теперь синхронизированное -->
     <div id="winnerModal" class="overlay hidden">
         <div class="modal-content">
             <div id="winMatchNum" style="font-size:11px; opacity:0.8; font-weight:800; color:var(--gray);"></div>
             <div id="winTeamName" style="padding:15px 25px; border-radius:18px; font-weight:900; margin:15px 0; display:inline-block; font-size: 24px;"></div>
             <div id="winScoreText" style="font-size:60px; font-weight:900;">0 : 0</div>
-            <button class="full-btn" style="margin-top: 10px;" onclick="window.closeWinner()">ПРИНЯТО</button>
+            <button class="full-btn" id="winnerAcceptBtn" style="margin-top: 10px;" onclick="window.closeWinner()">ПРИНЯТО</button>
         </div>
     </div>
     
@@ -557,18 +558,19 @@
     </div>
 
 <script>
-/* JS LOGIC v18.02 Pro */
+/* JS LOGIC v18.03 Pro */
 window.COLORS = { "Черные": "#000000", "Белые": "#ffffff", "Желтые": "#facc15", "Зеленые": "#22c55e", "Красные": "#ef4444", "Синие": "#3b82f6", "Разноцветные": "linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" };
 window.colorKeys = Object.keys(window.COLORS);
 window.audioCtx = null;
 window.currentRoom = null; window.currentRole = 'viewer';
 window.defaultConfig = { time: 420, goalLimit: 2, teams: ["Зеленые", "Красные", "Белые"], autoReset: true, useOT: true, goldenGoal: true, otLimit: 0, voiceEnabled: true, usePlayers: true, rosters: {}, adminPass: "123", viewerPass: "000", soundUrl: "", otInitializedDate: "" };
 window.config = null; window.tempConfig = null; window.matches = []; window.customTours = {}; window.tourRosters = {}; window.globalPlayers = []; window.tourMvps = {};
+window.liveWinnerModal = { active: false };
 
 window.time = 0; window.interval = null; window.currentMatch = null; window.selL = null; window.selR = null; window.otActive = false; window.isOT = false; window.otTime = 0; window.isFinishing = false; window.tSide = null; window.tScorer = null; 
 window.currentMvpDate = null; window.currentStatsPageIndex = 0; window.currentShareDate = null; window.editingMatchId = null; window.passMode = ''; window.editingTourPlayerDate = null; window.tempTourRosters = {}; window.editingTourDate = null; window.currentSettingsTarget = 'settingsContainer';
 window.playerDbSortCol = 'points'; window.playerDbSortDesc = true; window.playerDbStats = []; window.dropdownTarget = null;
-window.lastTick = Date.now(); // Для точного таймера
+window.timerReference = Date.now(); window.timerBaseTime = 0; window.timerBaseOtTime = 0;
 
 window.openModal = function(id) { const m = document.getElementById(id); if (m) { m.style.setProperty('display', 'flex', 'important'); m.classList.remove('hidden'); } };
 window.closeModal = function(id) { const m = document.getElementById(id); if (m) { m.style.display = 'none'; m.classList.add('hidden'); } };
@@ -585,36 +587,79 @@ window.applyDataFromFirebase = function(data) {
     
     if (window.currentRole !== 'viewer') window.ensureDefaultRosters();
 
-    // СИНХРОНИЗАЦИЯ LIVE-СОСТОЯНИЯ МАТЧА
-    if (data.liveState && !window.isFinishing) {
+    // СИНХРОНИЗАЦИЯ LIVE-СОСТОЯНИЯ МАТЧА И ОКОН
+    if (data.liveState) {
         let state = data.liveState;
-        window.selL = state.selL;
-        window.selR = state.selR;
-        window.currentMatch = data.currentMatch || null;
-
-        if (window.currentMatch) {
-            document.getElementById('score').innerText = window.currentMatch.s1 + " : " + window.currentMatch.s2;
-        } else {
-            document.getElementById('score').innerText = "0 : 0";
+        
+        // Синхронизация окна победителя
+        if (state.winnerModal) {
+            window.liveWinnerModal = state.winnerModal;
+            if (state.winnerModal.active && !window.isFinishing) {
+                let wm = state.winnerModal;
+                document.getElementById('winMatchNum').innerText = "МАТЧ #" + wm.matchNumber + " • " + wm.match.date + " " + wm.match.time;
+                const namePl = document.getElementById('winTeamName');
+                const win = wm.match.s1 > wm.match.s2 ? wm.match.t1 : (wm.match.s2 > wm.match.s1 ? wm.match.t2 : "НИЧЬЯ");
+                namePl.innerText = win.toUpperCase(); 
+                namePl.style.background = win === "НИЧЬЯ" ? "var(--gray)" : window.COLORS[win]; 
+                namePl.style.color = (win === 'Белые' || win === 'Желтые') ? '#000' : '#fff';
+                document.getElementById('winScoreText').innerText = wm.match.s1 + " : " + wm.match.s2;
+                window.openModal('winnerModal');
+                
+                window.isFinishing = true;
+                if(window.interval) { clearInterval(window.interval); window.interval = null; }
+                window.currentMatch = null; 
+            } else if (!state.winnerModal.active && window.isFinishing) {
+                window.closeModal('winnerModal');
+                window.isFinishing = false;
+                if (window.currentRole === 'viewer' || window.currentRole === 'admin') {
+                    window.confirmReset(false); 
+                    if(window.config.autoReset){window.selL=null; window.selR=null; window.updateSelectionUI();}
+                    document.getElementById('otTimerPlate').style.display='none';
+                }
+            }
         }
+        
+        if (!state.winnerModal || !state.winnerModal.active) {
+            window.selL = state.selL; window.selR = state.selR;
+            window.currentMatch = data.currentMatch || null;
 
-        if (Math.abs(window.time - state.time) > 2) window.time = state.time;
-        if (Math.abs(window.otTime - state.otTime) > 2) window.otTime = state.otTime;
+            if (window.currentMatch) document.getElementById('score').innerText = window.currentMatch.s1 + " : " + window.currentMatch.s2;
+            else document.getElementById('score').innerText = "0 : 0";
 
-        if (state.isOT && !window.isOT) {
-            window.isOT = true;
-            document.getElementById('otTimerPlate').style.display='flex';
-        } else if (!state.isOT && window.isOT) {
-            window.isOT = false;
-            document.getElementById('otTimerPlate').style.display='none';
-        }
+            if (state.isRunning) {
+                let timeSinceSync = (Date.now() - (state.syncTimestamp || Date.now())) / 1000;
+                if (timeSinceSync < 0 || timeSinceSync > 86400) timeSinceSync = 0;
+                
+                if (state.isOT) {
+                    window.time = 0;
+                    window.otTime = state.otTime + timeSinceSync;
+                } else {
+                    window.time = state.time - timeSinceSync;
+                    if (window.time < 0) window.time = 0;
+                    window.otTime = state.otTime;
+                }
 
-        if (state.isRunning && !window.interval) {
-            window.startLocalTimer();
-        } else if (!state.isRunning && window.interval) {
-            clearInterval(window.interval);
-            window.interval = null;
-            if (window.currentRole === 'admin') document.getElementById('startBtn').innerText = window.currentMatch ? "ПРОДОЛЖИТЬ" : "СТАРТ МАТЧА";
+                if (!window.interval) {
+                    window.startLocalTimer();
+                } else {
+                    window.timerReference = Date.now();
+                    window.timerBaseTime = window.time;
+                    window.timerBaseOtTime = window.otTime;
+                }
+            } else {
+                window.time = state.time !== undefined ? state.time : window.config.time;
+                window.otTime = state.otTime || 0;
+                if (window.interval) {
+                    clearInterval(window.interval); window.interval = null;
+                    if (window.currentRole === 'admin') document.getElementById('startBtn').innerText = window.currentMatch ? "ПРОДОЛЖИТЬ" : "СТАРТ МАТЧА";
+                }
+            }
+
+            if (state.isOT && !window.isOT) {
+                window.isOT = true; document.getElementById('otTimerPlate').style.display='flex';
+            } else if (!state.isOT && window.isOT) {
+                window.isOT = false; document.getElementById('otTimerPlate').style.display='none';
+            }
         }
     }
 };
@@ -627,19 +672,11 @@ window.syncToFirebase = async function(force = false) {
         try {
             const roomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', window.currentRoom);
             let payload = { 
-                config: window.config, 
-                matches: window.matches, 
-                customTours: window.customTours, 
-                tourRosters: window.tourRosters, 
-                globalPlayers: window.globalPlayers, 
-                tourMvps: window.tourMvps || {},
+                config: window.config, matches: window.matches, customTours: window.customTours, 
+                tourRosters: window.tourRosters, globalPlayers: window.globalPlayers, tourMvps: window.tourMvps || {},
                 liveState: {
-                    selL: window.selL,
-                    selR: window.selR,
-                    time: window.time,
-                    otTime: window.otTime,
-                    isOT: window.isOT,
-                    isRunning: window.interval !== null
+                    selL: window.selL, selR: window.selR, time: window.time, otTime: window.otTime, isOT: window.isOT,
+                    isRunning: window.interval !== null, syncTimestamp: Date.now(), winnerModal: window.liveWinnerModal || { active: false }
                 },
                 currentMatch: window.currentMatch
             };
@@ -698,7 +735,6 @@ window.startApp = function() {
 
 window.initApp = async function() {
     document.getElementById('loadingOverlay').style.display = 'flex';
-    
     const user = await window.startAuth();
     if (!user) { console.error("Firebase Auth Failed"); document.getElementById('loadingOverlay').style.display = 'none'; return; }
 
@@ -1021,6 +1057,7 @@ window.updateLockUI = function() {
     if (e && t) { if (window.currentRole === 'admin') { e.innerHTML = '<use href="#icon-lock"></use>'; t.innerText = "АДМИН"; } else { e.innerHTML = '<use href="#icon-eye"></use>'; t.innerText = "ИГРОК"; } }
     if(sBtn) sBtn.style.display = (window.currentRole === 'admin') ? 'flex' : 'none';
     document.getElementById('otToggle').parentElement.classList.toggle('active', window.otActive);
+    document.getElementById('winnerAcceptBtn').style.display = (window.currentRole === 'admin') ? 'block' : 'none';
     if (window.currentRole === 'viewer') {
         document.body.classList.add('viewer-mode'); if(adminRow) adminRow.style.display = 'none'; if(startBtn) startBtn.style.display = 'none';
         if(statsBtn) { statsBtn.style.background = 'var(--accent)'; statsBtn.style.color = 'var(--bg)'; statsBtn.style.fontSize = '18px'; statsBtn.style.padding = '18px 15px'; }
@@ -1084,28 +1121,39 @@ window.updateLastGoalDisplay = function() {
 
 window.startLocalTimer = function() {
     if(window.interval) return;
-    window.lastTick = Date.now();
+    window.timerReference = Date.now();
+    window.timerBaseTime = window.time;
+    window.timerBaseOtTime = window.otTime;
+
     window.interval = setInterval(() => {
         if (window.isFinishing) { clearInterval(window.interval); window.interval = null; return; }
         
         let now = Date.now();
-        let dt = (now - window.lastTick) / 1000;
-        window.lastTick = now;
+        let elapsedSeconds = (now - window.timerReference) / 1000;
 
         if(!window.isOT) { 
-            window.time -= dt; 
+            window.time = window.timerBaseTime - elapsedSeconds; 
             if(window.time <= 0){ 
                 window.time = 0; 
                 if(window.otActive && window.currentMatch && window.currentMatch.s1 === window.currentMatch.s2){ 
-                    window.isOT=true; window.otTime=0; document.getElementById('otTimerPlate').style.display='flex'; 
+                    window.isOT = true; 
+                    window.otTime = 0;
+                    window.timerReference = Date.now();
+                    window.timerBaseOtTime = 0;
+                    document.getElementById('otTimerPlate').style.display='flex'; 
+                    if(window.currentRole === 'admin') window.syncToFirebase(true);
                 } 
                 else { 
                     if(window.interval){ clearInterval(window.interval); window.interval=null; } 
-                    if(window.currentRole === 'admin') window.terminateMatch(); 
+                    if(window.currentRole === 'admin') {
+                        if (!window.liveWinnerModal || !window.liveWinnerModal.active) window.terminateMatch(); 
+                    }
                     return; 
                 } 
             }
-        } else { window.otTime += dt; }
+        } else { 
+            window.otTime = window.timerBaseOtTime + elapsedSeconds; 
+        }
         
         window.updateTimerDisplay();
         
@@ -1113,7 +1161,9 @@ window.startLocalTimer = function() {
             const lim = parseInt(window.config.goalLimit);
             if (lim > 0 && (window.currentMatch.s1 >= lim || window.currentMatch.s2 >= lim)) { 
                 if(window.interval){ clearInterval(window.interval); window.interval=null; }
-                if(window.currentRole === 'admin') window.terminateMatch(); 
+                if(window.currentRole === 'admin') {
+                    if (!window.liveWinnerModal || !window.liveWinnerModal.active) window.terminateMatch(); 
+                }
             }
         }
     }, 200);
@@ -1200,7 +1250,7 @@ window.processGoal = function(side, s, a) {
     const lim = parseInt(window.config.goalLimit);
     if (lim > 0 && (window.currentMatch.s1 >= lim || window.currentMatch.s2 >= lim)) { 
         if(window.interval){ clearInterval(window.interval); window.interval=null; }
-        window.terminateMatch(); 
+        if (!window.liveWinnerModal || !window.liveWinnerModal.active) window.terminateMatch(); 
     } else {
         window.syncToFirebase(true);
     }
@@ -1232,7 +1282,6 @@ window.endMatch = async function() {
         if (window.matches.some(m => m.id === window.currentMatch.id)) { window.currentMatch = null; return; }
 
         const dayMatchesCount = window.matches.filter(m => m.date === window.currentMatch.date).length + 1;
-        document.getElementById('winMatchNum').innerText = "МАТЧ #" + dayMatchesCount + " • " + window.currentMatch.date + " " + window.currentMatch.time;
         
         const namePl = document.getElementById('winTeamName');
         const win = window.currentMatch.s1 > window.currentMatch.s2 ? window.currentMatch.t1 : (window.currentMatch.s2 > window.currentMatch.s1 ? window.currentMatch.t2 : "НИЧЬЯ");
@@ -1250,11 +1299,16 @@ window.endMatch = async function() {
         window.matches.unshift(finishedMatch); 
         window.setStore("matches", window.matches);
         
-        window.currentMatch = null; 
-        
         window.snapshotTourRoster(finishedMatch.date); 
         window.updateGlobalPlayersList(); 
         window.updateMatchStatusLabel();
+
+        window.liveWinnerModal = {
+            active: true,
+            match: finishedMatch,
+            matchNumber: dayMatchesCount
+        };
+        window.currentMatch = null;
         
         await window.syncToFirebase(true);
     } catch (err) { console.error("Ошибка завершения матча:", err); window.showAlert("Сбой сохранения."); }
@@ -1283,18 +1337,27 @@ window.deleteDay = function(date) {
     if (window.currentRole !== 'admin') return;
     window.showConfirm(`Вы действительно хотите удалить турнир за ${date}?`, async () => { 
         window.matches = window.matches.filter(m => m.date !== date); 
+        
         if (window.customTours[date]) delete window.customTours[date];
         if (window.tourRosters[date]) delete window.tourRosters[date];
+        
         let mvps = window.getStore("tourMvps", {});
         if (mvps[date]) { delete mvps[date]; window.setStore("tourMvps", mvps); }
-        window.setStore("matches", window.matches); window.setStore("customTours", window.customTours); window.setStore("tourRosters", window.tourRosters); 
+        
+        window.setStore("matches", window.matches); 
+        window.setStore("customTours", window.customTours); 
+        window.setStore("tourRosters", window.tourRosters); 
+        
         window.currentStatsPageIndex = 0;
+        
         if (date === new Date().toLocaleDateString('ru-RU')) {
             window.otActive = window.config.useOT; 
             const otBtn = document.getElementById('otToggle');
             if(otBtn && otBtn.parentElement) otBtn.parentElement.classList.toggle('active', window.otActive);
         }
-        await window.syncToFirebase(true); window.renderCombinedStats(); 
+        
+        await window.syncToFirebase(true); 
+        window.renderCombinedStats(); 
     }); 
 };
 
@@ -1696,158 +1759,43 @@ window.saveAdminEdit = function() {
 
 window.deleteAdminMatch = function() { window.showConfirm("Точно удалить этот матч?", () => { window.matches = window.matches.filter(x => x.id !== window.editingMatchId); window.setStore("matches", window.matches); window.syncToFirebase(true); window.closeModal('adminEditorModal'); window.renderCombinedStats(); }); };
 
-window.openSettings = function() { 
-    if(window.interval || window.currentRole !== 'admin') return; 
-    window.tempConfig = JSON.parse(JSON.stringify(window.config)); 
-    window.currentSettingsTarget = 'settingsContainer'; window.renderSettingsList(window.currentSettingsTarget); window.openModal('settings'); 
-};
-
-window.renderSettingsList = function(targetId = window.currentSettingsTarget) {
-    window.currentSettingsTarget = targetId; const c = document.getElementById(targetId); if(!c) return;
-    let goalLimitDisplay = window.tempConfig.goalLimit === 0 ? "∞" : window.tempConfig.goalLimit;
-    
-    let h = window.createStepRow("Время (мин)", "time", window.tempConfig.time/60) + window.createStepRow("Лимит голов", "goalLimit", goalLimitDisplay) + window.createCheckRow("Выбор команд после игры", "autoReset", window.tempConfig.autoReset) + `<div class="settings-divider"></div>` + window.createStepRow("Всего команд", "teamsCount", window.tempConfig.teams.length);
-    window.tempConfig.teams.forEach((t, i) => h += window.createColorRow(`Команда ${i+1}`, i, t));
-    h += `<div class="settings-divider"></div>` + window.createCheckRow("Игроки и составы", "usePlayers", window.tempConfig.usePlayers);
-    if(window.tempConfig.usePlayers) h += `<button class="full-btn icon-btn" style="margin:10px 0; font-size:12px;" onclick="window.openRosterEditor()"><svg class="icon"><use href="#icon-run"></use></svg> СОСТАВЫ КОМАНД</button>`;
-    h += `<div class="settings-divider"></div>` + window.createCheckRow("Овертайм", "useOT", window.tempConfig.useOT) + window.createStepRow("Лимит овертайма (мин)", "otLimit", window.tempConfig.otLimit || "∞") + window.createCheckRow("Золотой гол", "goldenGoal", window.tempConfig.goldenGoal) + `<div class="settings-divider"></div><div style="background:rgba(255,255,255,0.03); padding:12px; border-radius:12px; margin-top:10px;"><div style="font-size:11px;color:var(--gray);margin-bottom:6px;">ЗВУК КОНЦА (URL):</div><input type="text" class="player-input" style="width:100%;" value="${window.tempConfig.soundUrl}" onchange="window.tempConfig.soundUrl=this.value"></div>`;
-    if (window.currentRole === 'admin' && targetId !== 'createSettingsContainer') { h += `<div class="settings-divider"></div><div class="settings-checkbox-row" onclick="window.changeRoomName()"><div class="setting-label">НАЗВАНИЕ ТУРНИРА</div><div style="color:var(--gray); font-size:12px; font-weight:900; text-transform:uppercase;">ИЗМЕНИТЬ</div></div><div class="settings-checkbox-row" onclick="window.changeViewerPass()"><div class="setting-label">ПАРОЛЬ ИГРОКА</div><div style="color:var(--gray); font-size:12px; font-weight:900; text-transform:uppercase;">ИЗМЕНИТЬ</div></div><div class="settings-checkbox-row" onclick="window.changeAdminPass()"><div class="setting-label">ПАРОЛЬ АДМИНА</div><div style="color:var(--gray); font-size:12px; font-weight:900; text-transform:uppercase;">ИЗМЕНИТЬ</div></div><button class="btn-base icon-btn" style="margin-top:15px; background:#1e293b; border:1px solid var(--success); color:var(--success); font-size:13px; padding:14px; width:100%;" onclick="window.openCreateRoomFromSettings()"><svg class="icon"><use href="#icon-plus"></use></svg> СОЗДАТЬ НОВЫЙ ЧЕМПИОНАТ</button>`; }
-    c.innerHTML = h;
-};
-
-window.createStepRow = function(l, k, v) { return `<div class="settings-row"><div class="setting-label">${l}</div><button class="step-btn" onclick="window.stepS('${k}',-1)">-</button><div class="step-value">${v}</div><button class="step-btn" onclick="window.stepS('${k}',1)"><svg class="icon" style="font-size: 12px;"><use href="#icon-plus"></use></svg></button></div>`; };
-window.createCheckRow = function(l, k, c) { return `<div class="settings-checkbox-row ${c?'checked':''}" onclick="window.toggleS('${k}')"><div class="setting-label">${l}</div><div class="custom-checkbox"></div></div>`; };
-window.createColorRow = function(l, i, v) { return `<div class="settings-row"><div class="setting-label">${l}</div><button class="step-btn" onclick="window.stepColor(${i},-1)">←</button><div class="step-value" style="background:${window.COLORS[v]}; color:${(v==='Белые'||v==='Желтые')?'#000':'#fff'}">${v}</div><button class="step-btn" onclick="window.stepColor(${i},1)">→</button></div>`; };
-
-window.stepS = function(k, d) { 
-    if(k==='time') window.tempConfig.time = Math.max(60, window.tempConfig.time + d*60); 
-    if(k==='goalLimit') window.tempConfig.goalLimit = Math.max(0, window.tempConfig.goalLimit + d); 
-    if(k==='teamsCount') { if(d>0 && window.tempConfig.teams.length<7) window.tempConfig.teams.push(window.colorKeys.find(c=>!window.tempConfig.teams.includes(c))); else if(d<0 && window.tempConfig.teams.length>2) window.tempConfig.teams.pop(); }
-    if(k==='otLimit') window.tempConfig.otLimit = Math.max(0, (window.tempConfig.otLimit||0) + d);
-    window.renderSettingsList(window.currentSettingsTarget); 
-};
-window.toggleS = function(k) { window.tempConfig[k] = !window.tempConfig[k]; window.renderSettingsList(window.currentSettingsTarget); };
-window.stepColor = function(i, d) { let c=window.colorKeys.indexOf(window.tempConfig.teams[i]), n=(c+d+window.colorKeys.length)%window.colorKeys.length; while(window.tempConfig.teams.includes(window.colorKeys[n])) n=(n+d+window.colorKeys.length)%window.colorKeys.length; window.tempConfig.teams[i]=window.colorKeys[n]; window.renderSettingsList(window.currentSettingsTarget); };
-
-window.saveSettings = async function() { 
-    if (window.tempConfig._pin && window.tempConfig._pin !== window.currentRoom) {
-        let newPin = window.tempConfig._pin.trim(); if (!newPin) newPin = window.currentRoom;
-        if (newPin !== window.currentRoom) {
-            if (localStorage.getItem("mSmartPro_config_" + newPin)) { return window.showAlert("Этот PIN уже существует! Придумайте другой."); }
-            let oldRoom = window.currentRoom; window.currentRoom = newPin;
-            window.setStore("config", window.tempConfig); window.setStore("matches", window.matches); window.setStore("customTours", window.customTours); window.setStore("tourRosters", window.tourRosters);
-            localStorage.removeItem("mSmartPro_config_" + oldRoom); localStorage.removeItem("mSmartPro_matches_" + oldRoom); localStorage.removeItem("mSmartPro_customTours_" + oldRoom); localStorage.removeItem("mSmartPro_tourRosters_" + oldRoom); localStorage.setItem("mSmartPro_lastRoom", window.currentRoom);
-        }
-    }
-
-    window.colorKeys.forEach(t => {
-        let oldR = window.config.rosters[t] || []; let newR = window.tempConfig.rosters[t] || [];
-        for (let i = 0; i < Math.min(oldR.length, newR.length); i++) {
-            let oName = oldR[i] ? String(oldR[i]).trim() : ""; let nName = newR[i] ? String(newR[i]).trim() : "";
-            if (oName && nName && oName !== nName) {
-                window.replacePlayerNameGlobally(oName, nName);
-            }
-        }
-    });
-
-    window.config = JSON.parse(JSON.stringify(window.tempConfig)); 
-    window.setStore("matches", window.matches); 
-    window.updateGlobalPlayersList(); 
-    await window.syncToFirebase(true); 
-    
-    window.closeModal('settings');
-    window.ensureDefaultRosters();
-    window.updateSelectionUI();
-    window.updateTimerDisplay();
-    
-    window.otActive = window.config.useOT;
-    const otBtn = document.getElementById('otToggle');
-    if(otBtn && otBtn.parentElement) otBtn.parentElement.classList.toggle('active', window.otActive);
-};
-
-window.changeRosterSize = function(t, d) {
-    let r = window.tempConfig.rosters[t];
-    if (d > 0 && r.length < 15) r.push(""); else if (d < 0 && r.length > 1) r.pop();
-    window.renderRosterEditorUI(); 
-};
-
-window.renderRosterEditorUI = function() {
-    window.updateGlobalPlayersList();
-    const c = document.getElementById('rosterContainer'); c.innerHTML = "";
-    window.tempConfig.teams.forEach(t => {
-        let h = `<div style="margin-bottom:15px; background:rgba(0,0,0,0.1); border-radius:12px; overflow:hidden;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; background:${window.COLORS[t]}; color:${(t==='Белые'||t==='Желтые')?'#000':'#fff'}; padding:10px; font-weight:800; font-size:12px;">
-                        <span>${t}</span>
-                        <div style="display:flex; gap:6px;">
-                            <button style="background:rgba(0,0,0,0.2); border:none; color:inherit; width:24px; height:24px; border-radius:4px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:bold;" onclick="window.changeRosterSize('${t}', -1)">-</button>
-                            <button style="background:rgba(0,0,0,0.2); border:none; color:inherit; width:24px; height:24px; border-radius:4px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:bold;" onclick="window.changeRosterSize('${t}', 1)"><svg class="icon" style="font-size: 11px;"><use href="#icon-plus"></use></svg></button>
-                        </div>
-                    </div>`;
-        if(!window.tempConfig.rosters[t]) window.tempConfig.rosters[t] = Array(5).fill("");
-        window.tempConfig.rosters[t].forEach((n, i) => {
-            h += `<div class="player-row">
-                    <span class="player-num">${i+1}.</span>
-                    <div style="display:flex; gap:4px; flex:1;">
-                        <input type="text" class="player-input" value="${n}" onchange="window.tempConfig.rosters['${t}'][${i}]=this.value" style="margin-bottom:0;">
-                        <button class="btn-base icon-btn" style="flex:0 0 35px; padding:0; margin-bottom:0;" onclick="window.openPlayerDropdown('${t}', ${i}, 'config')">▼</button>
-                    </div>
-                  </div>`;
-        });
-        c.innerHTML += h + `</div>`;
-    });
-    window.openModal('rosterModal');
-};
-
-window.openRosterEditor = function() {
-    window.renderRosterEditorUI();
-    window.openModal('rosterModal');
-};
-
-window.saveConfig = function() { window.setStore("config", window.config); window.syncToFirebase(true); };
-
-window.handleReset = function() { window.openModal('confirmReset'); };
-
-window.confirmReset = function(manual = true) { 
-    if(window.interval){clearInterval(window.interval); window.interval=null;} 
-    window.currentMatch=null; window.isOT=false; window.time=window.config.time; window.isFinishing=false;
-    document.getElementById('score').innerText="0 : 0"; 
-    document.getElementById('startBtn').innerText="СТАРТ МАТЧА"; 
-    document.getElementById('otTimerPlate').style.display='none'; 
-    if(manual) { window.selL=null; window.selR=null; }
-    window.closeModal('confirmReset'); 
-    window.updateSelectionUI(); window.updateTimerDisplay(); window.updateUtilityBtns(); window.updateLastGoalDisplay();
-    window.syncToFirebase(true);
-};
-
 window.openUndoModal = function() { window.openModal('confirmUndo'); };
 
-window.confirmUndo = function() { 
-    if(window.currentMatch && window.currentMatch.events && window.currentMatch.events.length) { 
-        const e = window.currentMatch.events.pop(); 
-        if(e.side===1) window.currentMatch.s1--; else window.currentMatch.s2--; 
-        document.getElementById('score').innerText = window.currentMatch.s1 + " : " + window.currentMatch.s2; 
+window.confirmUndo = function() {
+    if(window.currentMatch && window.currentMatch.events && window.currentMatch.events.length) {
+        const e = window.currentMatch.events.pop();
+        if(e.side===1) window.currentMatch.s1--; else window.currentMatch.s2--;
+        document.getElementById('score').innerText = window.currentMatch.s1 + " : " + window.currentMatch.s2;
         window.animateScore();
         window.syncToFirebase(true);
-    } 
-    window.closeModal('confirmUndo'); 
+    }
+    window.closeModal('confirmUndo');
     window.updateUtilityBtns(); window.updateLastGoalDisplay();
 };
 
 window.openFinish = function() { window.openModal('confirmFinish'); };
 window.confirmFinish = function() { window.terminateMatch(); window.closeModal('confirmFinish'); };
 
-window.closeWinner = function() { 
+window.closeWinner = async function() { 
+    if (window.currentRole !== 'admin') return; 
+    
+    window.liveWinnerModal = { active: false }; 
     window.confirmReset(false); 
     window.closeModal('winnerModal'); 
+    
     if(window.config.autoReset){window.selL=null; window.selR=null; window.updateSelectionUI();} 
-    window.otActive = false; window.config.useOT = false; window.saveConfig();
+    
+    window.otActive = false; window.config.useOT = false; 
     document.getElementById('otToggle').parentElement.classList.toggle('active', false);
+    
+    await window.syncToFirebase(true); 
 };
 
 window.toggleOTManual = function() { 
     if (window.currentRole === 'viewer') return;
-    window.otActive = !window.otActive; window.config.useOT = window.otActive; window.saveConfig();
+    window.otActive = !window.otActive; window.config.useOT = window.otActive;
     document.getElementById('otToggle').parentElement.classList.toggle('active', window.otActive); 
+    window.syncToFirebase(true);
 };
 
 window.updateUtilityBtns = function() {
@@ -1858,8 +1806,8 @@ window.updateUtilityBtns = function() {
     g1.disabled = (window.currentRole === 'viewer') || !window.interval; g2.disabled = (window.currentRole === 'viewer') || !window.interval;
 };
 
-window.announce = function(t) { 
-    if(!window.config.voiceEnabled) return; 
+window.announce = function(t) {
+    if(!window.config.voiceEnabled) return;
     try {
         if(window.speechSynthesis) {
             window.speechSynthesis.cancel();
@@ -1870,12 +1818,12 @@ window.announce = function(t) {
     } catch(e) { console.error("Speech Error:", e); }
 };
 
-setInterval(() => { 
+setInterval(() => {
     if(!window.currentRoom) return;
     const todayStr = new Date().toLocaleDateString('ru-RU');
     const todayCount = window.matches.filter(m => m.date === todayStr).length + 1;
     const meta = document.getElementById("gameMeta");
-    if(meta) meta.innerHTML = `Матч #${todayCount} • ${todayStr} • ${new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'})} • <span style="color:var(--gray); font-weight:bold;">${window.currentRoom}</span>`; 
+    if(meta) meta.innerHTML = `Матч #${todayCount} • ${todayStr} • ${new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'})} • <span style="color:var(--gray); font-weight:bold;">${window.currentRoom}</span>`;
 }, 1000);
 
 if (!window.appInitialized && typeof __firebase_config === 'undefined') { window.initApp(); }
