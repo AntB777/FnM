@@ -290,7 +290,6 @@
         <button id="statsBtn" class="full-btn icon-btn" style="margin-top:5px; background:var(--card); color:var(--text); font-size:14px; padding: 14px;" onclick="window.renderCombinedStats()"><svg class="icon"><use href="#icon-stats"></use></svg> СТАТИСТИКА</button>
     </div>
 
-    <!-- Модальные окна -->
     <div id="welcomeOverlay" class="overlay lobby-bg" style="z-index: 9999;">
         <div class="modal-content">
             <h2 style="color: var(--accent); margin-bottom: 25px; text-transform: uppercase; font-size: 24px;">Футбол на Манеже</h2>
@@ -306,7 +305,7 @@
                 <button class="btn-base" style="border: 1px solid var(--danger); color: var(--danger); width: 100%;" onclick="window.logout()">ВЫЙТИ ИЗ ЧЕМПИОНАТА</button>
             </div>
             <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
-                v17.25 Pro • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
+                v17.24 Pro • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
             </div>
         </div>
     </div>
@@ -1192,7 +1191,6 @@ window.openMvpSelector = function(date) {
 window.setMvp = function(name) { let tourMvps = window.getStore("tourMvps", {}); if (name) { tourMvps[window.currentMvpDate] = name; } else { delete tourMvps[window.currentMvpDate]; } window.setStore("tourMvps", tourMvps); window.syncToFirebase(true); window.closeModal('mvpSelectModal'); window.renderCombinedStats(); };
 window.changeStatsPage = function(dir) { window.currentStatsPageIndex += dir; window.renderCombinedStats(); };
 
-// ФУНКЦИЯ УДАЛЕНИЯ ТУРНИРА
 window.deleteDay = function(date) { 
     if (window.currentRole !== 'admin') return;
     window.showConfirm(`Вы действительно хотите удалить турнир за ${date}?`, async () => { 
@@ -1661,6 +1659,7 @@ window.renderRosterEditorUI = function() {
         });
         c.innerHTML += h + `</div>`;
     });
+    window.openModal('rosterModal');
 };
 
 window.openRosterEditor = function() {
