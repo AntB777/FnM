@@ -1666,7 +1666,10 @@ window.openRosterEditor = function() {
     window.renderRosterEditorUI();
     window.openModal('rosterModal');
 };
-
+window.saveConfig = function() { 
+    window.setStore("config", window.config); 
+    window.syncToFirebase(true); 
+};
 window.handleReset = function() { window.openModal('confirmReset'); };
 
 window.confirmReset = function(manual = true) { 
