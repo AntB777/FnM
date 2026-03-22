@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0f172a">
-    <title>Футбол на Манеже v17.25 Pro</title>
+    <title>Футбол на Манеже v17.26 Pro</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
@@ -228,7 +228,7 @@
         <symbol id="icon-share" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></symbol>
         <symbol id="icon-reset" viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></symbol>
         <symbol id="icon-undo" viewBox="0 0 24 24"><path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/></symbol>
-        <symbol id="icon-stop" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4 11H8c-.55 0-1-.45-1-1s.45-1 1-1h8c.55 0 1 .45 1 1s-.45 1-1 1h8c.55 0 1 .45 1 1s-.45 1-1 1h8c.55 0 1 .45 1 1s-.45 1-1 1h8c.55 0 1 .45 1 1s-.45 1-1 1z"/></symbol>
+        <symbol id="icon-stop" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4 11H8c-.55 0-1-.45-1-1s.45-1 1-1h8c.55 0 1 .45 1 1s-.45 1-1 1h8c.55 0 1 .45 1 1s-.45 1-1 1h8c.55 0 1 .45 1 1s-.45 1-1 1z"/></symbol>
         <symbol id="icon-door" viewBox="0 0 24 24"><path d="M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59zM19 3H5c-1.11 0-2 .9-2 2v4h2V5h14v14H5v-4H3v4c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></symbol>
         <symbol id="icon-star" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></symbol>
     </svg>
@@ -305,7 +305,7 @@
                 <button class="btn-base" style="border: 1px solid var(--danger); color: var(--danger); width: 100%;" onclick="window.logout()">ВЫЙТИ ИЗ ЧЕМПИОНАТА</button>
             </div>
             <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
-                v17.24 Pro • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
+                v17.26 Pro • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
             </div>
         </div>
     </div>
@@ -477,7 +477,6 @@
         </div>
     </div>
 
-    <!-- Новое модальное окно для быстрого выбора игрока из БД -->
     <div id="playerDropdownModal" class="overlay hidden" style="z-index: 20005;">
         <div class="modal-content">
             <h2 style="color:var(--accent); margin-top:0;">ВЫБЕРИТЕ ИГРОКА</h2>
@@ -558,7 +557,7 @@
     </div>
 
 <script>
-/* JS LOGIC v17.25 Pro */
+/* JS LOGIC v17.26 Pro */
 window.COLORS = { "Черные": "#000000", "Белые": "#ffffff", "Желтые": "#facc15", "Зеленые": "#22c55e", "Красные": "#ef4444", "Синие": "#3b82f6", "Разноцветные": "linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" };
 window.colorKeys = Object.keys(window.COLORS);
 window.audioCtx = null;
@@ -568,7 +567,7 @@ window.config = null; window.tempConfig = null; window.matches = []; window.cust
 window.time = 0; window.interval = null; window.currentMatch = null; window.selL = null; window.selR = null; window.otActive = false; window.isOT = false; window.otTime = 0; window.isFinishing = false; window.tSide = null; window.tScorer = null; 
 window.currentMvpDate = null; window.currentStatsPageIndex = 0; window.currentShareDate = null; window.editingMatchId = null; window.passMode = ''; window.editingTourPlayerDate = null; window.tempTourRosters = {}; window.editingTourDate = null; window.currentSettingsTarget = 'settingsContainer';
 window.playerDbSortCol = 'points'; window.playerDbSortDesc = true; window.playerDbStats = [];
-window.dropdownTarget = null; // Для нового модального окна выбора игрока
+window.dropdownTarget = null;
 
 window.openModal = function(id) { const m = document.getElementById(id); if (m) { m.style.setProperty('display', 'flex', 'important'); m.classList.remove('hidden'); } };
 window.closeModal = function(id) { const m = document.getElementById(id); if (m) { m.style.display = 'none'; m.classList.add('hidden'); } };
@@ -647,7 +646,7 @@ window.startApp = function() {
 
 window.initApp = async function() {
     document.getElementById('loadingOverlay').style.display = 'flex';
-    const user = await window.startAuth(); // ОЖИДАНИЕ АВТОРИЗАЦИИ
+    const user = await window.startAuth();
     if (!user) { console.error("Не удалось авторизоваться в Firebase."); }
 
     window.currentRoom = localStorage.getItem("mSmartPro_lastRoom"); window.currentRole = localStorage.getItem("mSmartPro_lastRole") || 'viewer';
@@ -708,7 +707,6 @@ window.updateGlobalPlayersList = function() {
     window.globalPlayers = Array.from(names).sort(); window.setStore("globalPlayers", window.globalPlayers);
 };
 
-// Универсальная функция замены имени игрока (СИНХРОНИЗАЦИЯ ИМЕН ВО ВСЕХ МЕНЮ)
 window.replacePlayerNameGlobally = function(oldName, newName) {
     if(!oldName || !newName || oldName === newName) return;
     const replaceArr = (arr) => { for(let i=0; i<arr.length; i++) if(String(arr[i]).trim() === oldName) arr[i] = newName; };
@@ -728,7 +726,6 @@ window.replacePlayerNameGlobally = function(oldName, newName) {
     if (idx !== -1) { window.globalPlayers[idx] = newName; window.globalPlayers = [...new Set(window.globalPlayers)].sort(); }
 };
 
-// Функция открытия быстрого списка игроков (ТРЕУГОЛЬНИК)
 window.openPlayerDropdown = function(team, index, mode) {
     window.dropdownTarget = { team, index, mode };
     window.updateGlobalPlayersList();
@@ -1195,18 +1192,27 @@ window.deleteDay = function(date) {
     if (window.currentRole !== 'admin') return;
     window.showConfirm(`Вы действительно хотите удалить турнир за ${date}?`, async () => { 
         window.matches = window.matches.filter(m => m.date !== date); 
+        
         if (window.customTours[date]) delete window.customTours[date];
         if (window.tourRosters[date]) delete window.tourRosters[date];
+        
         let mvps = window.getStore("tourMvps", {});
         if (mvps[date]) { delete mvps[date]; window.setStore("tourMvps", mvps); }
-        window.setStore("matches", window.matches); window.setStore("customTours", window.customTours); window.setStore("tourRosters", window.tourRosters); 
+        
+        window.setStore("matches", window.matches); 
+        window.setStore("customTours", window.customTours); 
+        window.setStore("tourRosters", window.tourRosters); 
+        
         window.currentStatsPageIndex = 0;
+        
         if (date === new Date().toLocaleDateString('ru-RU')) {
             window.otActive = window.config.useOT; 
             const otBtn = document.getElementById('otToggle');
             if(otBtn && otBtn.parentElement) otBtn.parentElement.classList.toggle('active', window.otActive);
         }
-        await window.syncToFirebase(true); window.renderCombinedStats(); 
+        
+        await window.syncToFirebase(true); 
+        window.renderCombinedStats(); 
     }); 
 };
 
@@ -1666,10 +1672,8 @@ window.openRosterEditor = function() {
     window.renderRosterEditorUI();
     window.openModal('rosterModal');
 };
-window.saveConfig = function() { 
-    window.setStore("config", window.config); 
-    window.syncToFirebase(true); 
-};
+
+window.saveConfig = function() { window.setStore("config", window.config); window.syncToFirebase(true); };
 window.handleReset = function() { window.openModal('confirmReset'); };
 
 window.confirmReset = function(manual = true) { 
