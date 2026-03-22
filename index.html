@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0f172a">
-    <title>Футбол на Манеже v17.26 Pro</title>
+    <title>Футбол на Манеже v18.01 Pro</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
@@ -228,7 +228,7 @@
         <symbol id="icon-share" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></symbol>
         <symbol id="icon-reset" viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></symbol>
         <symbol id="icon-undo" viewBox="0 0 24 24"><path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/></symbol>
-        <symbol id="icon-stop" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4 11H8c-.55 0-1-.45-1-1s.45-1 1-1h8c.55 0 1 .45 1 1s-.45 1-1 1h8c.55 0 1 .45 1 1s-.45 1-1 1h8c.55 0 1 .45 1 1s-.45 1-1 1z"/></symbol>
+        <symbol id="icon-stop" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4 11H8c-.55 0-1-.45-1-1s.45-1 1-1h8c.55 0 1 .45 1 1s-.45 1-1 1h8c.55 0 1 .45 1 1s-.45 1-1 1h8c.55 0 1 .45 1 1s-.45 1-1 1h8c.55 0 1 .45 1 1s-.45 1-1 1z"/></symbol>
         <symbol id="icon-door" viewBox="0 0 24 24"><path d="M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59zM19 3H5c-1.11 0-2 .9-2 2v4h2V5h14v14H5v-4H3v4c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></symbol>
         <symbol id="icon-star" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></symbol>
     </svg>
@@ -244,7 +244,6 @@
     </div>
 
     <div class="game-meta" id="gameMeta">Загрузка...</div>
-    <div id="matchStatusLabel" style="display: none; text-align: center; font-weight: 900; font-size: 13px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;"></div>
 
     <div class="scoreboard-area">
         <div class="score-plate">
@@ -305,7 +304,7 @@
                 <button class="btn-base" style="border: 1px solid var(--danger); color: var(--danger); width: 100%;" onclick="window.logout()">ВЫЙТИ ИЗ ЧЕМПИОНАТА</button>
             </div>
             <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
-                v17.26 Pro • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
+                v18.01 Pro • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
             </div>
         </div>
     </div>
@@ -557,17 +556,17 @@
     </div>
 
 <script>
-/* JS LOGIC v17.26 Pro */
+/* JS LOGIC v18.01 Pro */
 window.COLORS = { "Черные": "#000000", "Белые": "#ffffff", "Желтые": "#facc15", "Зеленые": "#22c55e", "Красные": "#ef4444", "Синие": "#3b82f6", "Разноцветные": "linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" };
 window.colorKeys = Object.keys(window.COLORS);
 window.audioCtx = null;
 window.currentRoom = null; window.currentRole = 'viewer';
 window.defaultConfig = { time: 420, goalLimit: 2, teams: ["Зеленые", "Красные", "Белые"], autoReset: true, useOT: true, goldenGoal: true, otLimit: 0, voiceEnabled: true, usePlayers: true, rosters: {}, adminPass: "123", viewerPass: "000", soundUrl: "", otInitializedDate: "" };
 window.config = null; window.tempConfig = null; window.matches = []; window.customTours = {}; window.tourRosters = {}; window.globalPlayers = []; window.tourMvps = {};
+
 window.time = 0; window.interval = null; window.currentMatch = null; window.selL = null; window.selR = null; window.otActive = false; window.isOT = false; window.otTime = 0; window.isFinishing = false; window.tSide = null; window.tScorer = null; 
 window.currentMvpDate = null; window.currentStatsPageIndex = 0; window.currentShareDate = null; window.editingMatchId = null; window.passMode = ''; window.editingTourPlayerDate = null; window.tempTourRosters = {}; window.editingTourDate = null; window.currentSettingsTarget = 'settingsContainer';
-window.playerDbSortCol = 'points'; window.playerDbSortDesc = true; window.playerDbStats = [];
-window.dropdownTarget = null;
+window.playerDbSortCol = 'points'; window.playerDbSortDesc = true; window.playerDbStats = []; window.dropdownTarget = null;
 
 window.openModal = function(id) { const m = document.getElementById(id); if (m) { m.style.setProperty('display', 'flex', 'important'); m.classList.remove('hidden'); } };
 window.closeModal = function(id) { const m = document.getElementById(id); if (m) { m.style.display = 'none'; m.classList.add('hidden'); } };
@@ -581,7 +580,41 @@ window.applyDataFromFirebase = function(data) {
     window.tourRosters = data.tourRosters || {}; 
     window.globalPlayers = data.globalPlayers || []; 
     window.tourMvps = data.tourMvps || {};
+    
     if (window.currentRole !== 'viewer') window.ensureDefaultRosters();
+
+    // СИНХРОНИЗАЦИЯ LIVE-СОСТОЯНИЯ МАТЧА
+    if (data.liveState && !window.isFinishing) {
+        let state = data.liveState;
+        window.selL = state.selL;
+        window.selR = state.selR;
+        window.currentMatch = data.currentMatch || null;
+
+        if (window.currentMatch) {
+            document.getElementById('score').innerText = window.currentMatch.s1 + " : " + window.currentMatch.s2;
+        } else {
+            document.getElementById('score').innerText = "0 : 0";
+        }
+
+        if (Math.abs(window.time - state.time) > 2) window.time = state.time;
+        if (Math.abs(window.otTime - state.otTime) > 2) window.otTime = state.otTime;
+
+        if (state.isOT && !window.isOT) {
+            window.isOT = true;
+            document.getElementById('otTimerPlate').style.display='flex';
+        } else if (!state.isOT && window.isOT) {
+            window.isOT = false;
+            document.getElementById('otTimerPlate').style.display='none';
+        }
+
+        if (state.isRunning && !window.interval) {
+            window.startLocalTimer();
+        } else if (!state.isRunning && window.interval) {
+            clearInterval(window.interval);
+            window.interval = null;
+            if (window.currentRole === 'admin') document.getElementById('startBtn').innerText = window.currentMatch ? "ПРОДОЛЖИТЬ" : "СТАРТ МАТЧА";
+        }
+    }
 };
 
 window.syncTimeout = null;
@@ -591,7 +624,24 @@ window.syncToFirebase = async function(force = false) {
     const doSync = async () => {
         try {
             const roomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', window.currentRoom);
-            await window.setDoc(roomRef, { config: window.config, matches: window.matches, customTours: window.customTours, tourRosters: window.tourRosters, globalPlayers: window.globalPlayers, tourMvps: window.tourMvps || {} });
+            let payload = { 
+                config: window.config, 
+                matches: window.matches, 
+                customTours: window.customTours, 
+                tourRosters: window.tourRosters, 
+                globalPlayers: window.globalPlayers, 
+                tourMvps: window.tourMvps || {},
+                liveState: {
+                    selL: window.selL,
+                    selR: window.selR,
+                    time: window.time,
+                    otTime: window.otTime,
+                    isOT: window.isOT,
+                    isRunning: window.interval !== null
+                },
+                currentMatch: window.currentMatch
+            };
+            await window.setDoc(roomRef, payload);
         } catch(e) { console.error("Sync Error:", e); }
     };
 
@@ -614,7 +664,7 @@ window.listenToRoom = function() {
             window.applyDataFromFirebase(doc.data());
             if (!document.getElementById('statsModal').classList.contains('hidden')) window.renderCombinedStats();
             if (!document.getElementById('playerDBModal').classList.contains('hidden')) window.openPlayerDB();
-            window.updateTimerDisplay(); window.updateLastGoalDisplay(); window.checkReady(); window.updateMatchStatusLabel();
+            window.updateTimerDisplay(); window.updateLastGoalDisplay(); window.checkReady(); window.updateMatchStatusLabel(); window.updateSelectionUI();
         }
     });
 };
@@ -627,13 +677,13 @@ window.ensureDefaultRosters = function() {
         if (!window.config.rosters[t]) { window.config.rosters[t] = Array(5).fill(""); changed = true; }
         window.config.rosters[t] = window.config.rosters[t].map((p, i) => { let name = p ? String(p).trim() : ""; if (!name || name === '?') { changed = true; return getDefaultPlayerName(t, i); } return name; });
     });
-    if (changed) window.syncToFirebase();
+    if (changed) window.syncToFirebase(true);
 };
 
 window.loadRoomData = function() {
     window.matches = window.getStore("matches", []); window.customTours = window.getStore("customTours", {}); window.tourRosters = window.getStore("tourRosters", {}); window.globalPlayers = window.getStore("globalPlayers", []); window.tourMvps = window.getStore("tourMvps", {});
     const todayStr = new Date().toLocaleDateString('ru-RU');
-    if (window.config.otInitializedDate !== todayStr) { const playedToday = window.matches.some(m => m.date === todayStr); window.config.useOT = !playedToday; window.config.otInitializedDate = todayStr; window.setStore("config", window.config); window.syncToFirebase(); }
+    if (window.config.otInitializedDate !== todayStr) { const playedToday = window.matches.some(m => m.date === todayStr); window.config.useOT = !playedToday; window.config.otInitializedDate = todayStr; window.setStore("config", window.config); window.syncToFirebase(true); }
 };
 
 window.startApp = function() {
@@ -646,8 +696,9 @@ window.startApp = function() {
 
 window.initApp = async function() {
     document.getElementById('loadingOverlay').style.display = 'flex';
+    
     const user = await window.startAuth();
-    if (!user) { console.error("Не удалось авторизоваться в Firebase."); }
+    if (!user) { console.error("Firebase Auth Failed"); document.getElementById('loadingOverlay').style.display = 'none'; return; }
 
     window.currentRoom = localStorage.getItem("mSmartPro_lastRoom"); window.currentRole = localStorage.getItem("mSmartPro_lastRole") || 'viewer';
     
@@ -855,7 +906,7 @@ window.confirmCreateRoom = async function() {
         window.currentRoom = pin; window.currentRole = 'admin'; window.tempConfig.adminPass = aPass; window.tempConfig.viewerPass = vPass; window.config = JSON.parse(JSON.stringify(window.tempConfig)); window.matches = []; window.customTours = {}; window.tourRosters = {}; window.globalPlayers = []; window.tourMvps = {};
         await window.syncToFirebase(true);
         localStorage.setItem("mSmartPro_lastRoom", window.currentRoom); localStorage.setItem("mSmartPro_lastRole", window.currentRole);
-        window.closeModal('createRoomModal'); window.startApp(); if (typeof window.listenToRoom === 'function') window.listenToRoom();
+        window.closeModal('createRoomModal'); window.startApp(); window.listenToRoom();
     } catch(e) { console.error("Ошибка создания:", e); window.showAlert("Ошибка при создании: " + e.message); } finally { document.getElementById('loadingOverlay').style.display = 'none'; }
 };
 
@@ -877,7 +928,7 @@ window.confirmJoinAdmin = async function() {
         }
         if (pass === c.adminPass || pass === (c.adminPass||"123")) { window.currentRole = 'admin'; } else { document.getElementById('loadingOverlay').style.display = 'none'; return window.showAlert("Неверный пароль!"); }
         window.currentRoom = pin; localStorage.setItem("mSmartPro_lastRoom", window.currentRoom); localStorage.setItem("mSmartPro_lastRole", window.currentRole);
-        window.closeModal('joinAdminModal'); window.startApp(); if (typeof window.listenToRoom === 'function') window.listenToRoom();
+        window.closeModal('joinAdminModal'); window.startApp(); window.listenToRoom();
     } catch(e) { console.error("Ошибка входа:", e); window.showAlert("Ошибка при подключении: " + e.message); } finally { document.getElementById('loadingOverlay').style.display = 'none'; }
 };
 
@@ -899,7 +950,7 @@ window.confirmJoinViewer = async function() {
         }
         if (pass !== c.viewerPass && pass !== (c.viewerPass||"000")) { document.getElementById('loadingOverlay').style.display = 'none'; return window.showAlert("Неверный пароль игрока!"); }
         window.currentRoom = pin; window.currentRole = 'viewer'; localStorage.setItem("mSmartPro_lastRoom", window.currentRoom); localStorage.setItem("mSmartPro_lastRole", window.currentRole);
-        window.closeModal('joinViewerModal'); window.startApp(); if (typeof window.listenToRoom === 'function') window.listenToRoom();
+        window.closeModal('joinViewerModal'); window.startApp(); window.listenToRoom();
     } catch(e) { console.error("Ошибка входа:", e); window.showAlert("Ошибка при подключении: " + e.message); } finally { document.getElementById('loadingOverlay').style.display = 'none'; }
 };
 
@@ -981,7 +1032,8 @@ window.updateLockUI = function() {
 window.selectTeam = function(side, team) {
     if (window.interval || window.currentRole === 'viewer') return;
     if (side === 'L' && team === window.selR) return; if (side === 'R' && team === window.selL) return;
-    if (side === 'L') window.selL = team; else window.selR = team; window.updateSelectionUI();
+    if (side === 'L') window.selL = team; else window.selR = team; 
+    window.updateSelectionUI(); window.syncToFirebase(true);
 };
 
 window.updateSelectionUI = function() {
@@ -998,7 +1050,11 @@ window.updateSelectionUI = function() {
     draw('left', window.selL, window.selR); draw('right', window.selR, window.selL); window.checkReady(); window.updateMatchStatusLabel();
 };
 
-window.resetTeam = function(id) { if(window.interval || window.currentRole === 'viewer') return; if(id==='left') window.selL=null; else window.selR=null; window.updateSelectionUI(); };
+window.resetTeam = function(id) { 
+    if(window.interval || window.currentRole === 'viewer') return; 
+    if(id==='left') window.selL=null; else window.selR=null; 
+    window.updateSelectionUI(); window.syncToFirebase(true); 
+};
 
 window.checkReady = function() {
     const s = document.getElementById('startBtn'), g1 = document.getElementById('goal1'), g2 = document.getElementById('goal2');
@@ -1023,41 +1079,55 @@ window.updateLastGoalDisplay = function() {
     lL.innerHTML = gl.map(e => fmtG(e)).join(''); lR.innerHTML = gr.map(e => fmtG(e)).join('');
 };
 
+window.startLocalTimer = function() {
+    if(window.interval) return;
+    window.interval = setInterval(() => {
+        if (window.isFinishing) { clearInterval(window.interval); window.interval = null; return; }
+        
+        if(!window.isOT) { 
+            window.time -= 0.2; 
+            if(window.time <= 0){ 
+                window.time = 0; 
+                if(window.otActive && window.currentMatch && window.currentMatch.s1 === window.currentMatch.s2){ 
+                    window.isOT=true; window.otTime=0; document.getElementById('otTimerPlate').style.display='flex'; 
+                } 
+                else { 
+                    if(window.interval){ clearInterval(window.interval); window.interval=null; } 
+                    if(window.currentRole === 'admin') window.terminateMatch(); 
+                    return; 
+                } 
+            }
+        } else { window.otTime += 0.2; }
+        
+        window.updateTimerDisplay();
+        
+        if (window.currentMatch && !window.isFinishing) {
+            const lim = parseInt(window.config.goalLimit);
+            if (lim > 0 && (window.currentMatch.s1 >= lim || window.currentMatch.s2 >= lim)) { 
+                if(window.interval){ clearInterval(window.interval); window.interval=null; }
+                if(window.currentRole === 'admin') window.terminateMatch(); 
+            }
+        }
+    }, 200);
+    if(window.currentRole === 'admin') document.getElementById('startBtn').innerText = "⏸ ПАУЗА";
+};
+
 window.toggleTimer = function() {
     if (window.currentRole === 'viewer') return;
     if (navigator.vibrate) navigator.vibrate(40); 
     if (window.audioCtx && window.audioCtx.state === 'suspended') window.audioCtx.resume();
     
     if (window.interval) { 
-        clearInterval(window.interval); window.interval = null; document.getElementById('startBtn').innerText = "ПРОДОЛЖИТЬ"; 
+        clearInterval(window.interval); window.interval = null; 
+        document.getElementById('startBtn').innerText = "ПРОДОЛЖИТЬ"; 
+        window.syncToFirebase(true);
     } else {
         if (!window.currentMatch) { 
             window.currentMatch = { id: window.matches.length ? Math.max(...window.matches.map(m=>m.id||0))+1 : 1, t1: window.selL, t2: window.selR, s1: 0, s2: 0, date: new Date().toLocaleDateString('ru-RU'), time: new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'}), events: [] }; 
             window.time = window.config.time; window.isFinishing = false; window.updateLastGoalDisplay();
         }
-        
-        window.interval = setInterval(() => {
-            if (window.isFinishing) { clearInterval(window.interval); window.interval = null; return; }
-            if(!window.isOT) { 
-                window.time -= 0.2; 
-                if(window.time <= 0){ 
-                    window.time = 0; 
-                    if(window.otActive && window.currentMatch.s1 === window.currentMatch.s2){ window.isOT=true; window.otTime=0; document.getElementById('otTimerPlate').style.display='flex'; } 
-                    else { if(window.interval){ clearInterval(window.interval); window.interval=null; } window.terminateMatch(); return; } 
-                }
-            } else { window.otTime += 0.2; }
-            
-            window.updateTimerDisplay();
-            
-            if (window.currentMatch && !window.isFinishing) {
-                const lim = parseInt(window.config.goalLimit);
-                if (lim > 0 && (window.currentMatch.s1 >= lim || window.currentMatch.s2 >= lim)) { 
-                    if(window.interval){ clearInterval(window.interval); window.interval=null; }
-                    window.terminateMatch(); 
-                }
-            }
-        }, 200);
-        document.getElementById('startBtn').innerText = "⏸ ПАУЗА";
+        window.startLocalTimer();
+        window.syncToFirebase(true);
     }
     window.updateUtilityBtns(); window.updateMatchStatusLabel();
 };
@@ -1123,6 +1193,8 @@ window.processGoal = function(side, s, a) {
     if (lim > 0 && (window.currentMatch.s1 >= lim || window.currentMatch.s2 >= lim)) { 
         if(window.interval){ clearInterval(window.interval); window.interval=null; }
         window.terminateMatch(); 
+    } else {
+        window.syncToFirebase(true);
     }
     window.updateUtilityBtns();
 };
@@ -1148,6 +1220,9 @@ window.terminateMatch = function() {
 
 window.endMatch = async function() {
     try {
+        if (!window.currentMatch) return; 
+        if (window.matches.some(m => m.id === window.currentMatch.id)) { window.currentMatch = null; return; }
+
         const dayMatchesCount = window.matches.filter(m => m.date === window.currentMatch.date).length + 1;
         document.getElementById('winMatchNum').innerText = "МАТЧ #" + dayMatchesCount + " • " + window.currentMatch.date + " " + window.currentMatch.time;
         
@@ -1162,8 +1237,16 @@ window.endMatch = async function() {
         window.openModal('winnerModal');
         
         if (!window.currentMatch.events) window.currentMatch.events = [];
-        window.matches.unshift({...window.currentMatch}); window.setStore("matches", window.matches);
-        window.snapshotTourRoster(window.currentMatch.date); window.updateGlobalPlayersList(); window.updateMatchStatusLabel();
+        
+        const finishedMatch = {...window.currentMatch};
+        window.matches.unshift(finishedMatch); 
+        window.setStore("matches", window.matches);
+        
+        window.currentMatch = null; 
+        
+        window.snapshotTourRoster(finishedMatch.date); 
+        window.updateGlobalPlayersList(); 
+        window.updateMatchStatusLabel();
         
         await window.syncToFirebase(true);
     } catch (err) { console.error("Ошибка завершения матча:", err); window.showAlert("Сбой сохранения."); }
@@ -1552,7 +1635,7 @@ window.openMatchEditor = function(id) {
     document.getElementById('adminEditContainer').innerHTML = h; window.openModal('adminEditorModal');
 };
 
-window.removeEventFromEdit = function(idx) { const m = window.matches.find(x => x.id === window.editingMatchId); m.events.splice(idx, 1); window.openMatchEditor(window.editingMatchId); };
+window.removeEventFromEdit = function(idx) { const m = window.matches.find(x => x.id === window.editingMatchId); if(m && m.events) { m.events.splice(idx, 1); window.openMatchEditor(window.editingMatchId); } };
 window.addEventToEdit = function() { const m = window.matches.find(x => x.id === window.editingMatchId); if(m) { if(!m.events) m.events = []; m.events.push({side: 1, s: '', a: ''}); window.openMatchEditor(window.editingMatchId); } };
 
 window.openAddPastMatch = function(targetDate) {
@@ -1674,6 +1757,7 @@ window.openRosterEditor = function() {
 };
 
 window.saveConfig = function() { window.setStore("config", window.config); window.syncToFirebase(true); };
+
 window.handleReset = function() { window.openModal('confirmReset'); };
 
 window.confirmReset = function(manual = true) { 
@@ -1685,6 +1769,7 @@ window.confirmReset = function(manual = true) {
     if(manual) { window.selL=null; window.selR=null; }
     window.closeModal('confirmReset'); 
     window.updateSelectionUI(); window.updateTimerDisplay(); window.updateUtilityBtns(); window.updateLastGoalDisplay();
+    window.syncToFirebase(true);
 };
 
 window.openUndoModal = function() { window.openModal('confirmUndo'); };
@@ -1695,6 +1780,7 @@ window.confirmUndo = function() {
         if(e.side===1) window.currentMatch.s1--; else window.currentMatch.s2--; 
         document.getElementById('score').innerText = window.currentMatch.s1 + " : " + window.currentMatch.s2; 
         window.animateScore();
+        window.syncToFirebase(true);
     } 
     window.closeModal('confirmUndo'); 
     window.updateUtilityBtns(); window.updateLastGoalDisplay();
