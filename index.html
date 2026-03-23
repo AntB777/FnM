@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0f172a">
-    <title>Футбол на Манеже v18.06 Pro</title>
+    <title>Футбол на Манеже v18.07 Pro</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
@@ -305,7 +305,7 @@
                 <button class="btn-base" style="border: 1px solid var(--danger); color: var(--danger); width: 100%;" onclick="window.logout()">ВЫЙТИ ИЗ ЧЕМПИОНАТА</button>
             </div>
             <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
-                v18.06 Pro • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
+                v18.07 Pro • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
             </div>
         </div>
     </div>
@@ -558,7 +558,7 @@
     </div>
 
 <script>
-/* JS LOGIC v18.06 Pro */
+/* JS LOGIC v18.07 Pro */
 window.COLORS = { "Черные": "#000000", "Белые": "#ffffff", "Желтые": "#facc15", "Зеленые": "#22c55e", "Красные": "#ef4444", "Синие": "#3b82f6", "Разноцветные": "linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" };
 window.colorKeys = Object.keys(window.COLORS);
 window.audioCtx = null;
@@ -753,7 +753,7 @@ window.listenToRoom = function() {
             window.applyDataFromFirebase(doc.data());
             if (!document.getElementById('statsModal').classList.contains('hidden')) window.renderCombinedStats();
             if (!document.getElementById('playerDBModal').classList.contains('hidden')) window.openPlayerDB();
-            window.updateTimerDisplay(); window.updateLastGoalDisplay(); window.checkReady(); window.updateMatchStatusLabel(); window.updateSelectionUI();
+            window.updateTimerDisplay(); window.updateLastGoalDisplay(); window.checkReady(); window.updateMatchStatusLabel(); window.updateSelectionUI(); window.updateUtilityBtns();
         }
     });
 };
@@ -1133,12 +1133,10 @@ window.updateSelectionUI = function() {
         if (cur) {
             cont.classList.add('hidden'); act.classList.remove('hidden'); 
             const light = cur==='Белые'||cur==='Желтые';
-            const newHtml = `<button class="chosen-team-btn" style="background:${window.COLORS[cur]}; color:${light?'#000':'#fff'}" onclick="window.resetTeam('${id}')">${cur}</button>`;
-            if(window.selectionHtmlState[id+'Active'] !== newHtml) { act.innerHTML = newHtml; window.selectionHtmlState[id+'Active'] = newHtml; }
+            act.innerHTML = `<button class="chosen-team-btn" style="background:${window.COLORS[cur]}; color:${light?'#000':'#fff'}" onclick="window.resetTeam('${id}')">${cur}</button>`;
         } else {
             cont.classList.remove('hidden'); act.classList.add('hidden');
-            const newHtml = window.config.teams.map(t => `<div class="circle-select ${t===opp?'blocked':''}" style="background:${window.COLORS[t]}" onclick="window.selectTeam('${id==='left'?'L':'R'}','${t}')"></div>`).join('');
-            if(window.selectionHtmlState[id+'Cont'] !== newHtml) { cont.innerHTML = newHtml; window.selectionHtmlState[id+'Cont'] = newHtml; }
+            cont.innerHTML = window.config.teams.map(t => `<div class="circle-select ${t===opp?'blocked':''}" style="background:${window.COLORS[t]}" onclick="window.selectTeam('${id==='left'?'L':'R'}','${t}')"></div>`).join('');
         }
     };
     draw('left', window.selL, window.selR); draw('right', window.selR, window.selL); window.checkReady(); window.updateMatchStatusLabel();
@@ -1260,7 +1258,7 @@ window.updateTimerDisplay = function() {
 };
 
 window.playGoalSound = function() { 
-    if (window.localSettings.vibration && navigator.vibrate) navigator.vibrate([50, 50, 50]);
+    if (window.localSettings.vibration && navigator.vibrate) navigator.vibrate([50]);
     if (!window.localSettings.sound) return;
     try {
         if (!window.audioCtx) { window.audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
@@ -1340,6 +1338,7 @@ window.finishGoal = function(a) { window.closeModal('playerSelModal'); setTimeou
 
 window.processGoal = function(side, s, a) {
     if (window.isFinishing) return;
+    window.playGoalSound();
     if (side === 1) window.currentMatch.s1++; else window.currentMatch.s2++;
     
     if(!window.currentMatch.events) window.currentMatch.events = [];
@@ -1363,6 +1362,8 @@ window.terminateMatch = function() {
     window.isFinishing = true;
     if (window.interval) { clearInterval(window.interval); window.interval = null; }
     document.querySelectorAll('.overlay').forEach(ov => { if(ov.id !== 'winnerModal') window.closeModal(ov.id); });
+    
+    window.playEndSound();
     
     setTimeout(window.endMatch, 600); 
 };
