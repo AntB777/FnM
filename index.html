@@ -305,7 +305,7 @@
                 <button class="btn-base" style="border: 1px solid var(--danger); color: var(--danger); width: 100%;" onclick="window.logout()">ВЫЙТИ ИЗ ЧЕМПИОНАТА</button>
             </div>
             <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
-                v18.03 Pro • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
+                v18.02 Pro 
             </div>
         </div>
     </div>
@@ -623,42 +623,29 @@ window.applyDataFromFirebase = function(data) {
             window.selL = state.selL; window.selR = state.selR;
             window.currentMatch = data.currentMatch || null;
 
-            if (window.currentMatch) document.getElementById('score').innerText = window.currentMatch.s1 + " : " + window.currentMatch.s2;
-            else document.getElementById('score').innerText = "0 : 0";
-
-            if (state.isRunning) {
-                let timeSinceSync = (Date.now() - (state.syncTimestamp || Date.now())) / 1000;
-                if (timeSinceSync < 0 || timeSinceSync > 86400) timeSinceSync = 0;
-                
-                if (state.isOT) {
-                    window.time = 0;
-                    window.otTime = state.otTime + timeSinceSync;
-                } else {
-                    window.time = state.time - timeSinceSync;
-                    if (window.time < 0) window.time = 0;
-                    window.otTime = state.otTime;
-                }
-
-                if (!window.interval) {
-                    window.startLocalTimer();
-                } else {
-                    window.timerReference = Date.now();
-                    window.timerBaseTime = window.time;
-                    window.timerBaseOtTime = window.otTime;
-                }
+            if (window.currentMatch) {
+                document.getElementById('score').innerText = window.currentMatch.s1 + " : " + window.currentMatch.s2;
             } else {
-                window.time = state.time !== undefined ? state.time : window.config.time;
-                window.otTime = state.otTime || 0;
-                if (window.interval) {
-                    clearInterval(window.interval); window.interval = null;
-                    if (window.currentRole === 'admin') document.getElementById('startBtn').innerText = window.currentMatch ? "ПРОДОЛЖИТЬ" : "СТАРТ МАТЧА";
-                }
+                document.getElementById('score').innerText = "0 : 0";
             }
 
+            if (Math.abs(window.time - state.time) > 2) window.time = state.time;
+            if (Math.abs(window.otTime - state.otTime) > 2) window.otTime = state.otTime;
+
             if (state.isOT && !window.isOT) {
-                window.isOT = true; document.getElementById('otTimerPlate').style.display='flex';
+                window.isOT = true;
+                document.getElementById('otTimerPlate').style.display='flex';
             } else if (!state.isOT && window.isOT) {
-                window.isOT = false; document.getElementById('otTimerPlate').style.display='none';
+                window.isOT = false;
+                document.getElementById('otTimerPlate').style.display='none';
+            }
+
+            if (state.isRunning && !window.interval) {
+                window.startLocalTimer();
+            } else if (!state.isRunning && window.interval) {
+                clearInterval(window.interval);
+                window.interval = null;
+                if (window.currentRole === 'admin') document.getElementById('startBtn').innerText = window.currentMatch ? "ПРОДОЛЖИТЬ" : "СТАРТ МАТЧА";
             }
         }
     }
@@ -672,11 +659,21 @@ window.syncToFirebase = async function(force = false) {
         try {
             const roomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', window.currentRoom);
             let payload = { 
-                config: window.config, matches: window.matches, customTours: window.customTours, 
-                tourRosters: window.tourRosters, globalPlayers: window.globalPlayers, tourMvps: window.tourMvps || {},
+                config: window.config, 
+                matches: window.matches, 
+                customTours: window.customTours, 
+                tourRosters: window.tourRosters, 
+                globalPlayers: window.globalPlayers, 
+                tourMvps: window.tourMvps || {},
                 liveState: {
-                    selL: window.selL, selR: window.selR, time: window.time, otTime: window.otTime, isOT: window.isOT,
-                    isRunning: window.interval !== null, syncTimestamp: Date.now(), winnerModal: window.liveWinnerModal || { active: false }
+                    selL: window.selL,
+                    selR: window.selR,
+                    time: window.time,
+                    otTime: window.otTime,
+                    isOT: window.isOT,
+                    isRunning: window.interval !== null,
+                    syncTimestamp: Date.now(),
+                    winnerModal: window.liveWinnerModal || { active: false }
                 },
                 currentMatch: window.currentMatch
             };
@@ -735,6 +732,7 @@ window.startApp = function() {
 
 window.initApp = async function() {
     document.getElementById('loadingOverlay').style.display = 'flex';
+    
     const user = await window.startAuth();
     if (!user) { console.error("Firebase Auth Failed"); document.getElementById('loadingOverlay').style.display = 'none'; return; }
 
@@ -1337,27 +1335,18 @@ window.deleteDay = function(date) {
     if (window.currentRole !== 'admin') return;
     window.showConfirm(`Вы действительно хотите удалить турнир за ${date}?`, async () => { 
         window.matches = window.matches.filter(m => m.date !== date); 
-        
         if (window.customTours[date]) delete window.customTours[date];
         if (window.tourRosters[date]) delete window.tourRosters[date];
-        
         let mvps = window.getStore("tourMvps", {});
         if (mvps[date]) { delete mvps[date]; window.setStore("tourMvps", mvps); }
-        
-        window.setStore("matches", window.matches); 
-        window.setStore("customTours", window.customTours); 
-        window.setStore("tourRosters", window.tourRosters); 
-        
+        window.setStore("matches", window.matches); window.setStore("customTours", window.customTours); window.setStore("tourRosters", window.tourRosters); 
         window.currentStatsPageIndex = 0;
-        
         if (date === new Date().toLocaleDateString('ru-RU')) {
             window.otActive = window.config.useOT; 
             const otBtn = document.getElementById('otToggle');
             if(otBtn && otBtn.parentElement) otBtn.parentElement.classList.toggle('active', window.otActive);
         }
-        
-        await window.syncToFirebase(true); 
-        window.renderCombinedStats(); 
+        await window.syncToFirebase(true); window.renderCombinedStats(); 
     }); 
 };
 
@@ -1759,17 +1748,140 @@ window.saveAdminEdit = function() {
 
 window.deleteAdminMatch = function() { window.showConfirm("Точно удалить этот матч?", () => { window.matches = window.matches.filter(x => x.id !== window.editingMatchId); window.setStore("matches", window.matches); window.syncToFirebase(true); window.closeModal('adminEditorModal'); window.renderCombinedStats(); }); };
 
+window.openSettings = function() { 
+    if(window.interval || window.currentRole !== 'admin') return; 
+    window.tempConfig = JSON.parse(JSON.stringify(window.config)); 
+    window.currentSettingsTarget = 'settingsContainer'; window.renderSettingsList(window.currentSettingsTarget); window.openModal('settings'); 
+};
+
+window.renderSettingsList = function(targetId = window.currentSettingsTarget) {
+    window.currentSettingsTarget = targetId; const c = document.getElementById(targetId); if(!c) return;
+    let goalLimitDisplay = window.tempConfig.goalLimit === 0 ? "∞" : window.tempConfig.goalLimit;
+    
+    let h = window.createStepRow("Время (мин)", "time", window.tempConfig.time/60) + window.createStepRow("Лимит голов", "goalLimit", goalLimitDisplay) + window.createCheckRow("Выбор команд после игры", "autoReset", window.tempConfig.autoReset) + `<div class="settings-divider"></div>` + window.createStepRow("Всего команд", "teamsCount", window.tempConfig.teams.length);
+    window.tempConfig.teams.forEach((t, i) => h += window.createColorRow(`Команда ${i+1}`, i, t));
+    h += `<div class="settings-divider"></div>` + window.createCheckRow("Игроки и составы", "usePlayers", window.tempConfig.usePlayers);
+    if(window.tempConfig.usePlayers) h += `<button class="full-btn icon-btn" style="margin:10px 0; font-size:12px;" onclick="window.openRosterEditor()"><svg class="icon"><use href="#icon-run"></use></svg> СОСТАВЫ КОМАНД</button>`;
+    h += `<div class="settings-divider"></div>` + window.createCheckRow("Овертайм", "useOT", window.tempConfig.useOT) + window.createStepRow("Лимит овертайма (мин)", "otLimit", window.tempConfig.otLimit || "∞") + window.createCheckRow("Золотой гол", "goldenGoal", window.tempConfig.goldenGoal) + `<div class="settings-divider"></div><div style="background:rgba(255,255,255,0.03); padding:12px; border-radius:12px; margin-top:10px;"><div style="font-size:11px;color:var(--gray);margin-bottom:6px;">ЗВУК КОНЦА (URL):</div><input type="text" class="player-input" style="width:100%;" value="${window.tempConfig.soundUrl}" onchange="window.tempConfig.soundUrl=this.value"></div>`;
+    if (window.currentRole === 'admin' && targetId !== 'createSettingsContainer') { h += `<div class="settings-divider"></div><div class="settings-checkbox-row" onclick="window.changeRoomName()"><div class="setting-label">НАЗВАНИЕ ТУРНИРА</div><div style="color:var(--gray); font-size:12px; font-weight:900; text-transform:uppercase;">ИЗМЕНИТЬ</div></div><div class="settings-checkbox-row" onclick="window.changeViewerPass()"><div class="setting-label">ПАРОЛЬ ИГРОКА</div><div style="color:var(--gray); font-size:12px; font-weight:900; text-transform:uppercase;">ИЗМЕНИТЬ</div></div><div class="settings-checkbox-row" onclick="window.changeAdminPass()"><div class="setting-label">ПАРОЛЬ АДМИНА</div><div style="color:var(--gray); font-size:12px; font-weight:900; text-transform:uppercase;">ИЗМЕНИТЬ</div></div><button class="btn-base icon-btn" style="margin-top:15px; background:#1e293b; border:1px solid var(--success); color:var(--success); font-size:13px; padding:14px; width:100%;" onclick="window.openCreateRoomFromSettings()"><svg class="icon"><use href="#icon-plus"></use></svg> СОЗДАТЬ НОВЫЙ ЧЕМПИОНАТ</button>`; }
+    c.innerHTML = h;
+};
+
+window.createStepRow = function(l, k, v) { return `<div class="settings-row"><div class="setting-label">${l}</div><button class="step-btn" onclick="window.stepS('${k}',-1)">-</button><div class="step-value">${v}</div><button class="step-btn" onclick="window.stepS('${k}',1)"><svg class="icon" style="font-size: 12px;"><use href="#icon-plus"></use></svg></button></div>`; };
+window.createCheckRow = function(l, k, c) { return `<div class="settings-checkbox-row ${c?'checked':''}" onclick="window.toggleS('${k}')"><div class="setting-label">${l}</div><div class="custom-checkbox"></div></div>`; };
+window.createColorRow = function(l, i, v) { return `<div class="settings-row"><div class="setting-label">${l}</div><button class="step-btn" onclick="window.stepColor(${i},-1)">←</button><div class="step-value" style="background:${window.COLORS[v]}; color:${(v==='Белые'||v==='Желтые')?'#000':'#fff'}">${v}</div><button class="step-btn" onclick="window.stepColor(${i},1)">→</button></div>`; };
+
+window.stepS = function(k, d) { 
+    if(k==='time') window.tempConfig.time = Math.max(60, window.tempConfig.time + d*60); 
+    if(k==='goalLimit') window.tempConfig.goalLimit = Math.max(0, window.tempConfig.goalLimit + d); 
+    if(k==='teamsCount') { if(d>0 && window.tempConfig.teams.length<7) window.tempConfig.teams.push(window.colorKeys.find(c=>!window.tempConfig.teams.includes(c))); else if(d<0 && window.tempConfig.teams.length>2) window.tempConfig.teams.pop(); }
+    if(k==='otLimit') window.tempConfig.otLimit = Math.max(0, (window.tempConfig.otLimit||0) + d);
+    window.renderSettingsList(window.currentSettingsTarget); 
+};
+window.toggleS = function(k) { window.tempConfig[k] = !window.tempConfig[k]; window.renderSettingsList(window.currentSettingsTarget); };
+window.stepColor = function(i, d) { let c=window.colorKeys.indexOf(window.tempConfig.teams[i]), n=(c+d+window.colorKeys.length)%window.colorKeys.length; while(window.tempConfig.teams.includes(window.colorKeys[n])) n=(n+d+window.colorKeys.length)%window.colorKeys.length; window.tempConfig.teams[i]=window.colorKeys[n]; window.renderSettingsList(window.currentSettingsTarget); };
+
+window.saveSettings = async function() { 
+    if (window.tempConfig._pin && window.tempConfig._pin !== window.currentRoom) {
+        let newPin = window.tempConfig._pin.trim(); if (!newPin) newPin = window.currentRoom;
+        if (newPin !== window.currentRoom) {
+            if (localStorage.getItem("mSmartPro_config_" + newPin)) { return window.showAlert("Этот PIN уже существует! Придумайте другой."); }
+            let oldRoom = window.currentRoom; window.currentRoom = newPin;
+            window.setStore("config", window.tempConfig); window.setStore("matches", window.matches); window.setStore("customTours", window.customTours); window.setStore("tourRosters", window.tourRosters);
+            localStorage.removeItem("mSmartPro_config_" + oldRoom); localStorage.removeItem("mSmartPro_matches_" + oldRoom); localStorage.removeItem("mSmartPro_customTours_" + oldRoom); localStorage.removeItem("mSmartPro_tourRosters_" + oldRoom); localStorage.setItem("mSmartPro_lastRoom", window.currentRoom);
+        }
+    }
+
+    window.colorKeys.forEach(t => {
+        let oldR = window.config.rosters[t] || []; let newR = window.tempConfig.rosters[t] || [];
+        for (let i = 0; i < Math.min(oldR.length, newR.length); i++) {
+            let oName = oldR[i] ? String(oldR[i]).trim() : ""; let nName = newR[i] ? String(newR[i]).trim() : "";
+            if (oName && nName && oName !== nName) {
+                window.replacePlayerNameGlobally(oName, nName);
+            }
+        }
+    });
+
+    window.config = JSON.parse(JSON.stringify(window.tempConfig)); 
+    window.setStore("matches", window.matches); 
+    window.updateGlobalPlayersList(); 
+    await window.syncToFirebase(true); 
+    
+    window.closeModal('settings');
+    window.ensureDefaultRosters();
+    window.updateSelectionUI();
+    window.updateTimerDisplay();
+    
+    window.otActive = window.config.useOT;
+    const otBtn = document.getElementById('otToggle');
+    if(otBtn && otBtn.parentElement) otBtn.parentElement.classList.toggle('active', window.otActive);
+};
+
+window.changeRosterSize = function(t, d) {
+    let r = window.tempConfig.rosters[t];
+    if (d > 0 && r.length < 15) r.push(""); else if (d < 0 && r.length > 1) r.pop();
+    window.renderRosterEditorUI(); 
+};
+
+window.renderRosterEditorUI = function() {
+    window.updateGlobalPlayersList();
+    const c = document.getElementById('rosterContainer'); c.innerHTML = "";
+    window.tempConfig.teams.forEach(t => {
+        let h = `<div style="margin-bottom:15px; background:rgba(0,0,0,0.1); border-radius:12px; overflow:hidden;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; background:${window.COLORS[t]}; color:${(t==='Белые'||t==='Желтые')?'#000':'#fff'}; padding:10px; font-weight:800; font-size:12px;">
+                        <span>${t}</span>
+                        <div style="display:flex; gap:6px;">
+                            <button style="background:rgba(0,0,0,0.2); border:none; color:inherit; width:24px; height:24px; border-radius:4px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:bold;" onclick="window.changeRosterSize('${t}', -1)">-</button>
+                            <button style="background:rgba(0,0,0,0.2); border:none; color:inherit; width:24px; height:24px; border-radius:4px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:bold;" onclick="window.changeRosterSize('${t}', 1)"><svg class="icon" style="font-size: 11px;"><use href="#icon-plus"></use></svg></button>
+                        </div>
+                    </div>`;
+        if(!window.tempConfig.rosters[t]) window.tempConfig.rosters[t] = Array(5).fill("");
+        window.tempConfig.rosters[t].forEach((n, i) => {
+            h += `<div class="player-row">
+                    <span class="player-num">${i+1}.</span>
+                    <div style="display:flex; gap:4px; flex:1;">
+                        <input type="text" class="player-input" value="${n}" onchange="window.tempConfig.rosters['${t}'][${i}]=this.value" style="margin-bottom:0;">
+                        <button class="btn-base icon-btn" style="flex:0 0 35px; padding:0; margin-bottom:0;" onclick="window.openPlayerDropdown('${t}', ${i}, 'config')">▼</button>
+                    </div>
+                  </div>`;
+        });
+        c.innerHTML += h + `</div>`;
+    });
+    window.openModal('rosterModal');
+};
+
+window.openRosterEditor = function() {
+    window.renderRosterEditorUI();
+    window.openModal('rosterModal');
+};
+
+window.saveConfig = function() { window.setStore("config", window.config); window.syncToFirebase(true); };
+
+window.handleReset = function() { window.openModal('confirmReset'); };
+
+window.confirmReset = function(manual = true) { 
+    if(window.interval){clearInterval(window.interval); window.interval=null;} 
+    window.currentMatch=null; window.isOT=false; window.time=window.config.time; window.isFinishing=false;
+    document.getElementById('score').innerText="0 : 0"; 
+    document.getElementById('startBtn').innerText="СТАРТ МАТЧА"; 
+    document.getElementById('otTimerPlate').style.display='none'; 
+    if(manual) { window.selL=null; window.selR=null; }
+    window.closeModal('confirmReset'); 
+    window.updateSelectionUI(); window.updateTimerDisplay(); window.updateUtilityBtns(); window.updateLastGoalDisplay();
+    window.syncToFirebase(true);
+};
+
 window.openUndoModal = function() { window.openModal('confirmUndo'); };
 
-window.confirmUndo = function() {
-    if(window.currentMatch && window.currentMatch.events && window.currentMatch.events.length) {
-        const e = window.currentMatch.events.pop();
-        if(e.side===1) window.currentMatch.s1--; else window.currentMatch.s2--;
-        document.getElementById('score').innerText = window.currentMatch.s1 + " : " + window.currentMatch.s2;
+window.confirmUndo = function() { 
+    if(window.currentMatch && window.currentMatch.events && window.currentMatch.events.length) { 
+        const e = window.currentMatch.events.pop(); 
+        if(e.side===1) window.currentMatch.s1--; else window.currentMatch.s2--; 
+        document.getElementById('score').innerText = window.currentMatch.s1 + " : " + window.currentMatch.s2; 
         window.animateScore();
         window.syncToFirebase(true);
-    }
-    window.closeModal('confirmUndo');
+    } 
+    window.closeModal('confirmUndo'); 
     window.updateUtilityBtns(); window.updateLastGoalDisplay();
 };
 
@@ -1806,8 +1918,8 @@ window.updateUtilityBtns = function() {
     g1.disabled = (window.currentRole === 'viewer') || !window.interval; g2.disabled = (window.currentRole === 'viewer') || !window.interval;
 };
 
-window.announce = function(t) {
-    if(!window.config.voiceEnabled) return;
+window.announce = function(t) { 
+    if(!window.config.voiceEnabled) return; 
     try {
         if(window.speechSynthesis) {
             window.speechSynthesis.cancel();
@@ -1818,12 +1930,12 @@ window.announce = function(t) {
     } catch(e) { console.error("Speech Error:", e); }
 };
 
-setInterval(() => {
+setInterval(() => { 
     if(!window.currentRoom) return;
     const todayStr = new Date().toLocaleDateString('ru-RU');
     const todayCount = window.matches.filter(m => m.date === todayStr).length + 1;
     const meta = document.getElementById("gameMeta");
-    if(meta) meta.innerHTML = `Матч #${todayCount} • ${todayStr} • ${new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'})} • <span style="color:var(--gray); font-weight:bold;">${window.currentRoom}</span>`;
+    if(meta) meta.innerHTML = `Матч #${todayCount} • ${todayStr} • ${new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'})} • <span style="color:var(--gray); font-weight:bold;">${window.currentRoom}</span>`; 
 }, 1000);
 
 if (!window.appInitialized && typeof __firebase_config === 'undefined') { window.initApp(); }
