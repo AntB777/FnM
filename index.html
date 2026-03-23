@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0f172a">
-    <title>Футбол на Манеже v18.09 Pro</title>
+    <title>Футбол на Манеже v18.08 Pro</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
@@ -305,7 +305,7 @@
                 <button class="btn-base" style="border: 1px solid var(--danger); color: var(--danger); width: 100%;" onclick="window.logout()">ВЫЙТИ ИЗ ЧЕМПИОНАТА</button>
             </div>
             <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
-                v18.09 Pro • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
+                v18.08 Pro • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
             </div>
         </div>
     </div>
@@ -558,7 +558,7 @@
     </div>
 
 <script>
-/* JS LOGIC v18.09 Pro */
+/* JS LOGIC v18.08 Pro */
 window.COLORS = { "Черные": "#000000", "Белые": "#ffffff", "Желтые": "#facc15", "Зеленые": "#22c55e", "Красные": "#ef4444", "Синие": "#3b82f6", "Разноцветные": "linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" };
 window.colorKeys = Object.keys(window.COLORS);
 window.audioCtx = null;
@@ -569,7 +569,6 @@ window.liveWinnerModal = { active: false };
 
 window.time = 0; window.interval = null; window.currentMatch = null; window.selL = null; window.selR = null; window.otActive = false; window.isOT = false; window.otTime = 0; window.isFinishing = false; window.tSide = null; window.tScorer = null; 
 window.currentMvpDate = null; window.currentStatsPageIndex = 0; window.currentShareDate = null; window.editingMatchId = null; window.passMode = ''; window.editingTourPlayerDate = null; window.tempTourRosters = {}; window.editingTourDate = null; window.currentSettingsTarget = 'settingsContainer';
-
 window.playerDbSortCol = 'points'; window.playerDbSortDesc = true; window.playerDbStats = []; window.dropdownTarget = null;
 window.timerReference = Date.now(); window.timerBaseTime = 0; window.timerBaseOtTime = 0; window.syncTick = 0;
 
@@ -1269,6 +1268,10 @@ window.updateTimerDisplay = function() {
     document.getElementById('otTimer').innerText = `${Math.floor(window.otTime/60).toString().padStart(2,'0')}:${Math.floor(window.otTime%60).toString().padStart(2,'0')}`;
 };
 
+window.playGoalSound = function() { 
+    if (window.localSettings.vibration && navigator.vibrate) navigator.vibrate(50);
+};
+
 window.playEndSound = function() {
     if (!window.localSettings.sound) return;
     if (window.config.soundUrl && window.config.soundUrl.trim() !== '') {
@@ -1337,6 +1340,7 @@ window.finishGoal = function(a) { window.closeModal('playerSelModal'); setTimeou
 
 window.processGoal = function(side, s, a) {
     if (window.isFinishing) return;
+    window.playGoalSound();
     if (side === 1) window.currentMatch.s1++; else window.currentMatch.s2++;
     
     if(!window.currentMatch.events) window.currentMatch.events = [];
