@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0f172a">
-    <title>Футбол на Манеже v18.04 Pro</title>
+    <title>Футбол на Манеже v18.05 Pro</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
@@ -305,7 +305,7 @@
                 <button class="btn-base" style="border: 1px solid var(--danger); color: var(--danger); width: 100%;" onclick="window.logout()">ВЫЙТИ ИЗ ЧЕМПИОНАТА</button>
             </div>
             <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
-                v18.04 Pro • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
+                v18.05 Pro • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
             </div>
         </div>
     </div>
@@ -460,6 +460,7 @@
         </div>
     </div>
 
+    <!-- Модальное окно победителя, теперь синхронизированное -->
     <div id="winnerModal" class="overlay hidden">
         <div class="modal-content">
             <div id="winMatchNum" style="font-size:11px; opacity:0.8; font-weight:800; color:var(--gray);"></div>
@@ -557,7 +558,7 @@
     </div>
 
 <script>
-/* JS LOGIC v18.04 Pro */
+/* JS LOGIC v18.05 Pro */
 window.COLORS = { "Черные": "#000000", "Белые": "#ffffff", "Желтые": "#facc15", "Зеленые": "#22c55e", "Красные": "#ef4444", "Синие": "#3b82f6", "Разноцветные": "linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" };
 window.colorKeys = Object.keys(window.COLORS);
 window.audioCtx = null;
@@ -586,11 +587,9 @@ window.applyDataFromFirebase = function(data) {
     
     if (window.currentRole !== 'viewer') window.ensureDefaultRosters();
 
-    // СИНХРОНИЗАЦИЯ LIVE-СОСТОЯНИЯ МАТЧА И ОКОН
     if (data.liveState) {
         let state = data.liveState;
         
-        // Синхронизация окна победителя
         if (state.winnerModal) {
             window.liveWinnerModal = state.winnerModal;
             if (state.winnerModal.active && !window.isFinishing) {
@@ -629,22 +628,17 @@ window.applyDataFromFirebase = function(data) {
             }
 
             if (state.isRunning) {
-                // Если мы получили пинг, то время максимально свежее (около 5 сек давности)
                 let targetTime = state.time;
                 let targetOtTime = state.otTime || 0;
 
                 if (state.syncTimestamp) {
                     let elapsed = (Date.now() - state.syncTimestamp) / 1000;
-                    if (elapsed > 0 && elapsed < 86400) { // Если не рассинхрон часовых поясов
-                        if (state.isOT) {
-                            targetOtTime += elapsed;
-                        } else {
-                            targetTime = Math.max(0, targetTime - elapsed);
-                        }
+                    if (elapsed > 0 && elapsed < 86400) { 
+                        if (state.isOT) targetOtTime += elapsed;
+                        else targetTime = Math.max(0, targetTime - elapsed);
                     }
                 }
 
-                // Корректируем только если локально мы отстаем/спешим более чем на 2 сек
                 if (Math.abs(window.time - targetTime) > 2) {
                     window.time = targetTime;
                     window.timerBaseTime = window.time;
@@ -1104,11 +1098,18 @@ window.updateSelectionUI = function() {
     const draw = (id, cur, opp) => {
         const cont = document.getElementById(id + 'Circles'), act = document.getElementById(id + 'Active'); if (!cont || !act) return;
         if (cur) {
-            cont.classList.add('hidden'); act.classList.remove('hidden'); const light = cur==='Белые'||cur==='Желтые';
-            act.innerHTML = `<button class="chosen-team-btn" style="background:${window.COLORS[cur]}; color:${light?'#000':'#fff'}" onclick="window.resetTeam('${id}')">${cur}</button>`;
+            const light = cur==='Белые'||cur==='Желтые';
+            const newHtml = `<button class="chosen-team-btn" style="background:${window.COLORS[cur]}; color:${light?'#000':'#fff'}" onclick="window.resetTeam('${id}')">${cur}</button>`;
+            if (act.innerHTML !== newHtml) {
+                cont.classList.add('hidden'); act.classList.remove('hidden');
+                act.innerHTML = newHtml;
+            }
         } else {
-            cont.classList.remove('hidden'); act.classList.add('hidden');
-            cont.innerHTML = window.config.teams.map(t => `<div class="circle-select ${t===opp?'blocked':''}" style="background:${window.COLORS[t]}" onclick="window.selectTeam('${id==='left'?'L':'R'}','${t}')"></div>`).join('');
+            const newHtml = window.config.teams.map(t => `<div class="circle-select ${t===opp?'blocked':''}" style="background:${window.COLORS[t]}" onclick="window.selectTeam('${id==='left'?'L':'R'}','${t}')"></div>`).join('');
+            if (cont.innerHTML !== newHtml) {
+                cont.classList.remove('hidden'); act.classList.add('hidden');
+                cont.innerHTML = newHtml;
+            }
         }
     };
     draw('left', window.selL, window.selR); draw('right', window.selR, window.selL); window.checkReady(); window.updateMatchStatusLabel();
@@ -1297,7 +1298,12 @@ window.terminateMatch = function() {
     if (window.interval) { clearInterval(window.interval); window.interval = null; }
     document.querySelectorAll('.overlay').forEach(ov => { if(ov.id !== 'winnerModal') window.closeModal(ov.id); });
     
-    if (window.config.voiceEnabled) {
+    if (window.config.soundUrl && window.config.soundUrl.trim() !== '') {
+        try {
+            let endAudio = new Audio(window.config.soundUrl.trim());
+            endAudio.play().catch(e => console.error("Audio play error:", e));
+        } catch (err) { console.error(err); }
+    } else if (window.config.voiceEnabled) {
         try {
             if(window.speechSynthesis) {
                 window.speechSynthesis.cancel();
@@ -1489,7 +1495,7 @@ window.renderCombinedStats = function() {
         h += `<div style="border: 1px dashed rgba(255,255,255,0.15); border-radius: 12px; padding: 12px; margin-bottom: 15px; background: rgba(255,255,255,0.02);">`;
         h += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                 <div style="font-weight:800; color:var(--accent); font-size:12px; text-transform:uppercase;">Статистика игроков`;
-        if (window.currentRole === 'admin') h += `&nbsp;&nbsp;&nbsp;<button class="admin-edit-btn icon-btn" style="background:var(--card); border:1px solid var(--accent); border-radius:8px; padding:4px 10px; color:var(--accent); display:inline-flex; vertical-align:middle; cursor:pointer;" onclick="window.openTourEditor('${date}')"><svg class="icon" style="width:14px; height:14px;"><use href="#icon-edit"></use></svg></button>`;
+        if (window.currentRole === 'admin') h += `&nbsp;&nbsp;&nbsp;<button class="admin-edit-btn icon-btn" style="background:var(--card); border:1px solid var(--accent); border-radius:8px; padding:4px 10px; color:var(--accent); display:inline-flex; vertical-align:middle; cursor:pointer;" onclick="window.openTourPlayerEditor('${date}')"><svg class="icon" style="width:14px; height:14px;"><use href="#icon-edit"></use></svg></button>`;
         h += `</div>`;
         if (window.currentRole === 'admin' && activeTeams.length > 0) h += `<button class="admin-edit-btn icon-btn" style="padding:5px 10px; font-size:10px; background:var(--card); border:1px solid #facc15; border-radius:8px; color:#facc15;" onclick="window.openMvpSelector('${date}')"><svg class="icon"><use href="#icon-star"></use></svg> MVP ТУРНИРА</button>`;
         h += `</div>`;
@@ -1959,18 +1965,6 @@ window.updateUtilityBtns = function() {
     u.disabled = (window.currentRole === 'viewer') || !window.currentMatch || !window.currentMatch.events.length;
     f.disabled = (window.currentRole === 'viewer') || !window.currentMatch;
     g1.disabled = (window.currentRole === 'viewer') || !window.interval; g2.disabled = (window.currentRole === 'viewer') || !window.interval;
-};
-
-window.announce = function(t) { 
-    if(!window.config.voiceEnabled) return; 
-    try {
-        if(window.speechSynthesis) {
-            window.speechSynthesis.cancel();
-            const u = new SpeechSynthesisUtterance(t);
-            u.lang='ru-RU';
-            window.speechSynthesis.speak(u);
-        }
-    } catch(e) { console.error("Speech Error:", e); }
 };
 
 setInterval(() => { 
