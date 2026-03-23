@@ -558,7 +558,7 @@
     </div>
 
 <script>
-/* JS LOGIC v18.07 Pro */
+/* JS LOGIC v18.08 Pro */
 window.COLORS = { "Черные": "#000000", "Белые": "#ffffff", "Желтые": "#facc15", "Зеленые": "#22c55e", "Красные": "#ef4444", "Синие": "#3b82f6", "Разноцветные": "linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" };
 window.colorKeys = Object.keys(window.COLORS);
 window.audioCtx = null;
@@ -592,7 +592,6 @@ window.applyDataFromFirebase = function(data) {
     
     if (window.currentRole !== 'viewer') window.ensureDefaultRosters();
 
-    // Проверка новых голов для звука/вибрации у зрителей
     let newGoalAdded = false;
     if (window.currentMatch && data.currentMatch && data.currentMatch.id === window.currentMatch.id) {
          if (data.currentMatch.events && (!window.currentMatch.events || data.currentMatch.events.length > window.currentMatch.events.length)) {
@@ -779,7 +778,7 @@ window.startApp = function() {
     window.time = window.config.time; window.isOT = false; window.otTime = 0; window.currentMatch = null; window.isFinishing = false; window.selL = null; window.selR = null; window.otActive = window.config.useOT;
     window.ensureDefaultRosters(); 
     document.getElementById('score').innerText = "0 : 0"; document.getElementById('startBtn').innerText = "ВЫБЕРИТЕ КОМАНДЫ"; document.getElementById('otTimerPlate').style.display = 'none';
-    window.selectionHtmlState = { leftActive: '', leftCont: '', rightActive: '', rightCont: '' };
+    window.selectionHtmlState = { leftActive: '', leftCont: '', rightActive: '', rightCont: '', rendered: false };
     window.updateSelectionUI(); window.updateLockUI(); window.updateWelcomeButtons(); window.updateUtilityBtns(); window.updateTimerDisplay(); window.updateLastGoalDisplay(); window.updateMatchStatusLabel();
 };
 
@@ -1794,6 +1793,7 @@ window.executeShare = function() {
         }
     }
     
+    t += `⚡ @antoni_bel`;
     if(navigator.share) { navigator.share({text: t}); } else { navigator.clipboard.writeText(t); window.showAlert("Текст скопирован в буфер обмена!"); }
     window.closeModal('shareModal');
 };
@@ -1988,6 +1988,8 @@ window.openRosterEditor = function() {
     window.openModal('rosterModal');
 };
 
+window.saveConfig = function() { window.setStore("config", window.config); window.syncToFirebase(true); };
+
 window.handleReset = function() { window.openModal('confirmReset'); };
 
 window.confirmReset = async function(manual = true) { 
@@ -1998,7 +2000,7 @@ window.confirmReset = async function(manual = true) {
     document.getElementById('otTimerPlate').style.display='none'; 
     if(manual) { window.selL=null; window.selR=null; }
     window.closeModal('confirmReset'); 
-    window.updateSelectionUI(); window.updateTimerDisplay(); window.updateUtilityBtns(); window.updateLastGoalDisplay();
+    window.updateSelectionUI(true); window.updateTimerDisplay(); window.updateUtilityBtns(); window.updateLastGoalDisplay();
     await window.syncToFirebase(true);
 };
 
@@ -2026,7 +2028,7 @@ window.closeWinner = async function() {
     window.confirmReset(false); 
     window.closeModal('winnerModal'); 
     
-    if(window.config.autoReset){window.selL=null; window.selR=null; window.updateSelectionUI();} 
+    if(window.config.autoReset){window.selL=null; window.selR=null; window.updateSelectionUI(true);} 
     
     window.otActive = window.config.useOT;
     document.getElementById('otToggle').parentElement.classList.toggle('active', window.otActive);
