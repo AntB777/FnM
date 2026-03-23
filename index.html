@@ -1104,7 +1104,7 @@ window.updateMatchStatusLabel = function() {
 window.updateLockUI = function() {
     const e = document.getElementById("lockEmoji"), t = document.getElementById("lockText"), sBtn = document.getElementById("settingsBtn"), adminRow = document.getElementById("adminControlsRow"), startBtn = document.getElementById("startBtn"), statsBtn = document.getElementById("statsBtn");
     if (e && t) { if (window.currentRole === 'admin') { e.innerHTML = '<use href="#icon-lock"></use>'; t.innerText = "АДМИН"; } else { e.innerHTML = '<use href="#icon-eye"></use>'; t.innerText = "ИГРОК"; } }
-    if(sBtn) sBtn.style.display = 'flex';
+    if(sBtn) sBtn.style.display = (window.currentRole === 'admin') ? 'flex' : 'none';
     document.getElementById('otToggle').parentElement.classList.toggle('active', window.otActive);
     document.getElementById('winnerAcceptBtn').style.display = (window.currentRole === 'admin') ? 'block' : 'none';
     if (window.currentRole === 'viewer') {
@@ -1140,10 +1140,12 @@ window.updateSelectionUI = function(force = false) {
         if (cur) {
             const light = cur==='Белые'||cur==='Желтые';
             const newHtml = `<button class="chosen-team-btn" style="background:${window.COLORS[cur]}; color:${light?'#000':'#fff'}" onclick="window.resetTeam('${id}')">${cur}</button>`;
-            if(window.selectionHtmlState[id+'Active'] !== newHtml) { act.innerHTML = newHtml; window.selectionHtmlState[id+'Active'] = newHtml; cont.classList.add('hidden'); act.classList.remove('hidden'); }
+            if(window.selectionHtmlState[id+'Active'] !== newHtml) { act.innerHTML = newHtml; window.selectionHtmlState[id+'Active'] = newHtml; }
+            cont.classList.add('hidden'); act.classList.remove('hidden');
         } else {
             const newHtml = window.config.teams.map(t => `<div class="circle-select ${t===opp?'blocked':''}" style="background:${window.COLORS[t]}" onclick="window.selectTeam('${id==='left'?'L':'R'}','${t}')"></div>`).join('');
-            if(window.selectionHtmlState[id+'Cont'] !== newHtml) { cont.innerHTML = newHtml; window.selectionHtmlState[id+'Cont'] = newHtml; cont.classList.remove('hidden'); act.classList.add('hidden'); }
+            if(window.selectionHtmlState[id+'Cont'] !== newHtml) { cont.innerHTML = newHtml; window.selectionHtmlState[id+'Cont'] = newHtml; }
+            cont.classList.remove('hidden'); act.classList.add('hidden');
         }
     };
     draw('left', window.selL, window.selR); draw('right', window.selR, window.selL); window.checkReady(); window.updateMatchStatusLabel();
@@ -1151,8 +1153,9 @@ window.updateSelectionUI = function(force = false) {
 
 window.resetTeam = function(id) { 
     if(window.interval || window.currentRole === 'viewer') return; 
+    if (navigator.vibrate && window.localSettings.vibration) navigator.vibrate(40);
     if(id==='left') window.selL=null; else window.selR=null; 
-    window.updateSelectionUI(); window.syncToFirebase(true); 
+    window.updateSelectionUI(true); window.syncToFirebase(true); 
 };
 
 window.checkReady = function() {
