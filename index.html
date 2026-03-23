@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0f172a">
-    <title>Футбол на Манеже v18.08 Pro</title>
+    <title>Футбол на Манеже v18.11 Pro</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
@@ -181,11 +181,11 @@
         .admin-edit-match { background: var(--card); border: 1px solid var(--accent); border-radius: 8px; color: var(--accent); font-size: 14px; cursor: pointer; padding: 4px 8px; display: inline-flex; align-items: center; justify-content: center; margin-left: 12px;} 
 
         .settings-row { display: grid; grid-template-columns: 2.5fr 35px 50px 35px; align-items: center; gap: 4px; margin-bottom: 10px; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 12px; width: 100%; box-sizing: border-box; } 
-        .settings-checkbox-row { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 14px; border-radius: 12px; cursor: pointer; } 
+        .settings-checkbox-row { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 14px; border-radius: 12px; cursor: pointer; margin-bottom: 6px;} 
         .setting-label { font-size: 12px; color: #94a3b8; text-align: left; font-weight: 700; text-transform: uppercase; } 
         .step-btn { background: #2d3748; border: 1px solid #475569; color: white; border-radius: 6px; height: 36px; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; } 
         .step-value { background: #0f172a; height: 36px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; } 
-        .custom-checkbox { width: 26px; height: 26px; border: 2px solid var(--gray); border-radius: 6px; display: flex; align-items: center; justify-content: center; } 
+        .custom-checkbox { width: 26px; height: 26px; border: 2px solid var(--gray); border-radius: 6px; display: flex; align-items: center; justify-content: center; transition: all 0.2s;} 
         .checked .custom-checkbox { background: var(--success); border-color: var(--success); }
         .checked .custom-checkbox::after { content: '✔'; font-size: 16px; font-weight: 900; color: var(--bg); } 
         .settings-divider { height: 1px; border-bottom: 1px dashed #334155; margin: 16px 0; opacity: 0.4; } 
@@ -305,7 +305,7 @@
                 <button class="btn-base" style="border: 1px solid var(--danger); color: var(--danger); width: 100%;" onclick="window.logout()">ВЫЙТИ ИЗ ЧЕМПИОНАТА</button>
             </div>
             <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
-                v18.08 Pro • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
+                v18.11 Pro • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
             </div>
         </div>
     </div>
@@ -340,10 +340,8 @@
             <h2 style="color: var(--accent); margin-top:0;">ВХОД ДЛЯ АДМИНА</h2>
             <input type="text" id="joinAdminPin" class="player-input" placeholder="НАЗВАНИЕ ТУРНИРА" style="font-size:18px; text-align:center; margin-bottom:10px;">
             <input type="password" id="joinAdminPass" class="player-input" placeholder="ПАРОЛЬ АДМИНА" style="font-size:18px; text-align:center; margin-bottom:15px;">
-            <div class="row-3">
-                <button class="btn-base" style="background:var(--success)" onclick="window.confirmJoinAdmin()">ВОЙТИ</button>
-                <button class="btn-base" onclick="window.backToLobby('joinAdminModal')">ОТМЕНА</button>
-            </div>
+            <button class="full-btn" style="background:var(--success); margin-bottom: 10px;" onclick="window.confirmJoinAdmin()">ВОЙТИ</button>
+            <button class="btn-base" onclick="window.backToLobby('joinAdminModal')">ОТМЕНА</button>
         </div>
     </div>
 
@@ -353,10 +351,8 @@
             <div style="font-size:11px; color:var(--gray); margin-bottom:15px;">Вам будет доступен просмотр текущих игр и статистики.</div>
             <input type="text" id="joinViewerPin" class="player-input" placeholder="НАЗВАНИЕ ТУРНИРА" style="font-size:18px; text-align:center; margin-bottom:10px;">
             <input type="password" id="joinViewerPass" class="player-input" placeholder="ПАРОЛЬ ИГРОКА" style="font-size:18px; text-align:center; margin-bottom:15px;">
-            <div class="row-3">
-                <button class="btn-base" style="background:var(--success)" onclick="window.confirmJoinViewer()">ВОЙТИ</button>
-                <button class="btn-base" onclick="window.backToWelcome('joinViewerModal')">ОТМЕНА</button>
-            </div>
+            <button class="full-btn" style="background:var(--success); margin-bottom: 10px;" onclick="window.confirmJoinViewer()">ВОЙТИ</button>
+            <button class="btn-base" onclick="window.backToWelcome('joinViewerModal')">ОТМЕНА</button>
         </div>
     </div>
 
@@ -558,7 +554,7 @@
     </div>
 
 <script>
-/* JS LOGIC v18.08 Pro */
+/* JS LOGIC v18.11 Pro */
 window.COLORS = { "Черные": "#000000", "Белые": "#ffffff", "Желтые": "#facc15", "Зеленые": "#22c55e", "Красные": "#ef4444", "Синие": "#3b82f6", "Разноцветные": "linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" };
 window.colorKeys = Object.keys(window.COLORS);
 window.audioCtx = null;
@@ -569,6 +565,7 @@ window.liveWinnerModal = { active: false };
 
 window.time = 0; window.interval = null; window.currentMatch = null; window.selL = null; window.selR = null; window.otActive = false; window.isOT = false; window.otTime = 0; window.isFinishing = false; window.tSide = null; window.tScorer = null; 
 window.currentMvpDate = null; window.currentStatsPageIndex = 0; window.currentShareDate = null; window.editingMatchId = null; window.passMode = ''; window.editingTourPlayerDate = null; window.tempTourRosters = {}; window.editingTourDate = null; window.currentSettingsTarget = 'settingsContainer';
+
 window.playerDbSortCol = 'points'; window.playerDbSortDesc = true; window.playerDbStats = []; window.dropdownTarget = null;
 window.timerReference = Date.now(); window.timerBaseTime = 0; window.timerBaseOtTime = 0; window.syncTick = 0;
 
@@ -583,6 +580,8 @@ window.getStore = function(key, def) { if (window[key] !== undefined && window[k
 window.setStore = function(key, val) { window[key] = val; };
 
 window.applyDataFromFirebase = function(data) {
+    if (window.ignoreSyncForAWhile) return;
+    
     window.config = data.config || JSON.parse(JSON.stringify(window.defaultConfig));
     window.matches = data.matches || []; 
     window.customTours = data.customTours || {}; 
@@ -630,8 +629,8 @@ window.applyDataFromFirebase = function(data) {
                 window.closeModal('winnerModal');
                 window.isFinishing = false;
                 if (window.currentRole === 'viewer' || window.currentRole === 'admin') {
-                    window.confirmReset(false); 
-                    if(window.config.autoReset){window.selL=null; window.selR=null; window.updateSelectionUI();}
+                    window.confirmReset(false, true); 
+                    if(window.config.autoReset){window.selL=null; window.selR=null; window.updateSelectionUI(true);}
                     document.getElementById('otTimerPlate').style.display='none';
                 }
             }
@@ -779,7 +778,7 @@ window.startApp = function() {
     window.ensureDefaultRosters(); 
     document.getElementById('score').innerText = "0 : 0"; document.getElementById('startBtn').innerText = "ВЫБЕРИТЕ КОМАНДЫ"; document.getElementById('otTimerPlate').style.display = 'none';
     window.selectionHtmlState = { leftActive: '', leftCont: '', rightActive: '', rightCont: '', rendered: false };
-    window.updateSelectionUI(); window.updateLockUI(); window.updateWelcomeButtons(); window.updateUtilityBtns(); window.updateTimerDisplay(); window.updateLastGoalDisplay(); window.updateMatchStatusLabel();
+    window.updateSelectionUI(true); window.updateLockUI(); window.updateWelcomeButtons(); window.updateUtilityBtns(); window.updateTimerDisplay(); window.updateLastGoalDisplay(); window.updateMatchStatusLabel();
 };
 
 window.initApp = async function() {
@@ -969,7 +968,7 @@ window.selectWelcomeMode = function(m) {
     if (!window.currentRoom) { if (m === 'admin') { window.closeModal('welcomeOverlay'); window.openModal('adminLobbyModal'); } else { window.closeModal('welcomeOverlay'); window.openJoinViewer(); } } 
     else {
         if (m === 'admin') { if (window.currentRole === 'admin') { document.getElementById('welcomeOverlay').style.display = 'none'; } else { window.openPassModal('switchRole'); } } 
-        else if (m === 'viewer') { if (window.currentRole === 'viewer') { document.getElementById('welcomeOverlay').style.display = 'none'; } else { window.currentRole = 'viewer'; window.config.isLocked = true; window.setStore("config", window.config); localStorage.setItem("mSmartPro_lastRole", window.currentRole); document.getElementById('welcomeOverlay').style.display = 'none'; window.updateLockUI(); window.updateSelectionUI(); window.updateUtilityBtns(); } }
+        else if (m === 'viewer') { if (window.currentRole === 'viewer') { document.getElementById('welcomeOverlay').style.display = 'none'; } else { window.currentRole = 'viewer'; window.config.isLocked = true; window.setStore("config", window.config); localStorage.setItem("mSmartPro_lastRole", window.currentRole); document.getElementById('welcomeOverlay').style.display = 'none'; window.updateLockUI(); window.updateSelectionUI(true); window.updateUtilityBtns(); } }
     }
 };
 
@@ -1086,7 +1085,7 @@ window.submitPass = async function() {
         const val = document.getElementById('passInput').value;
         if (val === window.config.adminPass || val === (window.config.adminPass||"123")) {
             window.currentRole = 'admin'; window.config.isLocked = false; window.setStore("config", window.config); localStorage.setItem("mSmartPro_lastRole", window.currentRole); window.closeModal('passModal'); await window.syncToFirebase(true);
-            if (window.passMode === 'switchRole') { document.getElementById('welcomeOverlay').style.display = 'none'; window.updateLockUI(); window.updateSelectionUI(); window.updateUtilityBtns(); }
+            if (window.passMode === 'switchRole') { document.getElementById('welcomeOverlay').style.display = 'none'; window.updateLockUI(); window.updateSelectionUI(true); window.updateUtilityBtns(); }
         } else { document.getElementById('passError').innerText = 'Неверный пароль!'; }
     }
 };
@@ -1104,7 +1103,7 @@ window.updateMatchStatusLabel = function() {
 window.updateLockUI = function() {
     const e = document.getElementById("lockEmoji"), t = document.getElementById("lockText"), sBtn = document.getElementById("settingsBtn"), adminRow = document.getElementById("adminControlsRow"), startBtn = document.getElementById("startBtn"), statsBtn = document.getElementById("statsBtn");
     if (e && t) { if (window.currentRole === 'admin') { e.innerHTML = '<use href="#icon-lock"></use>'; t.innerText = "АДМИН"; } else { e.innerHTML = '<use href="#icon-eye"></use>'; t.innerText = "ИГРОК"; } }
-    if(sBtn) sBtn.style.display = (window.currentRole === 'admin') ? 'flex' : 'none';
+    if(sBtn) sBtn.style.display = 'flex';
     document.getElementById('otToggle').parentElement.classList.toggle('active', window.otActive);
     document.getElementById('winnerAcceptBtn').style.display = (window.currentRole === 'admin') ? 'block' : 'none';
     if (window.currentRole === 'viewer') {
@@ -1122,7 +1121,7 @@ window.selectTeam = function(side, team) {
     if (navigator.vibrate && window.localSettings.vibration) navigator.vibrate(40);
     if (side === 'L' && team === window.selR) return; if (side === 'R' && team === window.selL) return;
     if (side === 'L') window.selL = team; else window.selR = team; 
-    window.updateSelectionUI(); window.syncToFirebase(true);
+    window.updateSelectionUI(true); window.syncToFirebase(true);
 };
 
 window.updateSelectionUI = function(force = false) {
@@ -1136,19 +1135,27 @@ window.updateSelectionUI = function(force = false) {
     window.selectionHtmlState.rendered = true;
 
     const draw = (id, cur, opp) => {
-        const cont = document.getElementById(id + 'Circles'), act = document.getElementById(id + 'Active'); if (!cont || !act) return;
+        const cont = document.getElementById(id + 'Circles');
+        const act = document.getElementById(id + 'Active'); 
+        if (!cont || !act) return;
+        
         if (cur) {
-            const light = cur==='Белые'||cur==='Желтые';
+            const light = cur === 'Белые' || cur === 'Желтые';
             const newHtml = `<button class="chosen-team-btn" style="background:${window.COLORS[cur]}; color:${light?'#000':'#fff'}" onclick="window.resetTeam('${id}')">${cur}</button>`;
-            if(window.selectionHtmlState[id+'Active'] !== newHtml) { act.innerHTML = newHtml; window.selectionHtmlState[id+'Active'] = newHtml; }
-            cont.classList.add('hidden'); act.classList.remove('hidden');
+            if(act.innerHTML !== newHtml) { act.innerHTML = newHtml; }
+            cont.style.display = 'none'; cont.classList.add('hidden');
+            act.style.display = 'block'; act.classList.remove('hidden');
         } else {
             const newHtml = window.config.teams.map(t => `<div class="circle-select ${t===opp?'blocked':''}" style="background:${window.COLORS[t]}" onclick="window.selectTeam('${id==='left'?'L':'R'}','${t}')"></div>`).join('');
-            if(window.selectionHtmlState[id+'Cont'] !== newHtml) { cont.innerHTML = newHtml; window.selectionHtmlState[id+'Cont'] = newHtml; }
-            cont.classList.remove('hidden'); act.classList.add('hidden');
+            if(cont.innerHTML !== newHtml) { cont.innerHTML = newHtml; }
+            cont.style.display = 'flex'; cont.classList.remove('hidden');
+            act.style.display = 'none'; act.classList.add('hidden');
         }
     };
-    draw('left', window.selL, window.selR); draw('right', window.selR, window.selL); window.checkReady(); window.updateMatchStatusLabel();
+    draw('left', window.selL, window.selR); 
+    draw('right', window.selR, window.selL); 
+    window.checkReady(); 
+    window.updateMatchStatusLabel();
 };
 
 window.resetTeam = function(id) { 
@@ -1268,10 +1275,6 @@ window.updateTimerDisplay = function() {
     document.getElementById('otTimer').innerText = `${Math.floor(window.otTime/60).toString().padStart(2,'0')}:${Math.floor(window.otTime%60).toString().padStart(2,'0')}`;
 };
 
-window.playGoalSound = function() { 
-    if (window.localSettings.vibration && navigator.vibrate) navigator.vibrate(50);
-};
-
 window.playEndSound = function() {
     if (!window.localSettings.sound) return;
     if (window.config.soundUrl && window.config.soundUrl.trim() !== '') {
@@ -1340,7 +1343,6 @@ window.finishGoal = function(a) { window.closeModal('playerSelModal'); setTimeou
 
 window.processGoal = function(side, s, a) {
     if (window.isFinishing) return;
-    window.playGoalSound();
     if (side === 1) window.currentMatch.s1++; else window.currentMatch.s2++;
     
     if(!window.currentMatch.events) window.currentMatch.events = [];
@@ -1796,7 +1798,6 @@ window.executeShare = function() {
         }
     }
     
-    t += `⚡ @antoni_bel`;
     if(navigator.share) { navigator.share({text: t}); } else { navigator.clipboard.writeText(t); window.showAlert("Текст скопирован в буфер обмена!"); }
     window.closeModal('shareModal');
 };
@@ -1856,7 +1857,6 @@ window.saveAdminEdit = function() {
 window.deleteAdminMatch = function() { window.showConfirm("Точно удалить этот матч?", () => { window.matches = window.matches.filter(x => x.id !== window.editingMatchId); window.setStore("matches", window.matches); window.syncToFirebase(true); window.closeModal('adminEditorModal'); window.renderCombinedStats(); }); };
 
 window.openSettings = function() { 
-    if(window.interval || window.currentRole !== 'admin') return; 
     window.tempConfig = JSON.parse(JSON.stringify(window.config)); 
     window.currentSettingsTarget = 'settingsContainer'; window.renderSettingsList(window.currentSettingsTarget); window.openModal('settings'); 
 };
@@ -1866,19 +1866,16 @@ window.renderSettingsList = function(targetId = window.currentSettingsTarget) {
     let goalLimitDisplay = window.tempConfig.goalLimit === 0 ? "∞" : window.tempConfig.goalLimit;
     
     let h = '';
-    if (window.currentRole === 'admin' && targetId === 'settingsContainer' && !window.interval) {
+    if (targetId === 'createSettingsContainer' || (window.currentRole === 'admin' && !window.interval)) {
         h += window.createStepRow("Время (мин)", "time", window.tempConfig.time/60) + window.createStepRow("Лимит голов", "goalLimit", goalLimitDisplay) + window.createCheckRow("Выбор команд после игры", "autoReset", window.tempConfig.autoReset) + `<div class="settings-divider"></div>` + window.createStepRow("Всего команд", "teamsCount", window.tempConfig.teams.length);
         window.tempConfig.teams.forEach((t, i) => h += window.createColorRow(`Команда ${i+1}`, i, t));
         h += `<div class="settings-divider"></div>` + window.createCheckRow("Игроки и составы", "usePlayers", window.tempConfig.usePlayers);
         if(window.tempConfig.usePlayers) h += `<button class="full-btn icon-btn" style="margin:10px 0; font-size:12px;" onclick="window.openRosterEditor()"><svg class="icon"><use href="#icon-run"></use></svg> СОСТАВЫ КОМАНД</button>`;
         h += `<div class="settings-divider"></div>` + window.createCheckRow("Овертайм", "useOT", window.tempConfig.useOT) + window.createStepRow("Лимит овертайма (мин)", "otLimit", window.tempConfig.otLimit || "∞") + window.createCheckRow("Золотой гол", "goldenGoal", window.tempConfig.goldenGoal);
-    } else if (window.currentRole === 'admin' && targetId === 'createSettingsContainer') {
-        h += window.createStepRow("Время (мин)", "time", window.tempConfig.time/60) + window.createStepRow("Лимит голов", "goalLimit", goalLimitDisplay) + window.createCheckRow("Выбор команд после игры", "autoReset", window.tempConfig.autoReset) + `<div class="settings-divider"></div>` + window.createStepRow("Всего команд", "teamsCount", window.tempConfig.teams.length);
-        window.tempConfig.teams.forEach((t, i) => h += window.createColorRow(`Команда ${i+1}`, i, t));
-        h += `<div class="settings-divider"></div>` + window.createCheckRow("Игроки и составы", "usePlayers", window.tempConfig.usePlayers);
-        h += `<div class="settings-divider"></div>` + window.createCheckRow("Овертайм", "useOT", window.tempConfig.useOT) + window.createStepRow("Лимит овертайма (мин)", "otLimit", window.tempConfig.otLimit || "∞") + window.createCheckRow("Золотой гол", "goldenGoal", window.tempConfig.goldenGoal);
     } else if (window.currentRole === 'admin' && window.interval) {
         h += `<div style="text-align:center; color:var(--warning); font-size:12px; margin-bottom:15px;">Изменение правил заблокировано во время матча</div>`;
+    } else if (window.currentRole === 'viewer') {
+        h += `<div style="text-align:center; color:var(--gray); font-size:12px; margin-bottom:15px;">Настройки просмотра</div>`;
     }
 
     h += `<div class="settings-divider"></div><div style="background:rgba(255,255,255,0.03); padding:12px; border-radius:12px; margin-top:10px;">
@@ -1886,7 +1883,7 @@ window.renderSettingsList = function(targetId = window.currentSettingsTarget) {
           ${window.createLocalCheckRow("Звук", "sound", window.localSettings.sound)}
           ${window.createLocalCheckRow("Вибрация", "vibration", window.localSettings.vibration)}`;
           
-    if (window.currentRole === 'admin') {
+    if (targetId === 'createSettingsContainer' || window.currentRole === 'admin') {
         h += `<div style="margin-top:12px;"><div style="font-size:11px;color:var(--gray);margin-bottom:6px; text-align:left;">ЗВУК ОКОНЧАНИЯ МАТЧА (URL):</div><input type="text" class="player-input" style="width:100%;" value="${window.tempConfig.soundUrl}" onchange="window.tempConfig.soundUrl=this.value"></div>`;
     }
     h += `</div>`;
@@ -1995,7 +1992,7 @@ window.saveConfig = function() { window.setStore("config", window.config); windo
 
 window.handleReset = function() { window.openModal('confirmReset'); };
 
-window.confirmReset = async function(manual = true) { 
+window.confirmReset = async function(manual = true, skipSync = false) { 
     if(window.interval){clearInterval(window.interval); window.interval=null;} 
     window.currentMatch=null; window.isOT=false; window.time=window.config.time; window.isFinishing=false;
     document.getElementById('score').innerText="0 : 0"; 
@@ -2004,7 +2001,7 @@ window.confirmReset = async function(manual = true) {
     if(manual) { window.selL=null; window.selR=null; }
     window.closeModal('confirmReset'); 
     window.updateSelectionUI(true); window.updateTimerDisplay(); window.updateUtilityBtns(); window.updateLastGoalDisplay();
-    await window.syncToFirebase(true);
+    if(!skipSync) await window.syncToFirebase(true);
 };
 
 window.openUndoModal = function() { window.openModal('confirmUndo'); };
@@ -2028,22 +2025,22 @@ window.closeWinner = async function() {
     if (window.currentRole !== 'admin') return; 
     
     window.liveWinnerModal = { active: false }; 
-    window.confirmReset(false); 
-    window.closeModal('winnerModal'); 
     
-    if(window.config.autoReset){window.selL=null; window.selR=null; window.updateSelectionUI(true);} 
+    if(window.config.autoReset){ window.selL=null; window.selR=null; } 
     
     window.otActive = window.config.useOT;
     document.getElementById('otToggle').parentElement.classList.toggle('active', window.otActive);
+    
+    await window.confirmReset(false, true); 
+    window.closeModal('winnerModal'); 
     
     await window.syncToFirebase(true); 
 };
 
 window.toggleOTManual = function() { 
     if (window.currentRole === 'viewer') return;
-    window.otActive = !window.otActive; window.config.useOT = window.otActive;
+    window.otActive = !window.otActive; window.config.useOT = window.otActive; window.saveConfig();
     document.getElementById('otToggle').parentElement.classList.toggle('active', window.otActive); 
-    window.syncToFirebase(true);
 };
 
 window.updateUtilityBtns = function() {
