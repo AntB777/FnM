@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0f172a">
-    <title>Футбол на Манеже v18.03 Pro</title>
+    <title>Футбол на Манеже v18.04 Pro</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
@@ -305,7 +305,7 @@
                 <button class="btn-base" style="border: 1px solid var(--danger); color: var(--danger); width: 100%;" onclick="window.logout()">ВЫЙТИ ИЗ ЧЕМПИОНАТА</button>
             </div>
             <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
-                v18.02 Pro 
+                v18.04 Pro • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
             </div>
         </div>
     </div>
@@ -460,7 +460,6 @@
         </div>
     </div>
 
-    <!-- Модальное окно победителя, теперь синхронизированное -->
     <div id="winnerModal" class="overlay hidden">
         <div class="modal-content">
             <div id="winMatchNum" style="font-size:11px; opacity:0.8; font-weight:800; color:var(--gray);"></div>
@@ -558,7 +557,7 @@
     </div>
 
 <script>
-/* JS LOGIC v18.03 Pro */
+/* JS LOGIC v18.04 Pro */
 window.COLORS = { "Черные": "#000000", "Белые": "#ffffff", "Желтые": "#facc15", "Зеленые": "#22c55e", "Красные": "#ef4444", "Синие": "#3b82f6", "Разноцветные": "linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" };
 window.colorKeys = Object.keys(window.COLORS);
 window.audioCtx = null;
@@ -570,7 +569,7 @@ window.liveWinnerModal = { active: false };
 window.time = 0; window.interval = null; window.currentMatch = null; window.selL = null; window.selR = null; window.otActive = false; window.isOT = false; window.otTime = 0; window.isFinishing = false; window.tSide = null; window.tScorer = null; 
 window.currentMvpDate = null; window.currentStatsPageIndex = 0; window.currentShareDate = null; window.editingMatchId = null; window.passMode = ''; window.editingTourPlayerDate = null; window.tempTourRosters = {}; window.editingTourDate = null; window.currentSettingsTarget = 'settingsContainer';
 window.playerDbSortCol = 'points'; window.playerDbSortDesc = true; window.playerDbStats = []; window.dropdownTarget = null;
-window.timerReference = Date.now(); window.timerBaseTime = 0; window.timerBaseOtTime = 0;
+window.timerReference = Date.now(); window.timerBaseTime = 0; window.timerBaseOtTime = 0; window.syncTick = 0;
 
 window.openModal = function(id) { const m = document.getElementById(id); if (m) { m.style.setProperty('display', 'flex', 'important'); m.classList.remove('hidden'); } };
 window.closeModal = function(id) { const m = document.getElementById(id); if (m) { m.style.display = 'none'; m.classList.add('hidden'); } };
@@ -629,8 +628,37 @@ window.applyDataFromFirebase = function(data) {
                 document.getElementById('score').innerText = "0 : 0";
             }
 
-            if (Math.abs(window.time - state.time) > 2) window.time = state.time;
-            if (Math.abs(window.otTime - state.otTime) > 2) window.otTime = state.otTime;
+            if (state.isRunning) {
+                // Если мы получили пинг, то время максимально свежее (около 5 сек давности)
+                let targetTime = state.time;
+                let targetOtTime = state.otTime || 0;
+
+                if (state.syncTimestamp) {
+                    let elapsed = (Date.now() - state.syncTimestamp) / 1000;
+                    if (elapsed > 0 && elapsed < 86400) { // Если не рассинхрон часовых поясов
+                        if (state.isOT) {
+                            targetOtTime += elapsed;
+                        } else {
+                            targetTime = Math.max(0, targetTime - elapsed);
+                        }
+                    }
+                }
+
+                // Корректируем только если локально мы отстаем/спешим более чем на 2 сек
+                if (Math.abs(window.time - targetTime) > 2) {
+                    window.time = targetTime;
+                    window.timerBaseTime = window.time;
+                    window.timerReference = Date.now();
+                }
+                if (Math.abs(window.otTime - targetOtTime) > 2) {
+                    window.otTime = targetOtTime;
+                    window.timerBaseOtTime = window.otTime;
+                    window.timerReference = Date.now();
+                }
+            } else {
+                window.time = state.time !== undefined ? state.time : window.config.time;
+                window.otTime = state.otTime || 0;
+            }
 
             if (state.isOT && !window.isOT) {
                 window.isOT = true;
@@ -732,7 +760,6 @@ window.startApp = function() {
 
 window.initApp = async function() {
     document.getElementById('loadingOverlay').style.display = 'flex';
-    
     const user = await window.startAuth();
     if (!user) { console.error("Firebase Auth Failed"); document.getElementById('loadingOverlay').style.display = 'none'; return; }
 
@@ -1122,6 +1149,7 @@ window.startLocalTimer = function() {
     window.timerReference = Date.now();
     window.timerBaseTime = window.time;
     window.timerBaseOtTime = window.otTime;
+    window.syncTick = 0;
 
     window.interval = setInterval(() => {
         if (window.isFinishing) { clearInterval(window.interval); window.interval = null; return; }
@@ -1162,6 +1190,14 @@ window.startLocalTimer = function() {
                 if(window.currentRole === 'admin') {
                     if (!window.liveWinnerModal || !window.liveWinnerModal.active) window.terminateMatch(); 
                 }
+            }
+        }
+
+        if (window.currentRole === 'admin') {
+            window.syncTick++;
+            if (window.syncTick >= 25) { 
+                window.syncTick = 0;
+                window.syncToFirebase(false);
             }
         }
     }, 200);
@@ -1335,18 +1371,27 @@ window.deleteDay = function(date) {
     if (window.currentRole !== 'admin') return;
     window.showConfirm(`Вы действительно хотите удалить турнир за ${date}?`, async () => { 
         window.matches = window.matches.filter(m => m.date !== date); 
+        
         if (window.customTours[date]) delete window.customTours[date];
         if (window.tourRosters[date]) delete window.tourRosters[date];
+        
         let mvps = window.getStore("tourMvps", {});
         if (mvps[date]) { delete mvps[date]; window.setStore("tourMvps", mvps); }
-        window.setStore("matches", window.matches); window.setStore("customTours", window.customTours); window.setStore("tourRosters", window.tourRosters); 
+        
+        window.setStore("matches", window.matches); 
+        window.setStore("customTours", window.customTours); 
+        window.setStore("tourRosters", window.tourRosters); 
+        
         window.currentStatsPageIndex = 0;
+        
         if (date === new Date().toLocaleDateString('ru-RU')) {
             window.otActive = window.config.useOT; 
             const otBtn = document.getElementById('otToggle');
             if(otBtn && otBtn.parentElement) otBtn.parentElement.classList.toggle('active', window.otActive);
         }
-        await window.syncToFirebase(true); window.renderCombinedStats(); 
+        
+        await window.syncToFirebase(true); 
+        window.renderCombinedStats(); 
     }); 
 };
 
@@ -1444,7 +1489,7 @@ window.renderCombinedStats = function() {
         h += `<div style="border: 1px dashed rgba(255,255,255,0.15); border-radius: 12px; padding: 12px; margin-bottom: 15px; background: rgba(255,255,255,0.02);">`;
         h += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                 <div style="font-weight:800; color:var(--accent); font-size:12px; text-transform:uppercase;">Статистика игроков`;
-        if (window.currentRole === 'admin') h += `&nbsp;&nbsp;&nbsp;<button class="admin-edit-btn icon-btn" style="background:var(--card); border:1px solid var(--accent); border-radius:8px; padding:4px 10px; color:var(--accent); display:inline-flex; vertical-align:middle; cursor:pointer;" onclick="window.openTourPlayerEditor('${date}')"><svg class="icon" style="width:14px; height:14px;"><use href="#icon-edit"></use></svg></button>`;
+        if (window.currentRole === 'admin') h += `&nbsp;&nbsp;&nbsp;<button class="admin-edit-btn icon-btn" style="background:var(--card); border:1px solid var(--accent); border-radius:8px; padding:4px 10px; color:var(--accent); display:inline-flex; vertical-align:middle; cursor:pointer;" onclick="window.openTourEditor('${date}')"><svg class="icon" style="width:14px; height:14px;"><use href="#icon-edit"></use></svg></button>`;
         h += `</div>`;
         if (window.currentRole === 'admin' && activeTeams.length > 0) h += `<button class="admin-edit-btn icon-btn" style="padding:5px 10px; font-size:10px; background:var(--card); border:1px solid #facc15; border-radius:8px; color:#facc15;" onclick="window.openMvpSelector('${date}')"><svg class="icon"><use href="#icon-star"></use></svg> MVP ТУРНИРА</button>`;
         h += `</div>`;
@@ -1854,8 +1899,6 @@ window.openRosterEditor = function() {
     window.renderRosterEditorUI();
     window.openModal('rosterModal');
 };
-
-window.saveConfig = function() { window.setStore("config", window.config); window.syncToFirebase(true); };
 
 window.handleReset = function() { window.openModal('confirmReset'); };
 
