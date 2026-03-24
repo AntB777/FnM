@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0f172a">
-    <title>Футбол на Манеже v19.05 Demo</title>
+    <title>Футбол на Манеже v19.06 Demo</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
@@ -303,14 +303,14 @@
                 <span class="btn-subtext">Войти в чемпионат для управления</span>
             </button>
             <button id="demoBtn" class="full-btn" style="margin-bottom: 15px; padding: 18px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;" onclick="window.startDemo()">
-                <span style="display: flex; align-items: center; gap: 6px;"><svg class="icon"><use href="#icon-run"></use></svg> РЕЖИМ ТЕСТИРОВАНИЯ</span>
-                <span class="btn-subtext" style="color: #000;">Локальная песочница</span>
+                <span style="display: flex; align-items: center; gap: 6px;"><svg class="icon"><use href="#icon-run"></use></svg> DEMO</span>
+                <span class="btn-subtext" style="color: #000;">Demo</span>
             </button>
             <div id="logoutBtnContainer" style="display:none; margin-top: 10px;">
                 <button class="btn-base" style="border: 1px solid var(--danger); color: var(--danger); width: 100%;" onclick="window.logout()">ВЫЙТИ ИЗ ЧЕМПИОНАТА</button>
             </div>
             <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
-                v19.05 Demo • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
+                v19.06 Demo • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
             </div>
         </div>
     </div>
@@ -572,7 +572,7 @@
     </div>
 
 <script>
-/* JS LOGIC v19.05 Demo */
+/* JS LOGIC v19.06 Demo */
 window.COLORS = { "Черные": "#000000", "Белые": "#ffffff", "Желтые": "#facc15", "Зеленые": "#22c55e", "Красные": "#ef4444", "Синие": "#3b82f6", "Разноцветные": "linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" };
 window.colorKeys = Object.keys(window.COLORS);
 window.audioCtx = null;
@@ -932,7 +932,6 @@ window.replacePlayerNameGlobally = function(oldName, newName) {
 };
 
 window.openPlayerDropdown = function(team, index, mode) {
-    if (window.isDemoMode) return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно.");
     window.dropdownTarget = { team, index, mode };
     window.updateGlobalPlayersList();
     let h = window.globalPlayers.map(p => `<button class="p-btn" style="margin-bottom:8px; width:100%; background:var(--card); border:1px solid var(--accent); color:var(--text);" onclick="window.selectDropdownPlayer('${p}')">${p}</button>`).join('');
@@ -942,7 +941,6 @@ window.openPlayerDropdown = function(team, index, mode) {
 };
 
 window.openPlayerDropdownMatch = function(idx, type) {
-    if (window.isDemoMode) return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно.");
     window.dropdownTarget = { idx, type, mode: 'match' };
     window.updateGlobalPlayersList();
     let h = window.globalPlayers.map(p => `<button class="p-btn" style="margin-bottom:8px; width:100%; background:var(--card); border:1px solid var(--accent); color:var(--text);" onclick="window.selectDropdownPlayer('${p}')">${p}</button>`).join('');
@@ -1003,7 +1001,7 @@ window.renderPlayerDBTable = function() {
 };
 
 window.renameGlobalPlayer = function(oldName) {
-    if (window.isDemoMode) return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно.");
+    if (window.isDemoMode) return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно. Обратитесь к разработчику.");
     window.showPrompt(`Новое имя для "${oldName}":`, oldName, (newName) => {
         let nName = newName.trim(); if(!nName || nName === oldName || nName === '?' || nName === 'Автогол') return;
         
@@ -1018,12 +1016,12 @@ window.renameGlobalPlayer = function(oldName) {
 };
 
 window.deleteGlobalPlayer = function(name) { 
-    if (window.isDemoMode) return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно.");
+    if (window.isDemoMode) return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно. Обратитесь к разработчику.");
     window.showConfirm(`Вы действительно хотите удалить игрока "${name}"?`, () => { window.globalPlayers = window.globalPlayers.filter(p => p !== name); window.setStore("globalPlayers", window.globalPlayers); window.updateGlobalPlayersList(); window.openPlayerDB(); window.syncToFirebase(true); }); 
 };
 
 window.addGlobalPlayer = function() { 
-    if (window.isDemoMode) return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно.");
+    if (window.isDemoMode) return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно. Обратитесь к разработчику.");
     window.showPrompt("Имя нового игрока:", "", (name) => { let n = name.trim(); if (n && n !== '?' && n !== 'Автогол' && !window.globalPlayers.includes(n)) { window.globalPlayers.push(n); window.setStore("globalPlayers", window.globalPlayers); window.updateGlobalPlayersList(); window.openPlayerDB(); window.syncToFirebase(true); } }); 
 };
 
@@ -1063,7 +1061,7 @@ window.updateWelcomeButtons = function() {
     
     viewerBtn.innerHTML = `<span style="display: flex; align-items: center; gap: 6px;"><svg class="icon"><use href="#icon-eye"></use></svg> ИГРОК</span><span class="btn-subtext">Вам доступен просмотр игр и статистики</span>`;
     adminBtn.innerHTML = `<span style="display: flex; align-items: center; gap: 6px;"><svg class="icon"><use href="#icon-lock"></use></svg> АДМИН</span><span class="btn-subtext">Войти в чемпионат для управления</span>`;
-    if (demoBtn) demoBtn.innerHTML = `<span style="display: flex; align-items: center; gap: 6px;"><svg class="icon"><use href="#icon-run"></use></svg> РЕЖИМ ТЕСТИРОВАНИЯ</span><span class="btn-subtext" style="color: #000;">Локальная песочница</span>`;
+    if (demoBtn) demoBtn.innerHTML = `<span style="display: flex; align-items: center; gap: 6px;"><svg class="icon"><use href="#icon-run"></use></svg> РЕЖИМ ТЕСТИРОВАНИЯ</span><span class="btn-subtext" style="color: #000;">Режим тестирования</span>`;
 
     if (!window.currentRoom) { 
         viewerBtn.style.background = 'transparent'; viewerBtn.style.color = 'var(--text)'; viewerBtn.style.border = '1px solid var(--gray)'; 
@@ -1175,6 +1173,7 @@ window.openJoinViewer = function() { window.closeModal('welcomeOverlay'); docume
 window.openJoinAdmin = function() { window.closeModal('adminLobbyModal'); document.getElementById('joinAdminPin').value = ''; document.getElementById('joinAdminPass').value = ''; window.openModal('joinAdminModal'); setTimeout(() => document.getElementById('joinAdminPin').focus(), 100); };
 window.openCreateRoom = function() { window.closeModal('adminLobbyModal'); document.getElementById('createPinInput').value = ''; document.getElementById('createAdminPassInput').value = ''; document.getElementById('createViewerPassInput').value = ''; window.tempConfig = JSON.parse(JSON.stringify(window.defaultConfig)); window.currentSettingsTarget = 'createSettingsContainer'; window.renderSettingsList(window.currentSettingsTarget); window.openModal('createRoomModal'); };
 window.cancelCreateRoom = function() { window.closeModal('createRoomModal'); if (!window.currentRoom) { window.showAdminLobby(); } };
+window.openCreateRoomFromSettings = function() { window.closeModal('settings'); window.openCreateRoom(); };
 
 window.confirmCreateRoom = async function() {
     const pin = document.getElementById('createPinInput').value.trim(); const aPass = document.getElementById('createAdminPassInput').value.trim(); const vPass = document.getElementById('createViewerPassInput').value.trim();
@@ -1241,7 +1240,7 @@ window.confirmJoinViewer = async function() {
 window.changeRoomName = function() { window.openPassModal('changeName'); }; window.changeViewerPass = function() { window.openPassModal('changeViewer'); }; window.changeAdminPass = function() { window.openPassModal('change'); };
 
 window.openPassModal = function(mode) {
-    if (window.isDemoMode) return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно.");
+    if (window.isDemoMode) return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно. Обратитесь к разработчику.");
     window.passMode = mode; document.getElementById('passError').innerText = ''; const cont = document.getElementById('passInputsContainer'); const handleEnter = (e) => { if (e.key === 'Enter') window.submitPass(); };
     if (mode === 'change') {
         document.getElementById('passModalTitle').innerText = 'ИЗМЕНИТЬ ПАРОЛЬ АДМИНА'; cont.innerHTML = `<input type="password" id="passOld" class="player-input" placeholder="Старый пароль" style="text-align:center; margin-bottom:10px;"><input type="password" id="passNew" class="player-input" placeholder="Новый пароль" style="text-align:center; margin-bottom:10px;"><input type="password" id="passConfirm" class="player-input" placeholder="Подтвердить пароль" style="text-align:center; margin-bottom:10px;">`;
@@ -1616,7 +1615,6 @@ window.endMatch = async function() {
 };
 
 window.openMvpSelector = function(date) {
-    if (window.isDemoMode) return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно.");
     window.currentMvpDate = date; const dayMatches = window.matches.filter(m => m.date === date); let playerStats = {}; let activeTeams = []; let activeRosters = {};
     if (window.tourRosters[date]) { activeTeams = window.tourRosters[date].teams || []; activeRosters = window.tourRosters[date].rosters || {}; } 
     else { let playedTeams = new Set(); dayMatches.forEach(m => { playedTeams.add(m.t1); playedTeams.add(m.t2); }); if (window.customTours[date]) { Object.keys(window.customTours[date]).forEach(t => playedTeams.add(t)); } activeTeams = Array.from(playedTeams); activeRosters = window.config.rosters; }
@@ -1636,7 +1634,6 @@ window.setMvp = function(name) { let tourMvps = window.getStore("tourMvps", {});
 window.changeStatsPage = function(dir) { window.currentStatsPageIndex += dir; window.renderCombinedStats(); };
 
 window.deleteDay = function(date) { 
-    if (window.isDemoMode) return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно.");
     if (window.currentRole !== 'admin') return;
     window.showConfirm(`Вы действительно хотите удалить турнир за ${date}?`, async () => { 
         window.matches = window.matches.filter(m => m.date !== date); 
@@ -1785,7 +1782,6 @@ window.renderCombinedStats = function() {
 };
 
 window.openTourPlayerEditor = function(date) {
-    if (window.isDemoMode) return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно.");
     if (window.currentRole !== 'admin') return;
     window.editingTourPlayerDate = date; window.tempTourRosters = {}; window.updateGlobalPlayersList();
     let activeTeams = [];
@@ -1825,14 +1821,18 @@ window.renderTourPlayerEditorUI = function() {
                         </div>
                     </div>`;
         window.tempTourRosters[t].forEach((n, i) => {
-            h += `<div class="player-row"><span class="player-num">${i+1}.</span><input list="globalPlayersList" class="player-input tour-player-input" data-team="${t}" data-index="${i}" value="${n}" onchange="if(window.isDemoMode) { window.showAlert('Приложение тестируется. Изменение этих настроек в Demo режиме не доступно.'); this.value='${n}'; return; } window.tempTourRosters['${t}'][${i}]=this.value"></div>`;
+            h += `<div class="player-row"><span class="player-num">${i+1}.</span>
+                    <div style="display:flex; gap:4px; flex:1;">
+                        <input type="text" class="player-input tour-player-input" style="margin-bottom:0;" value="${n}" onchange="if(window.isDemoMode) { window.showAlert('Приложение тестируется. Изменение этих настроек в Demo режиме не доступно. Обратитесь к разработчику.'); this.value='${n}'; return; } window.tempTourRosters['${t}'][${i}]=this.value">
+                        <button class="btn-base icon-btn" style="flex:0 0 35px; padding:0; margin-bottom:0;" onclick="window.openPlayerDropdown('${t}', ${i}, 'tour')">▼</button>
+                    </div>
+                  </div>`;
         });
         c.innerHTML += h + `</div>`;
     });
 };
 
 window.changeTourPlayerSize = function(t, d) {
-    if (window.isDemoMode) return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно.");
     let r = window.tempTourRosters[t]; if (d > 0 && r.length < 15) r.push(""); else if (d < 0 && r.length > 1) r.pop(); window.renderTourPlayerEditorUI(); 
 };
 
@@ -1865,7 +1865,6 @@ window.saveTourPlayerEdit = function() {
 };
 
 window.addNewTournament = function() {
-    if (window.isDemoMode) return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно.");
     if (window.currentRole !== 'admin') return;
     window.showPrompt("Введите дату турнира (например: 01.01.2026):", new Date().toLocaleDateString('ru-RU'), (d) => {
         if (!d) return;
@@ -1877,7 +1876,6 @@ window.addNewTournament = function() {
 };
 
 window.openTourEditor = function(date) {
-    if (window.isDemoMode) return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно.");
     if (window.currentRole !== 'admin') return;
     window.editingTourDate = date; document.getElementById('tourEditTitle').innerText = `ТУРНИР ${date}`;
     let stats = {};
@@ -2015,7 +2013,6 @@ window.executeShare = function() {
 };
 
 window.openMatchEditor = function(id) {
-    if (window.isDemoMode) return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно.");
     if (window.currentRole !== 'admin') return;
     window.editingMatchId = id; const m = window.matches.find(x => x.id === id); if(!m) return;
     window.updateGlobalPlayersList();
@@ -2047,7 +2044,6 @@ window.removeEventFromEdit = function(idx) { const m = window.matches.find(x => 
 window.addEventToEdit = function() { const m = window.matches.find(x => x.id === window.editingMatchId); if(m) { if(!m.events) m.events = []; m.events.push({side: 1, s: '', a: ''}); window.openMatchEditor(window.editingMatchId); } };
 
 window.openAddPastMatch = function(targetDate) {
-    if (window.isDemoMode) return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно.");
     if (window.currentRole !== 'admin') return;
     window.editingMatchId = 'NEW'; document.getElementById('adminEditTitle').innerText = `ДОБАВИТЬ МАТЧ`; document.getElementById('adminDelMatchBtn').style.display = 'none';
     let teamsOptions = window.colorKeys.map(t => `<option value="${t}">${t}</option>`).join(''); let defaultDate = targetDate || new Date().toLocaleDateString('ru-RU');
@@ -2103,8 +2099,10 @@ window.renderSettingsList = function(targetId = window.currentSettingsTarget) {
     }
     h += `</div>`;
 
-    if (window.currentRole === 'admin' && targetId !== 'createSettingsContainer') { 
+    if (window.currentRole === 'admin' && targetId !== 'createSettingsContainer' && !window.isDemoMode) { 
         h += `<div class="settings-divider"></div><div class="settings-checkbox-row" onclick="window.changeRoomName()"><div class="setting-label">НАЗВАНИЕ ТУРНИРА</div><div style="color:var(--gray); font-size:12px; font-weight:900; text-transform:uppercase;">ИЗМЕНИТЬ</div></div><div class="settings-checkbox-row" onclick="window.changeViewerPass()"><div class="setting-label">ПАРОЛЬ ИГРОКА</div><div style="color:var(--gray); font-size:12px; font-weight:900; text-transform:uppercase;">ИЗМЕНИТЬ</div></div><div class="settings-checkbox-row" onclick="window.changeAdminPass()"><div class="setting-label">ПАРОЛЬ АДМИНА</div><div style="color:var(--gray); font-size:12px; font-weight:900; text-transform:uppercase;">ИЗМЕНИТЬ</div></div>`; 
+    } else if (window.isDemoMode && targetId !== 'createSettingsContainer') {
+        h += `<div class="settings-divider"></div><div class="settings-checkbox-row" onclick="window.showAlert('Приложение тестируется. Изменение этих настроек в Demo режиме не доступно. Обратитесь к разработчику.');"><div class="setting-label">НАЗВАНИЕ ТУРНИРА</div><div style="color:var(--gray); font-size:12px; font-weight:900; text-transform:uppercase;">ИЗМЕНИТЬ</div></div><div class="settings-checkbox-row" onclick="window.showAlert('Приложение тестируется. Изменение этих настроек в Demo режиме не доступно. Обратитесь к разработчику.');"><div class="setting-label">ПАРОЛЬ ИГРОКА</div><div style="color:var(--gray); font-size:12px; font-weight:900; text-transform:uppercase;">ИЗМЕНИТЬ</div></div><div class="settings-checkbox-row" onclick="window.showAlert('Приложение тестируется. Изменение этих настроек в Demo режиме не доступно. Обратитесь к разработчику.');"><div class="setting-label">ПАРОЛЬ АДМИНА</div><div style="color:var(--gray); font-size:12px; font-weight:900; text-transform:uppercase;">ИЗМЕНИТЬ</div></div>`;
     }
     c.innerHTML = h;
 };
@@ -2168,7 +2166,6 @@ window.saveSettings = async function() {
 };
 
 window.changeRosterSize = function(t, d) {
-    if (window.isDemoMode) return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно.");
     let r = window.tempConfig.rosters[t];
     if (d > 0 && r.length < 15) r.push(""); else if (d < 0 && r.length > 1) r.pop();
     window.renderRosterEditorUI(); 
@@ -2191,8 +2188,8 @@ window.renderRosterEditorUI = function() {
             h += `<div class="player-row">
                     <span class="player-num">${i+1}.</span>
                     <div style="display:flex; gap:4px; flex:1;">
-                        <input type="text" class="player-input" value="${n}" onchange="if(window.isDemoMode) { window.showAlert('Приложение тестируется. Изменение этих настроек в Demo режиме не доступно.'); this.value='${n}'; return; } window.tempConfig.rosters['${t}'][${i}]=this.value" style="margin-bottom:0;">
-                        <button class="btn-base icon-btn" style="flex:0 0 35px; padding:0; margin-bottom:0;" onclick="if(window.isDemoMode) { window.showAlert('Приложение тестируется. Изменение этих настроек в Demo режиме не доступно.'); return; } window.openPlayerDropdown('${t}', ${i}, 'config')">▼</button>
+                        <input type="text" class="player-input" value="${n}" onchange="if(window.isDemoMode) { window.showAlert('Приложение тестируется. Изменение этих настроек в Demo режиме не доступно. Обратитесь к разработчику.'); this.value='${n}'; return; } window.tempConfig.rosters['${t}'][${i}]=this.value" style="margin-bottom:0;">
+                        <button class="btn-base icon-btn" style="flex:0 0 35px; padding:0; margin-bottom:0;" onclick="window.openPlayerDropdown('${t}', ${i}, 'config')">▼</button>
                     </div>
                   </div>`;
         });
@@ -2255,9 +2252,8 @@ window.closeWinner = async function() {
 
 window.toggleOTManual = function() { 
     if (window.currentRole === 'viewer') return;
-    window.otActive = !window.otActive; window.config.useOT = window.otActive;
+    window.otActive = !window.otActive; window.config.useOT = window.otActive; window.saveConfig();
     document.getElementById('otToggle').parentElement.classList.toggle('active', window.otActive); 
-    if (typeof window.syncToFirebase === 'function') window.syncToFirebase(true);
 };
 
 window.updateUtilityBtns = function() {
