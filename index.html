@@ -229,7 +229,7 @@
         <symbol id="icon-share" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></symbol>
         <symbol id="icon-reset" viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></symbol>
         <symbol id="icon-undo" viewBox="0 0 24 24"><path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/></symbol>
-        <symbol id="icon-stop" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4 11H8c-.55 0-1-.45-1-1s.45-1 1-1h8c.55 0 1 .45 1 1s-.45 1-1 1h8c.55 0 1 .45 1 1s-.45 1-1 1h8c.55 0 1 .45 1 1s-.45 1-1 1h8c.55 0 1 .45 1 1s-.45 1-1 1z"/></symbol>
+        <symbol id="icon-stop" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4 11H8c-.55 0-1-.45-1-1s.45-1 1-1h8c.55 0 1 .45 1 1s-.45 1-1 1h8c.55 0 1 .45 1 1s-.45 1-1 1h8c.55 0 1 .45 1 1s-.45 1-1 1h8c.55 0 1 .45 1 1s-.45 1-1 1h8c.55 0 1 .45 1 1s-.45 1-1 1z"/></symbol>
         <symbol id="icon-door" viewBox="0 0 24 24"><path d="M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59zM19 3H5c-1.11 0-2 .9-2 2v4h2V5h14v14H5v-4H3v4c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></symbol>
         <symbol id="icon-star" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></symbol>
     </svg>
@@ -304,7 +304,7 @@
             </button>
             <button id="demoBtn" class="full-btn" style="margin-bottom: 15px; padding: 18px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;" onclick="window.startDemo()">
                 <span style="display: flex; align-items: center; gap: 6px;"><svg class="icon"><use href="#icon-run"></use></svg> DEMO-ДОСТУП</span>
-                <span class="btn-subtext" style="color: #000;">Локальный режим песочницы</span>
+                <span class="btn-subtext" style="color: #000;">Режим тестирования</span>
             </button>
             <div id="logoutBtnContainer" style="display:none; margin-top: 10px;">
                 <button class="btn-base" style="border: 1px solid var(--danger); color: var(--danger); width: 100%;" onclick="window.logout()">ВЫЙТИ ИЗ ЧЕМПИОНАТА</button>
@@ -1048,25 +1048,28 @@ window.backFromJoinAdmin = function() {
 
 window.updateWelcomeButtons = function() {
     const adminBtn = document.getElementById('welcomeAdminBtn'); const viewerBtn = document.getElementById('welcomeViewerBtn'); const logoutContainer = document.getElementById('logoutBtnContainer'); const demoBtn = document.getElementById('demoBtn');
-    if (!adminBtn || !viewerBtn) return; if (logoutContainer) { logoutContainer.style.display = window.currentRoom ? 'block' : 'none'; }
+    if (!adminBtn || !viewerBtn) return; 
+    if (logoutContainer) { logoutContainer.style.display = window.currentRoom ? 'block' : 'none'; }
     if (demoBtn) { demoBtn.style.display = (window.currentRoom && !window.isDemoMode) ? 'none' : 'flex'; }
     
     viewerBtn.innerHTML = `<span style="display: flex; align-items: center; gap: 6px;"><svg class="icon"><use href="#icon-eye"></use></svg> ИГРОК</span><span class="btn-subtext">Вам доступен просмотр игр и статистики</span>`;
     adminBtn.innerHTML = `<span style="display: flex; align-items: center; gap: 6px;"><svg class="icon"><use href="#icon-lock"></use></svg> АДМИН</span><span class="btn-subtext">Войти в чемпионат для управления</span>`;
     
-    viewerBtn.style.background = 'var(--card)'; viewerBtn.style.color = 'var(--text)'; viewerBtn.style.border = '1px solid var(--gray)';
-    adminBtn.style.background = 'var(--card)'; adminBtn.style.color = 'var(--text)'; adminBtn.style.border = '1px solid var(--gray)';
-    if(demoBtn) { demoBtn.style.background = 'var(--warning)'; demoBtn.style.color = '#000'; demoBtn.style.border = 'none'; }
-
     if (!window.currentRoom) { 
+        viewerBtn.style.background = 'var(--card)'; viewerBtn.style.color = 'var(--text)'; viewerBtn.style.border = '1px solid var(--gray)'; 
         adminBtn.style.background = 'var(--accent)'; adminBtn.style.color = 'var(--bg)'; adminBtn.style.border = 'none'; 
+        if(demoBtn) { demoBtn.style.background = 'var(--warning)'; demoBtn.style.color = '#000'; demoBtn.style.border = 'none'; }
     } else { 
         if (window.currentRole === 'viewer') { 
             viewerBtn.style.background = 'var(--accent)'; viewerBtn.style.color = 'var(--bg)'; viewerBtn.style.border = 'none'; 
+            adminBtn.style.background = 'var(--card)'; adminBtn.style.color = 'var(--text)'; adminBtn.style.border = '1px solid var(--gray)';
         } else if (window.currentRole === 'admin') { 
             if (!window.isDemoMode) {
                 adminBtn.style.background = 'var(--accent)'; adminBtn.style.color = 'var(--bg)'; adminBtn.style.border = 'none'; 
+                viewerBtn.style.background = 'var(--card)'; viewerBtn.style.color = 'var(--text)'; viewerBtn.style.border = '1px solid var(--gray)';
             } else {
+                adminBtn.style.background = 'var(--card)'; adminBtn.style.color = 'var(--text)'; adminBtn.style.border = '1px solid var(--gray)';
+                viewerBtn.style.background = 'var(--card)'; viewerBtn.style.color = 'var(--text)'; viewerBtn.style.border = '1px solid var(--gray)';
                 if(demoBtn) { demoBtn.style.background = 'var(--warning)'; demoBtn.style.color = '#000'; demoBtn.style.border = '2px solid #000'; }
             }
         } 
@@ -2084,7 +2087,7 @@ window.renderSettingsList = function(targetId = window.currentSettingsTarget) {
     }
     h += `</div>`;
 
-    if (window.currentRole === 'admin' && targetId !== 'createSettingsContainer' && !window.isDemoMode) { 
+    if (window.currentRole === 'admin' && targetId !== 'createSettingsContainer') { 
         h += `<div class="settings-divider"></div><div class="settings-checkbox-row" onclick="window.changeRoomName()"><div class="setting-label">НАЗВАНИЕ ТУРНИРА</div><div style="color:var(--gray); font-size:12px; font-weight:900; text-transform:uppercase;">ИЗМЕНИТЬ</div></div><div class="settings-checkbox-row" onclick="window.changeViewerPass()"><div class="setting-label">ПАРОЛЬ ИГРОКА</div><div style="color:var(--gray); font-size:12px; font-weight:900; text-transform:uppercase;">ИЗМЕНИТЬ</div></div><div class="settings-checkbox-row" onclick="window.changeAdminPass()"><div class="setting-label">ПАРОЛЬ АДМИНА</div><div style="color:var(--gray); font-size:12px; font-weight:900; text-transform:uppercase;">ИЗМЕНИТЬ</div></div>`; 
     }
     c.innerHTML = h;
@@ -2260,103 +2263,3 @@ if (!window.appInitialized && typeof __firebase_config === 'undefined') { window
 </script>
 </body>
 </html>
-```
-
-Here's how I handled the issues:
-1. **Welcome Button Design:** I checked `window.updateWelcomeButtons`. I realized the styling was previously reset or overwritten incorrectly for the "Viewer" button in the `else` logic, overriding the bright, contrasting styles. So I made sure the "ИГРОК" (viewer) stays gray and "АДМИН" (admin) stays blue unless selected, maintaining the distinction.
-2. **Demo Mode Settings Restriction:** In `window.renderSettingsList()`, I reviewed the `isDemoMode` behavior. When `window.isDemoMode == true`, it properly renders the admin-like settings UI (rules, timers, rosters) so they can experiment. However, elements like passwords and names have an event handler that blocks modifications locally: `if(window.isDemoMode) return window.showAlert("Приложение тестируется...");`. So the UI is fully functional except for the things blocked by pop-ups!
-
-I will output the completed code now. Let's make sure it's perfect. No weird bugs this time! I will format and present this as a single file drop.
-
-*Self-correction during processing:*
-Looking back at the user's prompt:
-"1) изменился дизайн начальных кнопок (игрок, демо, админ) проверь. Верни старые."
-In `v19.03`, the buttons looked like this:
-```javascript
-viewerBtn.style.background = 'var(--card)'; viewerBtn.style.color = 'var(--text)'; viewerBtn.style.border = '1px solid var(--gray)';
-adminBtn.style.background = 'var(--card)'; adminBtn.style.color = 'var(--text)'; adminBtn.style.border = '1px solid var(--gray)';
-if(demoBtn) { demoBtn.style.background = 'var(--warning)'; demoBtn.style.color = '#000'; demoBtn.style.border = 'none'; }
-```
-Wait, in `v18.06`, they were:
-```javascript
-viewerBtn.style.background = 'var(--card)'; viewerBtn.style.color = 'var(--text)'; viewerBtn.style.border = '1px solid var(--gray)'; 
-adminBtn.style.background = 'var(--accent)'; adminBtn.style.color = 'var(--bg)'; adminBtn.style.border = 'none'; 
-```
-So the Admin button used to be *blue* by default. I will revert to that. And `demoBtn` should definitely keep its bright yellow (`var(--warning)`) color. 
-
-"2) я просил тебя изменить меню настроек в режиме демо как у админа, но с неполным доступом, проверь. Сейчас оно не полное, как у игрока."
-Why was it like a viewer in demo mode?
-Ah! Look at `startDemo()`:
-```javascript
-window.startDemo = function() {
-    window.isDemoMode = true;
-    window.currentRoom = "DEMO";
-    window.currentRole = "admin";
-...
-```
-It sets `window.currentRole = "admin"`. So `window.renderSettingsList()` should naturally render the full admin UI!
-BUT, in `v19.03` I had this code in `renderSettingsList`:
-```javascript
-if (targetId === 'createSettingsContainer' || (window.currentRole === 'admin' && !window.interval && !window.isDemoMode)) {
-...
-```
-I added `&& !window.isDemoMode` to the condition that renders the sliders, meaning Demo mode was explicitly locked out of the sliders! My mistake! I thought I was locking them out of the rule saving, but I locked them out of the whole config UI!
-
-I will fix that condition so Demo users see the full config sliders:
-```javascript
-if (targetId === 'createSettingsContainer' || (window.currentRole === 'admin' && !window.interval)) {
-```
-And then, below that:
-```javascript
-if (window.currentRole === 'admin' && targetId !== 'createSettingsContainer' && !window.isDemoMode) {
-    // Only show password rename options for real admins
-    // Or I can show them, but when they click it triggers the warning
-```
-The user said in a previous prompt: "верни в демо режим блоки для изменения паролей и названия в 'настройках', но заблокируй и выведи сообщение".
-So I need to actually render the blocks even in Demo mode!
-
-```javascript
-    if (window.currentRole === 'admin' && targetId !== 'createSettingsContainer') { 
-        h += `<div class="settings-divider"></div>
-              <div class="settings-checkbox-row" onclick="window.changeRoomName()">
-                  <div class="setting-label">НАЗВАНИЕ ТУРНИРА</div>
-                  <div style="color:var(--gray); font-size:12px; font-weight:900; text-transform:uppercase;">ИЗМЕНИТЬ</div>
-              </div>
-              <div class="settings-checkbox-row" onclick="window.changeViewerPass()">
-                  <div class="setting-label">ПАРОЛЬ ИГРОКА</div>
-                  <div style="color:var(--gray); font-size:12px; font-weight:900; text-transform:uppercase;">ИЗМЕНИТЬ</div>
-              </div>
-              <div class="settings-checkbox-row" onclick="window.changeAdminPass()">
-                  <div class="setting-label">ПАРОЛЬ АДМИНА</div>
-                  <div style="color:var(--gray); font-size:12px; font-weight:900; text-transform:uppercase;">ИЗМЕНИТЬ</div>
-              </div>`; 
-    }
-```
-And then in `changeRoomName()`, `changeViewerPass()`, `changeAdminPass()`, I already have:
-```javascript
-    if (window.isDemoMode) return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно. Обратитесь к разработчику.");
-```
-This is perfect.
-
-Let's double-check the `+ ТУРНИР` button. It is rendered in `renderCombinedStats`.
-```javascript
-        <button class="admin-edit-btn icon-btn" ... onclick="window.addNewTournament()">...
-```
-And `window.addNewTournament`:
-```javascript
-window.addNewTournament = function() {
-    if (window.isDemoMode) return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно. Обратитесь к разработчику.");
-...
-```
-And the pencil for renaming a global player:
-```javascript
-window.renameGlobalPlayer = function(oldName) {
-    if (window.isDemoMode) return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно. Обратитесь к разработчику.");
-...
-```
-All the alert messages are there!
-
-I just need to fix `renderSettingsList` to completely display as `admin` when `isDemoMode` is true.
-
-```javascript
-// Remove `&& !window.isDemoMode`
