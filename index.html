@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0f172a">
-    <title>Футбол на Манеже v19.07+ Pro</title>
+    <title>Футбол на Манеже v19.08 Demo</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
@@ -310,7 +310,7 @@
                 <button class="btn-base" style="border: 1px solid var(--danger); color: var(--danger); width: 100%;" onclick="window.logout()">ВЫЙТИ ИЗ ЧЕМПИОНАТА</button>
             </div>
             <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
-                v19.07+ Pro • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
+                v19.08 Demo • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
             </div>
         </div>
     </div>
@@ -572,7 +572,7 @@
     </div>
 
 <script>
-/* JS LOGIC v19.07+ Pro */
+/* JS LOGIC v19.08 Demo */
 window.COLORS = { "Черные": "#000000", "Белые": "#ffffff", "Желтые": "#facc15", "Зеленые": "#22c55e", "Красные": "#ef4444", "Синие": "#3b82f6", "Разноцветные": "linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" };
 window.colorKeys = Object.keys(window.COLORS);
 window.audioCtx = null;
@@ -950,10 +950,35 @@ window.openPlayerDropdown = function(team, index, mode) {
 };
 
 window.openPlayerDropdownMatch = function(idx, type) {
+    if (window.isDemoMode) return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно.");
     window.dropdownTarget = { idx, type, mode: 'match' };
-    window.updateGlobalPlayersList();
-    let h = window.globalPlayers.map(p => `<button class="p-btn" style="margin-bottom:8px; width:100%; background:var(--card); border:1px solid var(--accent); color:var(--text);" onclick="window.selectDropdownPlayer('${p}')">${p}</button>`).join('');
-    if(!h) h = "<div style='color:var(--gray);'>Нет игроков в базе</div>";
+    
+    const m = window.matches.find(x => x.id === window.editingMatchId);
+    let players = new Set();
+    
+    if (m) {
+        // Берем составы именно этого турнирного дня
+        let dayRosters = window.tourRosters[m.date] ? window.tourRosters[m.date].rosters : window.config.rosters;
+        
+        // Добавляем игроков только из играющих команд
+        if (dayRosters[m.t1]) dayRosters[m.t1].forEach(p => { if(p && p.trim() && p !== '?') players.add(p.trim()); });
+        if (dayRosters[m.t2]) dayRosters[m.t2].forEach(p => { if(p && p.trim() && p !== '?') players.add(p.trim()); });
+    } else {
+        // Запасной вариант на случай бага
+        window.globalPlayers.forEach(p => players.add(p));
+    }
+    
+    let pArr = Array.from(players).sort();
+    
+    let h = pArr.map(p => `<button class="p-btn" style="margin-bottom:8px; width:100%; background:var(--card); border:1px solid var(--accent); color:var(--text);" onclick="window.selectDropdownPlayer('${p}')">${p}</button>`).join('');
+    
+    if(type === 's') {
+        h += `<button class="p-btn" style="margin-bottom:8px; width:100%; background:var(--gray); border:1px solid var(--gray); color:#fff;" onclick="window.selectDropdownPlayer('Автогол')">АВТОГОЛ</button>`;
+    }
+    h += `<button class="p-btn" style="margin-bottom:8px; width:100%; background:var(--danger); border:1px solid var(--danger); color:#fff;" onclick="window.selectDropdownPlayer('')">ОЧИСТИТЬ ПОЛЕ</button>`;
+    
+    if(!h && pArr.length === 0) h = "<div style='color:var(--gray); margin-bottom: 15px;'>Нет игроков в текущих составах</div>" + h;
+    
     document.getElementById('playerDropdownGrid').innerHTML = h;
     window.openModal('playerDropdownModal');
 };
@@ -2043,26 +2068,21 @@ window.executeShare = function() {
 };
 
 window.openMatchEditor = function(id) {
+    if (window.isDemoMode) return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно.");
     if (window.currentRole !== 'admin') return;
     window.editingMatchId = id; const m = window.matches.find(x => x.id === id); if(!m) return;
-    window.updateGlobalPlayersList();
+    
     document.getElementById('adminEditTitle').innerText = `РЕДАКТИРОВАТЬ МАТЧ`; document.getElementById('adminDelMatchBtn').style.display = 'block';
     
-    let h = `<div style="display:flex; gap:10px; margin-bottom:10px;"><div style="flex:1"><label style="color:var(--gray)">Дата:</label><input type="text" id="editMDate" class="player-input" value="${m.date}" style="width:100%"></div><div style="flex:1"><label style="color:var(--gray)">Время:</label><input type="text" id="editMTime" class="player-input" value="${m.time}" style="width:100%"></div></div><div style="display:flex; gap:10px; margin-bottom:10px; align-items:center;"><div style="flex:1; text-align:right; font-weight:bold;">${m.t1}</div><input type="number" id="editMS1" class="player-input" value="${m.s1}" style="width:40px; text-align:center;"><span>:</span><input type="number" id="editMS2" class="player-input" value="${m.s2}" style="width:40px; text-align:center;"><div style="flex:1; text-align:left; font-weight:bold;">${m.t2}</div></div><div class="settings-divider"></div><div style="font-weight:bold; margin-bottom:5px; color:var(--accent);">Голы:</div>`;
+    let h = `<div style="display:flex; gap:10px; margin-bottom:10px;"><div style="flex:1"><label style="color:var(--gray)">Дата:</label><input type="text" id="editMDate" class="player-input" value="${m.date}" style="width:100%"></div><div style="flex:1"><label style="color:var(--gray)">Время:</label><input type="text" id="editMTime" class="player-input" value="${m.time}" style="width:100%"></div></div><div style="display:flex; gap:10px; margin-bottom:10px; align-items:center;"><div style="flex:1; text-align:right; font-weight:bold; font-size:13px; overflow:hidden; text-overflow:ellipsis;">${m.t1}</div><input type="number" id="editMS1" class="player-input" value="${m.s1}" style="width:40px; text-align:center; padding:8px 4px;"><span>:</span><input type="number" id="editMS2" class="player-input" value="${m.s2}" style="width:40px; text-align:center; padding:8px 4px;"><div style="flex:1; text-align:left; font-weight:bold; font-size:13px; overflow:hidden; text-overflow:ellipsis;">${m.t2}</div></div><div class="settings-divider"></div><div style="font-weight:bold; margin-bottom:5px; color:var(--accent);">Голы:</div>`;
 
     if(m.events) {
         m.events.forEach((e, idx) => {
-            h += `<div style="background:rgba(255,255,255,0.03); padding:8px; border-radius:8px; margin-bottom:5px; display:flex; gap:8px; align-items:center;">
-                <select id="editESide_${idx}" class="player-input" style="padding:8px; max-width:80px; font-size:12px; margin-bottom:0;"><option value="1" ${e.side===1?'selected':''}>${m.t1}</option><option value="2" ${e.side===2?'selected':''}>${m.t2}</option></select>
-                <div style="display:flex; gap:2px; flex:1;">
-                    <input type="text" id="editES_${idx}" class="player-input" value="${e.s||''}" placeholder="Гол" style="flex:1; padding:8px; font-size:12px; margin-bottom:0;">
-                    <button class="btn-base icon-btn" style="flex:0 0 25px; padding:0; margin-bottom:0;" onclick="window.openPlayerDropdownMatch(${idx}, 's')">▼</button>
-                </div>
-                <div style="display:flex; gap:2px; flex:1;">
-                    <input type="text" id="editEA_${idx}" class="player-input" value="${e.a||''}" placeholder="Пас" style="flex:1; padding:8px; font-size:12px; margin-bottom:0;">
-                    <button class="btn-base icon-btn" style="flex:0 0 25px; padding:0; margin-bottom:0;" onclick="window.openPlayerDropdownMatch(${idx}, 'a')">▼</button>
-                </div>
-                <button class="btn-base icon-btn" style="background:var(--danger); flex:0 0 36px; padding:8px; margin-bottom:0;" onclick="window.removeEventFromEdit(${idx})"><svg class="icon"><use href="#icon-trash"></use></svg></button></div>`;
+            h += `<div style="background:rgba(255,255,255,0.03); padding:6px; border-radius:8px; margin-bottom:5px; display:flex; gap:4px; align-items:center;">
+                <select id="editESide_${idx}" class="player-input" style="padding:6px; flex: 0 0 65px; font-size:11px; margin-bottom:0;"><option value="1" ${e.side===1?'selected':''}>${m.t1}</option><option value="2" ${e.side===2?'selected':''}>${m.t2}</option></select>
+                <input type="text" id="editES_${idx}" class="player-input" value="${e.s||''}" placeholder="Гол" readonly onclick="window.openPlayerDropdownMatch(${idx}, 's')" style="flex:1; padding:8px 4px; font-size:11px; margin-bottom:0; cursor:pointer; text-align:center; min-width:0;">
+                <input type="text" id="editEA_${idx}" class="player-input" value="${e.a||''}" placeholder="Пас" readonly onclick="window.openPlayerDropdownMatch(${idx}, 'a')" style="flex:1; padding:8px 4px; font-size:11px; margin-bottom:0; cursor:pointer; text-align:center; min-width:0;">
+                <button class="btn-base icon-btn" style="background:var(--danger); flex:0 0 32px; padding:8px 0; margin-bottom:0;" onclick="window.removeEventFromEdit(${idx})"><svg class="icon"><use href="#icon-trash"></use></svg></button></div>`;
         });
     }
 
