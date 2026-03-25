@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0f172a">
-    <title>Футбол на Манеже v19.09 Demo</title>
+    <title>Футбол на Манеже v19.10 Demo</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
@@ -310,7 +310,7 @@
                 <button class="btn-base" style="border: 1px solid var(--danger); color: var(--danger); width: 100%;" onclick="window.logout()">ВЫЙТИ ИЗ ЧЕМПИОНАТА</button>
             </div>
             <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
-                v19.09 Demo • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
+                v19.10 Demo • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
             </div>
         </div>
     </div>
@@ -572,7 +572,7 @@
     </div>
 
 <script>
-/* JS LOGIC v19.09 Demo */
+/* JS LOGIC v19.10 Demo */
 window.COLORS = { "Черные": "#000000", "Белые": "#ffffff", "Желтые": "#facc15", "Зеленые": "#22c55e", "Красные": "#ef4444", "Синие": "#3b82f6", "Разноцветные": "linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" };
 window.colorKeys = Object.keys(window.COLORS);
 window.audioCtx = null;
@@ -1708,13 +1708,54 @@ window.deleteDay = function(date) {
 
 window.finishCurrentTournament = function(date) {
     if (window.isDemoMode) return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно.");
-    window.showConfirm("Завершить этот турнир? Составы команд будут зафиксированы для истории, а турнир получит статус 'ЗАВЕРШЕН'.", () => {
-        if (!window.config.finishedTours) window.config.finishedTours = [];
-        if (!window.config.finishedTours.includes(date)) {
-            window.config.finishedTours.push(date);
+    window.showConfirm("Завершить этот турнир? Статистика будет зафиксирована, и новые матчи начнут новый турнир.", () => {
+        let count = 1;
+        let newDate = `${date} (${count})`;
+        while (window.matches.some(m => m.date === newDate) || (window.customTours && window.customTours[newDate]) || (window.tourRosters && window.tourRosters[newDate])) {
+            count++;
+            newDate = `${date} (${count})`;
         }
-        window.snapshotTourRoster(date);
+
+        let movedMatches = false;
+        window.matches.forEach(m => {
+            if (m.date === date) {
+                m.date = newDate;
+                movedMatches = true;
+            }
+        });
+
+        if (window.tourRosters && window.tourRosters[date]) {
+            window.tourRosters[newDate] = JSON.parse(JSON.stringify(window.tourRosters[date]));
+            delete window.tourRosters[date];
+        } else if (movedMatches) {
+            window.snapshotTourRoster(newDate); 
+        }
+
+        if (window.customTours && window.customTours[date]) {
+            window.customTours[newDate] = JSON.parse(JSON.stringify(window.customTours[date]));
+            delete window.customTours[date];
+        }
+
+        let mvps = window.getStore("tourMvps", {});
+        if (mvps[date]) {
+            mvps[newDate] = mvps[date];
+            delete mvps[date];
+            window.setStore("tourMvps", mvps);
+        }
+
+        if (!window.config.finishedTours) window.config.finishedTours = [];
+        if (!window.config.finishedTours.includes(newDate)) window.config.finishedTours.push(newDate);
+        window.config.finishedTours = window.config.finishedTours.filter(d => d !== date);
+
+        // Моментально создаем пустую "болванку" для нового турнира в этой же дате, чтобы он появился в интерфейсе
+        window.snapshotTourRoster(date); 
+
+        window.setStore("matches", window.matches);
+        window.setStore("customTours", window.customTours);
+        window.setStore("tourRosters", window.tourRosters);
         window.setStore("config", window.config);
+        
+        window.currentStatsPageIndex = 0; // Перекидываем пользователя на новый чистый турнир
         window.syncToFirebase(true);
         window.renderCombinedStats();
     });
@@ -1722,9 +1763,12 @@ window.finishCurrentTournament = function(date) {
 
 window.renderCombinedStats = function() {
     const cont = document.getElementById('combinedStatsContainer'); cont.innerHTML = "";
-    const grouped = {}; window.matches.forEach(m => { if (!grouped[m.date]) grouped[m.date] = []; grouped[m.date].push(m); });
-    Object.keys(window.customTours).forEach(dt => { if (!grouped[dt]) grouped[dt] = []; });
-    const statsDates = Object.keys(grouped).sort((a,b) => b.split('.').reverse().join('') - a.split('.').reverse().join(''));
+    const grouped = {}; 
+    window.matches.forEach(m => { if (!grouped[m.date]) grouped[m.date] = []; grouped[m.date].push(m); });
+    if (window.customTours) { Object.keys(window.customTours).forEach(dt => { if (!grouped[dt]) grouped[dt] = []; }); }
+    if (window.tourRosters) { Object.keys(window.tourRosters).forEach(dt => { if (!grouped[dt]) grouped[dt] = []; }); }
+    
+    const statsDates = Object.keys(grouped).sort((a,b) => window.parseSortDate(b).localeCompare(window.parseSortDate(a)));
     
     if (!statsDates.length) { 
         let emptyHTML = "<p style='opacity:0.3; margin-top:30px;'>История пуста</p>";
@@ -1732,15 +1776,21 @@ window.renderCombinedStats = function() {
         cont.innerHTML = emptyHTML; window.openModal('statsModal'); return; 
     }
     
-    if (window.currentStatsPageIndex < 0) window.currentStatsPageIndex = 0; if (window.currentStatsPageIndex >= statsDates.length) window.currentStatsPageIndex = statsDates.length - 1;
-    const date = statsDates[window.currentStatsPageIndex]; const dayMatches = grouped[date] || []; let tourMvps = window.getStore("tourMvps", {});
-    const allDatesAsc = Object.keys(grouped).sort((a,b) => a.split('.').reverse().join('') - b.split('.').reverse().join('')); const tourNumber = allDatesAsc.indexOf(date) + 1;
+    if (window.currentStatsPageIndex < 0) window.currentStatsPageIndex = 0; 
+    if (window.currentStatsPageIndex >= statsDates.length) window.currentStatsPageIndex = statsDates.length - 1;
+    
+    const date = statsDates[window.currentStatsPageIndex]; 
+    const dayMatches = grouped[date] || []; 
+    let tourMvps = window.getStore("tourMvps", {});
+    const allDatesAsc = Object.keys(grouped).sort((a,b) => window.parseSortDate(a).localeCompare(window.parseSortDate(b))); 
+    const tourNumber = allDatesAsc.indexOf(date) + 1;
 
-    // Логика плашки ЗАВЕРШЕН / ТЕКУЩИЙ
     let isFinished = false;
     let todayStr = new Date().toLocaleDateString('ru-RU');
     if (!window.config.finishedTours) window.config.finishedTours = [];
-    if (date !== todayStr || window.config.finishedTours.includes(date)) { isFinished = true; }
+    if (window.config.finishedTours.includes(date) || date.includes('(')) { isFinished = true; }
+    if (date !== todayStr && !date.includes('(')) { isFinished = true; }
+    
     let statusBadge = isFinished ? `<span style="background:var(--gray); color:var(--bg); padding:3px 6px; border-radius:5px; font-size:9px; vertical-align:middle; margin-left:6px; font-weight:bold;">ЗАВЕРШЕН</span>` : `<span style="background:var(--success); color:var(--bg); padding:3px 6px; border-radius:5px; font-size:9px; vertical-align:middle; margin-left:6px; font-weight:bold;">ТЕКУЩИЙ</span>`;
 
     let stats = {};
@@ -1752,11 +1802,14 @@ window.renderCombinedStats = function() {
         else if(m.s2 > m.s1) { if(stats[m.t2]) { stats[m.t2].o+=3; stats[m.t2].v++; } if(stats[m.t1]) { stats[m.t1].p++; } } 
         else { if(stats[m.t1]) { stats[m.t1].o++; stats[m.t1].nch++; } if(stats[m.t2]) { stats[m.t2].o++; stats[m.t2].nch++; } }
     });
-    if (window.customTours[date]) stats = window.customTours[date];
+
+    if (window.customTours && window.customTours[date] && Object.keys(window.customTours[date]).length > 0) {
+        stats = window.customTours[date];
+    }
 
     let playerStats = {}; let currentMvp = tourMvps[date]; let activeTeams = []; let activeRosters = {};
-    if (window.tourRosters[date]) { activeTeams = window.tourRosters[date].teams || []; activeRosters = window.tourRosters[date].rosters || {}; } 
-    else { let playedTeams = new Set(); dayMatches.forEach(m => { playedTeams.add(m.t1); playedTeams.add(m.t2); }); if (window.customTours[date]) { Object.keys(window.customTours[date]).forEach(t => playedTeams.add(t)); } window.config.teams.forEach(t => playedTeams.add(t)); activeTeams = Array.from(playedTeams); activeRosters = window.config.rosters || {}; }
+    if (window.tourRosters && window.tourRosters[date]) { activeTeams = window.tourRosters[date].teams || []; activeRosters = window.tourRosters[date].rosters || {}; } 
+    else { let playedTeams = new Set(); dayMatches.forEach(m => { playedTeams.add(m.t1); playedTeams.add(m.t2); }); if (window.customTours && window.customTours[date]) { Object.keys(window.customTours[date]).forEach(t => playedTeams.add(t)); } window.config.teams.forEach(t => playedTeams.add(t)); activeTeams = Array.from(playedTeams); activeRosters = window.config.rosters || {}; }
     activeTeams.forEach(team => { if(activeRosters[team]) { activeRosters[team].forEach(p => { let pName = (p || '').toString().trim(); if(pName && pName !== '?') { playerStats[pName] = { name: pName, team: team, g: 0, a: 0, og: 0 }; } }); } });
 
     dayMatches.forEach(m => {
