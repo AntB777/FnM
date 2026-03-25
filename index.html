@@ -769,7 +769,8 @@ window.syncToFirebase = async function(force = false) {
                 },
                 currentMatch: window.currentMatch
             };
-            await window.setDoc(roomRef, payload);
+            // Добавлено { merge: true } для точечного обновления
+            await window.setDoc(roomRef, payload, { merge: true });
         } catch(e) { console.error("Sync Error:", e); }
     };
 
@@ -1466,6 +1467,7 @@ window.startLocalTimer = function() {
                 }
             }
         }
+        // БЛОК window.syncTick УДАЛЕН, чтобы телефоны не затирали друг друга
     }, 200);
     if(window.currentRole === 'admin') document.getElementById('startBtn').innerText = "⏸ ПАУЗА";
     window.updateUtilityBtns();
@@ -1857,6 +1859,34 @@ window.changeTourPlayerSize = function(t, d) {
 };
 
 window.saveTourPlayerEdit = function() {
+    let oldRosters = {};
+    if (window.tourRosters[window.editingTourPlayerDate]) { oldRosters = JSON.parse(JSON.stringify(window.tourRosters[window.editingTourPlayerDate].rosters)); } 
+    else { oldRosters = JSON.parse(JSON.stringify(window.config.rosters)); }
+
+    Object.keys(window.tempTourRosters).forEach(t => {
+        let oldR = oldRosters[t] || []; let newR = window.tempTourRosters[t];
+        for(let i=0; i<Math.min(oldR.length, newR.length); i++) {
+            let oName = oldR[i] ? String(oldR[i]).trim() : ""; let nName = newR[i] ? String(newR[i]).trim() : "";
+            // Убрали проверку на то, что имя не пустое, теперь удаление работает!
+            if(oName !== nName) {
+                window.matches.forEach(m => {
+                    if (m.date === window.editingTourPlayerDate && m.events) {
+                        m.events.forEach(e => { 
+                            if (e.s === oName) e.s = nName || null; 
+                            if (e.s === oName + ' (АГ)') e.s = nName ? nName + ' (АГ)' : null; 
+                            if (e.a === oName) e.a = nName || null; 
+                        });
+                    }
+                });
+                let mvps = window.getStore("tourMvps", {});
+                if (mvps[window.editingTourPlayerDate] === oName) { 
+                    if(nName) { mvps[window.editingTourPlayerDate] = nName; } else { delete mvps[window.editingTourPlayerDate]; }
+                    window.setStore("tourMvps", mvps); 
+                }
+            }
+        }
+    });
+
     if(!window.tourRosters[window.editingTourPlayerDate]) { window.tourRosters[window.editingTourPlayerDate] = { teams: Object.keys(window.tempTourRosters), rosters: {} }; }
     window.tourRosters[window.editingTourPlayerDate].rosters = window.tempTourRosters;
     
