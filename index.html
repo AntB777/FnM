@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0f172a">
-    <title>Футбол на Манеже v19.06 Demo</title>
+    <title>Футбол на Манеже v19.07 Pro</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
@@ -304,13 +304,13 @@
             </button>
             <button id="demoBtn" class="full-btn" style="margin-bottom: 15px; padding: 18px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;" onclick="window.startDemo()">
                 <span style="display: flex; align-items: center; gap: 6px;"><svg class="icon"><use href="#icon-run"></use></svg> DEMO</span>
-                <span class="btn-subtext" style="color: #000;">Demo</span>
+                <span class="btn-subtext" style="color: #000;">Режим тестирования</span>
             </button>
             <div id="logoutBtnContainer" style="display:none; margin-top: 10px;">
                 <button class="btn-base" style="border: 1px solid var(--danger); color: var(--danger); width: 100%;" onclick="window.logout()">ВЫЙТИ ИЗ ЧЕМПИОНАТА</button>
             </div>
             <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
-                v19.06 Demo • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
+                v19.07 Pro • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
             </div>
         </div>
     </div>
@@ -572,7 +572,7 @@
     </div>
 
 <script>
-/* JS LOGIC v19.06 Demo */
+/* JS LOGIC v19.07 Pro */
 window.COLORS = { "Черные": "#000000", "Белые": "#ffffff", "Желтые": "#facc15", "Зеленые": "#22c55e", "Красные": "#ef4444", "Синие": "#3b82f6", "Разноцветные": "linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" };
 window.colorKeys = Object.keys(window.COLORS);
 window.audioCtx = null;
@@ -600,6 +600,13 @@ window.openModal = function(id) { const m = document.getElementById(id); if (m) 
 window.closeModal = function(id) { const m = document.getElementById(id); if (m) { m.style.display = 'none'; m.classList.add('hidden'); } };
 window.getStore = function(key, def) { if (window[key] !== undefined && window[key] !== null && window[key] !== '') return window[key]; return def; };
 window.setStore = function(key, val) { window[key] = val; };
+
+window.fetchWithTimeout = function(ref, ms = 8000) {
+    return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error("Timeout")), ms);
+        window.getDoc(ref).then(res => { clearTimeout(timer); resolve(res); }).catch(err => { clearTimeout(timer); reject(err); });
+    });
+};
 
 window.applyDataFromFirebase = function(data) {
     if (window.isDemoMode) return;
@@ -834,7 +841,7 @@ window.initApp = async function() {
     if (window.currentRoom) {
         try {
             const roomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', window.currentRoom);
-            const snap = await window.getDoc(roomRef);
+            const snap = await window.fetchWithTimeout(roomRef, 8000);
             if (snap.exists()) {
                 window.applyDataFromFirebase(snap.data());
                 document.getElementById('loadingOverlay').style.display = 'none';
@@ -849,6 +856,7 @@ window.initApp = async function() {
             window.currentRoom = null;
             window.config = JSON.parse(JSON.stringify(window.defaultConfig));
             document.getElementById('loadingOverlay').style.display = 'none';
+            if(e.message === "Timeout") { window.showAlert("Ошибка сети: не удалось связаться с базой данных. Если вы в РФ, проверьте VPN или попробуйте Demo-режим."); }
             window.openWelcomeModal();
         }
     } else {
@@ -1017,7 +1025,15 @@ window.renameGlobalPlayer = function(oldName) {
 
 window.deleteGlobalPlayer = function(name) { 
     if (window.isDemoMode) return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно. Обратитесь к разработчику.");
-    window.showConfirm(`Вы действительно хотите удалить игрока "${name}"?`, () => { window.globalPlayers = window.globalPlayers.filter(p => p !== name); window.setStore("globalPlayers", window.globalPlayers); window.updateGlobalPlayersList(); window.openPlayerDB(); window.syncToFirebase(true); }); 
+    window.showConfirm(`Вы действительно хотите удалить игрока "${name}"?`, () => { 
+        window.colorKeys.forEach(t => { if(window.config.rosters[t]) { window.config.rosters[t] = window.config.rosters[t].map(p => String(p).trim() === name ? "" : p); } });
+        Object.keys(window.tourRosters).forEach(date => { Object.keys(window.tourRosters[date].rosters).forEach(t => { window.tourRosters[date].rosters[t] = window.tourRosters[date].rosters[t].map(p => String(p).trim() === name ? "" : p); }); });
+        window.matches.forEach(m => { if (m && m.events) { m.events.forEach(e => { if (e.s === name || e.s === name + ' (АГ)') e.s = null; if (e.a === name) e.a = null; }); } });
+        
+        window.globalPlayers = window.globalPlayers.filter(p => p !== name); 
+        window.setStore("globalPlayers", window.globalPlayers); 
+        window.updateGlobalPlayersList(); window.openPlayerDB(); window.syncToFirebase(true); 
+    }); 
 };
 
 window.addGlobalPlayer = function() { 
@@ -1028,6 +1044,7 @@ window.addGlobalPlayer = function() {
 window.logout = function() { 
     window.showConfirm("Выйти из аккаунта и покинуть чемпионат?", () => { 
         window.currentRoom = null; window.currentRole = 'viewer'; window.isDemoMode = false;
+        window.matches = []; window.customTours = {}; window.tourRosters = {}; window.globalPlayers = [];
         localStorage.removeItem("mSmartPro_lastRoom"); localStorage.removeItem("mSmartPro_lastRole"); localStorage.removeItem("mSmartPro_isDemo");
         window.config = JSON.parse(JSON.stringify(window.defaultConfig)); window.updateWelcomeButtons(); window.openWelcomeModal(); 
     }); 
@@ -1061,7 +1078,7 @@ window.updateWelcomeButtons = function() {
     
     viewerBtn.innerHTML = `<span style="display: flex; align-items: center; gap: 6px;"><svg class="icon"><use href="#icon-eye"></use></svg> ИГРОК</span><span class="btn-subtext">Вам доступен просмотр игр и статистики</span>`;
     adminBtn.innerHTML = `<span style="display: flex; align-items: center; gap: 6px;"><svg class="icon"><use href="#icon-lock"></use></svg> АДМИН</span><span class="btn-subtext">Войти в чемпионат для управления</span>`;
-    if (demoBtn) demoBtn.innerHTML = `<span style="display: flex; align-items: center; gap: 6px;"><svg class="icon"><use href="#icon-run"></use></svg> РЕЖИМ ТЕСТИРОВАНИЯ</span><span class="btn-subtext" style="color: #000;">Режим тестирования</span>`;
+    if (demoBtn) demoBtn.innerHTML = `<span style="display: flex; align-items: center; gap: 6px;"><svg class="icon"><use href="#icon-run"></use></svg> РЕЖИМ ТЕСТИРОВАНИЯ</span><span class="btn-subtext" style="color: #000;">Локальная песочница</span>`;
 
     if (!window.currentRoom) { 
         viewerBtn.style.background = 'transparent'; viewerBtn.style.color = 'var(--text)'; viewerBtn.style.border = '1px solid var(--gray)'; 
@@ -1183,14 +1200,18 @@ window.confirmCreateRoom = async function() {
         const user = await window.startAuth();
         if (!user) { document.getElementById('loadingOverlay').style.display = 'none'; return window.showAlert("Сбой авторизации Firebase (Анонимный вход отключен?)"); }
         if (typeof window.getDoc === 'function' && typeof window.db !== 'undefined') {
-            const roomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', pin); const snap = await window.getDoc(roomRef);
+            const roomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', pin); const snap = await window.fetchWithTimeout(roomRef, 8000);
             if(snap.exists()) { document.getElementById('loadingOverlay').style.display = 'none'; return window.showAlert("Это название уже занято! Придумайте другое."); }
         }
         window.currentRoom = pin; window.currentRole = 'admin'; window.isDemoMode = false; window.tempConfig.adminPass = aPass; window.tempConfig.viewerPass = vPass; window.config = JSON.parse(JSON.stringify(window.tempConfig)); window.matches = []; window.customTours = {}; window.tourRosters = {}; window.globalPlayers = []; window.tourMvps = {};
         if (typeof window.syncToFirebase === 'function') await window.syncToFirebase(true);
         localStorage.setItem("mSmartPro_lastRoom", window.currentRoom); localStorage.setItem("mSmartPro_lastRole", window.currentRole); localStorage.setItem("mSmartPro_isDemo", "false");
         window.closeModal('createRoomModal'); window.startApp(); window.listenToRoom();
-    } catch(e) { console.error("Ошибка создания:", e); window.showAlert("Ошибка при создании: " + e.message); } finally { document.getElementById('loadingOverlay').style.display = 'none'; }
+    } catch(e) { 
+        console.error("Ошибка создания:", e); 
+        if(e.message === "Timeout") window.showAlert("Ошибка сети: не удалось связаться с базой данных. Проверьте VPN."); 
+        else window.showAlert("Ошибка при создании: " + e.message); 
+    } finally { document.getElementById('loadingOverlay').style.display = 'none'; }
 };
 
 window.confirmJoinAdmin = async function() {
@@ -1202,7 +1223,7 @@ window.confirmJoinAdmin = async function() {
         if (!user) { document.getElementById('loadingOverlay').style.display = 'none'; return window.showAlert("Сбой авторизации Firebase."); }
         let c = null;
         if (typeof window.getDoc === 'function' && typeof window.db !== 'undefined') {
-            const roomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', pin); const snap = await window.getDoc(roomRef);
+            const roomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', pin); const snap = await window.fetchWithTimeout(roomRef, 8000);
             if(!snap.exists()) { document.getElementById('loadingOverlay').style.display = 'none'; return window.showAlert("Чемпионат не найден!"); }
             let data = snap.data(); c = data.config; window.applyDataFromFirebase(data);
         } else {
@@ -1212,7 +1233,11 @@ window.confirmJoinAdmin = async function() {
         if (pass === c.adminPass || pass === (c.adminPass||"123")) { window.currentRole = 'admin'; } else { document.getElementById('loadingOverlay').style.display = 'none'; return window.showAlert("Неверный пароль!"); }
         window.currentRoom = pin; window.isDemoMode = false; localStorage.setItem("mSmartPro_lastRoom", window.currentRoom); localStorage.setItem("mSmartPro_lastRole", window.currentRole); localStorage.setItem("mSmartPro_isDemo", "false");
         window.closeModal('joinAdminModal'); window.startApp(); window.listenToRoom();
-    } catch(e) { console.error("Ошибка входа:", e); window.showAlert("Ошибка при подключении: " + e.message); } finally { document.getElementById('loadingOverlay').style.display = 'none'; }
+    } catch(e) { 
+        console.error("Ошибка входа:", e); 
+        if(e.message === "Timeout") window.showAlert("Ошибка сети: не удалось связаться с базой данных. Если вы в РФ, проверьте VPN."); 
+        else window.showAlert("Ошибка при подключении: " + e.message); 
+    } finally { document.getElementById('loadingOverlay').style.display = 'none'; }
 };
 
 window.confirmJoinViewer = async function() {
@@ -1224,7 +1249,7 @@ window.confirmJoinViewer = async function() {
         if (!user) { document.getElementById('loadingOverlay').style.display = 'none'; return window.showAlert("Сбой авторизации Firebase."); }
         let c = null;
         if (typeof window.getDoc === 'function' && typeof window.db !== 'undefined') {
-            const roomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', pin); const snap = await window.getDoc(roomRef);
+            const roomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', pin); const snap = await window.fetchWithTimeout(roomRef, 8000);
             if(!snap.exists()) { document.getElementById('loadingOverlay').style.display = 'none'; return window.showAlert("Чемпионат не найден!"); }
             let data = snap.data(); c = data.config; window.applyDataFromFirebase(data);
         } else {
@@ -1234,13 +1259,17 @@ window.confirmJoinViewer = async function() {
         if (pass !== c.viewerPass && pass !== (c.viewerPass||"000")) { document.getElementById('loadingOverlay').style.display = 'none'; return window.showAlert("Неверный пароль игрока!"); }
         window.currentRoom = pin; window.currentRole = 'viewer'; window.isDemoMode = false; localStorage.setItem("mSmartPro_lastRoom", window.currentRoom); localStorage.setItem("mSmartPro_lastRole", window.currentRole); localStorage.setItem("mSmartPro_isDemo", "false");
         window.closeModal('joinViewerModal'); window.startApp(); window.listenToRoom();
-    } catch(e) { console.error("Ошибка входа:", e); window.showAlert("Ошибка при подключении: " + e.message); } finally { document.getElementById('loadingOverlay').style.display = 'none'; }
+    } catch(e) { 
+        console.error("Ошибка входа:", e); 
+        if(e.message === "Timeout") window.showAlert("Ошибка сети: не удалось связаться с базой данных. Если вы в РФ, проверьте VPN."); 
+        else window.showAlert("Ошибка при подключении: " + e.message); 
+    } finally { document.getElementById('loadingOverlay').style.display = 'none'; }
 };
 
 window.changeRoomName = function() { window.openPassModal('changeName'); }; window.changeViewerPass = function() { window.openPassModal('changeViewer'); }; window.changeAdminPass = function() { window.openPassModal('change'); };
 
 window.openPassModal = function(mode) {
-    if (window.isDemoMode) return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно. Обратитесь к разработчику.");
+    if (window.isDemoMode) return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно.");
     window.passMode = mode; document.getElementById('passError').innerText = ''; const cont = document.getElementById('passInputsContainer'); const handleEnter = (e) => { if (e.key === 'Enter') window.submitPass(); };
     if (mode === 'change') {
         document.getElementById('passModalTitle').innerText = 'ИЗМЕНИТЬ ПАРОЛЬ АДМИНА'; cont.innerHTML = `<input type="password" id="passOld" class="player-input" placeholder="Старый пароль" style="text-align:center; margin-bottom:10px;"><input type="password" id="passNew" class="player-input" placeholder="Новый пароль" style="text-align:center; margin-bottom:10px;"><input type="password" id="passConfirm" class="player-input" placeholder="Подтвердить пароль" style="text-align:center; margin-bottom:10px;">`;
@@ -1273,7 +1302,7 @@ window.submitPass = async function() {
         try {
             await window.startAuth();
             if (typeof window.getDoc === 'function' && typeof window.db !== 'undefined') {
-                const newRoomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', newP); const snap = await window.getDoc(newRoomRef);
+                const newRoomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', newP); const snap = await window.fetchWithTimeout(newRoomRef, 8000);
                 if(snap.exists()) { document.getElementById('loadingOverlay').style.display = 'none'; return document.getElementById('passError').innerText = 'Это название уже занято!'; }
                 await window.setDoc(newRoomRef, { config: window.config, matches: window.matches, customTours: window.customTours, tourRosters: window.tourRosters, globalPlayers: window.globalPlayers, tourMvps: window.tourMvps || {} });
                 await window.deleteDoc(window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', oldP));
@@ -1395,7 +1424,6 @@ window.startLocalTimer = function() {
     window.timerReference = Date.now();
     window.timerBaseTime = window.time;
     window.timerBaseOtTime = window.otTime;
-    window.syncTick = 0;
 
     window.interval = setInterval(() => {
         if (window.isFinishing) { clearInterval(window.interval); window.interval = null; return; }
@@ -1436,14 +1464,6 @@ window.startLocalTimer = function() {
                 if(window.currentRole === 'admin') {
                     if (!window.liveWinnerModal || !window.liveWinnerModal.active) window.terminateMatch(); 
                 }
-            }
-        }
-
-        if (window.currentRole === 'admin' && !window.isDemoMode) {
-            window.syncTick++;
-            if (window.syncTick >= 25) { 
-                window.syncTick = 0;
-                window.syncToFirebase(false);
             }
         }
     }, 200);
@@ -1823,7 +1843,7 @@ window.renderTourPlayerEditorUI = function() {
         window.tempTourRosters[t].forEach((n, i) => {
             h += `<div class="player-row"><span class="player-num">${i+1}.</span>
                     <div style="display:flex; gap:4px; flex:1;">
-                        <input type="text" class="player-input tour-player-input" style="margin-bottom:0;" value="${n}" onchange="if(window.isDemoMode) { window.showAlert('Приложение тестируется. Изменение этих настроек в Demo режиме не доступно. Обратитесь к разработчику.'); this.value='${n}'; return; } window.tempTourRosters['${t}'][${i}]=this.value">
+                        <input type="text" class="player-input tour-player-input" style="margin-bottom:0;" value="${n}" onchange="window.tempTourRosters['${t}'][${i}]=this.value">
                         <button class="btn-base icon-btn" style="flex:0 0 35px; padding:0; margin-bottom:0;" onclick="window.openPlayerDropdown('${t}', ${i}, 'tour')">▼</button>
                     </div>
                   </div>`;
@@ -2099,10 +2119,8 @@ window.renderSettingsList = function(targetId = window.currentSettingsTarget) {
     }
     h += `</div>`;
 
-    if (window.currentRole === 'admin' && targetId !== 'createSettingsContainer' && !window.isDemoMode) { 
+    if (window.currentRole === 'admin' && targetId !== 'createSettingsContainer') { 
         h += `<div class="settings-divider"></div><div class="settings-checkbox-row" onclick="window.changeRoomName()"><div class="setting-label">НАЗВАНИЕ ТУРНИРА</div><div style="color:var(--gray); font-size:12px; font-weight:900; text-transform:uppercase;">ИЗМЕНИТЬ</div></div><div class="settings-checkbox-row" onclick="window.changeViewerPass()"><div class="setting-label">ПАРОЛЬ ИГРОКА</div><div style="color:var(--gray); font-size:12px; font-weight:900; text-transform:uppercase;">ИЗМЕНИТЬ</div></div><div class="settings-checkbox-row" onclick="window.changeAdminPass()"><div class="setting-label">ПАРОЛЬ АДМИНА</div><div style="color:var(--gray); font-size:12px; font-weight:900; text-transform:uppercase;">ИЗМЕНИТЬ</div></div>`; 
-    } else if (window.isDemoMode && targetId !== 'createSettingsContainer') {
-        h += `<div class="settings-divider"></div><div class="settings-checkbox-row" onclick="window.showAlert('Приложение тестируется. Изменение этих настроек в Demo режиме не доступно. Обратитесь к разработчику.');"><div class="setting-label">НАЗВАНИЕ ТУРНИРА</div><div style="color:var(--gray); font-size:12px; font-weight:900; text-transform:uppercase;">ИЗМЕНИТЬ</div></div><div class="settings-checkbox-row" onclick="window.showAlert('Приложение тестируется. Изменение этих настроек в Demo режиме не доступно. Обратитесь к разработчику.');"><div class="setting-label">ПАРОЛЬ ИГРОКА</div><div style="color:var(--gray); font-size:12px; font-weight:900; text-transform:uppercase;">ИЗМЕНИТЬ</div></div><div class="settings-checkbox-row" onclick="window.showAlert('Приложение тестируется. Изменение этих настроек в Demo режиме не доступно. Обратитесь к разработчику.');"><div class="setting-label">ПАРОЛЬ АДМИНА</div><div style="color:var(--gray); font-size:12px; font-weight:900; text-transform:uppercase;">ИЗМЕНИТЬ</div></div>`;
     }
     c.innerHTML = h;
 };
@@ -2252,8 +2270,9 @@ window.closeWinner = async function() {
 
 window.toggleOTManual = function() { 
     if (window.currentRole === 'viewer') return;
-    window.otActive = !window.otActive; window.config.useOT = window.otActive; window.saveConfig();
+    window.otActive = !window.otActive; window.config.useOT = window.otActive;
     document.getElementById('otToggle').parentElement.classList.toggle('active', window.otActive); 
+    if (typeof window.syncToFirebase === 'function') window.syncToFirebase(true);
 };
 
 window.updateUtilityBtns = function() {
