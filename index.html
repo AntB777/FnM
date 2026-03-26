@@ -290,8 +290,8 @@
         </div>
         <div id="startBtnContainer" style="display:flex; gap:8px;">
             <button id="startBtn" class="full-btn" onclick="window.toggleTimer()" disabled>ВЫБЕРИТЕ КОМАНДЫ</button>
-            <button id="notifyBtn" class="btn-base icon-btn" style="flex: 0 0 65px; background: transparent; border: 2px dashed var(--accent); color: var(--accent); border-radius: 16px; padding: 0; display:none;" onclick="window.openNotifyModal()">
-                <svg class="icon" style="width: 28px; height: 28px;"><use href="#icon-campaign"></use></svg>
+            <button id="notifyBtn" class="btn-base icon-btn" style="flex: 0 0 54px; background: transparent; border: 1px solid var(--accent); color: var(--accent); border-radius: 12px; padding: 0; display:none;" onclick="window.openNotifyModal()">
+                <svg class="icon" style="width: 24px; height: 24px;"><use href="#icon-campaign"></use></svg>
             </button>
         </div>
         <button id="statsBtn" class="full-btn icon-btn" style="margin-top:5px; background:var(--card); color:var(--text); font-size:14px; padding: 14px;" onclick="window.renderCombinedStats()"><svg class="icon"><use href="#icon-stats"></use></svg> СТАТИСТИКА</button>
@@ -301,13 +301,18 @@
         <div class="modal-content">
             <h2 style="color:var(--accent); margin-top:0; margin-bottom:15px; font-size: 18px;">УВЕДОМИТЬ ИГРОКОВ</h2>
             <div style="text-align:left; margin-bottom:15px; display:flex; flex-direction:column; gap:10px;">
-                <div><label style="font-size:11px; color:var(--gray);">ВРЕМЯ НАЧАЛА:</label><input type="time" id="notifTime" class="player-input" style="width:100%; text-align:center;"></div>
-                <div><label style="font-size:11px; color:var(--gray);">КОММЕНТАРИЙ:</label><input type="text" id="notifText" class="player-input" style="width:100%;" placeholder="Например: Разминка в 19:45"></div>
-                <div class="settings-checkbox-row checked" onclick="this.classList.toggle('checked')" id="notifRosters" style="margin-bottom:0;"><div class="setting-label" style="font-size:10px;">Опубликовать составы команд</div><div class="custom-checkbox"></div></div>
+                <div class="settings-checkbox-row checked" onclick="this.classList.toggle('checked')" id="cbNotifTime" style="margin-bottom:0; padding:10px; border-radius:8px;"><div class="setting-label" style="font-size:11px;">Время начала турнира:</div><div class="custom-checkbox"></div></div>
+                <input type="time" id="notifTime" class="player-input" style="width:100%; text-align:center; margin-top:-5px;">
+                
+                <div class="settings-checkbox-row checked" onclick="this.classList.toggle('checked')" id="cbNotifText" style="margin-bottom:0; padding:10px; border-radius:8px;"><div class="setting-label" style="font-size:11px;">Оставить комментарий:</div><div class="custom-checkbox"></div></div>
+                <input type="text" id="notifText" class="player-input" style="width:100%; margin-top:-5px;" placeholder="Например: Разминка на поле">
+                
+                <div class="settings-checkbox-row checked" onclick="this.classList.toggle('checked')" id="notifRosters" style="margin-bottom:0; padding:10px; border-radius:8px;"><div class="setting-label" style="font-size:11px;">Опубликовать составы команд</div><div class="custom-checkbox"></div></div>
             </div>
             <div class="row-3">
-                <button class="btn-base" style="background:var(--success)" onclick="window.sendNotification()">ОТПРАВИТЬ</button>
-                <button class="btn-base" onclick="window.closeModal('notifyModal')">ОТМЕНА</button>
+                <button class="btn-base" style="background:var(--success); font-size:11px;" onclick="window.sendNotification()">ОТПРАВИТЬ</button>
+                <button class="btn-base" style="background:var(--danger); font-size:11px;" onclick="window.clearNotification()">СБРОСИТЬ</button>
+                <button class="btn-base" style="font-size:11px;" onclick="window.closeModal('notifyModal')">ОТМЕНА</button>
             </div>
         </div>
     </div>
@@ -1025,7 +1030,7 @@ window.openPlayerDropdownMatch = function(idx, type) {
     }
     h += `<button class="p-btn" style="margin-bottom:8px; width:100%; background:var(--danger); border:1px solid var(--danger); color:#fff; text-align:center; padding:10px 15px;" onclick="window.selectDropdownPlayer('')">ОЧИСТИТЬ ПОЛЕ</button>`;
     
-    if(pArr.length === 0) h = "<div style='color:var(--gray); margin-bottom: 15px;'>Нет игроков в текущих составах</div>" + h;
+    if(pArr.length === 0) h += "<div style='color:var(--gray); margin-bottom: 15px;'>Нет игроков в текущих составах</div>";
     
     document.getElementById('playerDropdownGrid').innerHTML = h;
     window.openModal('playerDropdownModal');
@@ -1756,9 +1761,9 @@ window.endMatch = async function() {
     } catch (err) { console.error("Ошибка завершения матча:", err); window.showAlert("Сбой сохранения."); }
 };
 
-window.finishCurrentTournament = function(date) {
+window.startNewTournament = function(date) {
     if (window.isDemoMode) return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно.");
-    window.showConfirm("Завершить этот турнир? Статистика будет зафиксирована, и новые матчи начнут новый турнир с текущими настройками.", () => {
+    window.showConfirm("Внимание! Текущий турнир будет завершен, и создастся новый. Выбирайте настройки игры и составы команд.", () => {
         
         if (!window.config.finishedTours) window.config.finishedTours = [];
         if (!window.config.finishedTours.includes(date)) {
@@ -1827,62 +1832,6 @@ window.deleteDay = function(date) {
         await window.syncToFirebase(true); 
         window.renderCombinedStats(); 
     }); 
-};
-
-window.startNewTournament = function(date) {
-    window.showConfirm("Внимание! Текущий турнир будет завершен, и создастся новый. Выбирайте настройки игры и составы команд.", () => {
-        if (!window.config.finishedTours) window.config.finishedTours = [];
-        if (!window.config.finishedTours.includes(date)) {
-            window.config.finishedTours.push(date);
-        }
-        
-        let base = new Date().toLocaleDateString('ru-RU');
-        if (!window.config.tourDayCounters) window.config.tourDayCounters = {};
-        window.config.tourDayCounters[base] = (window.config.tourDayCounters[base] || 0) + 1;
-
-        let newActiveDate = window.getActiveDate();
-        window.snapshotTourRoster(newActiveDate);
-
-        window.setStore("config", window.config);
-        window.syncToFirebase(true);
-        window.currentStatsPageIndex = 0;
-        window.closeModal('sysConfirmModal');
-        window.renderCombinedStats();
-    });
-};
-
-window.openNotifyModal = function() {
-    window.openModal('notifyModal');
-};
-
-window.sendNotification = function() {
-    const incTime = document.getElementById('cbNotifTime').classList.contains('checked');
-    const incText = document.getElementById('cbNotifText').classList.contains('checked');
-    const showRosters = document.getElementById('notifRosters').classList.contains('checked');
-    
-    const time = document.getElementById('notifTime').value;
-    const text = document.getElementById('notifText').value.trim();
-    
-    window.config.notification = {
-        active: true,
-        time: incTime ? time : null,
-        text: incText ? text : null,
-        showRosters: showRosters,
-        date: window.getActiveDate()
-    };
-    window.setStore("config", window.config);
-    window.syncToFirebase(true);
-    window.closeModal('notifyModal');
-    window.showAlert("Уведомление отправлено игрокам!");
-    window.updateMatchStatusLabel();
-};
-
-window.clearNotification = function() {
-    window.config.notification = { active: false };
-    window.setStore("config", window.config);
-    window.syncToFirebase(true);
-    window.closeModal('notifyModal');
-    window.updateMatchStatusLabel();
 };
 
 window.renderCombinedStats = function() {
@@ -1998,7 +1947,7 @@ window.renderCombinedStats = function() {
         h += `</div>`;
     }
 
-    if (Object.keys(playerStats).length > 0) {
+    if (dayMatches.length > 0 && Object.keys(playerStats).length > 0) {
         h += `<div style="border: 1px dashed rgba(255,255,255,0.15); border-radius: 12px; padding: 12px; margin-bottom: 15px; background: rgba(255,255,255,0.02);">`;
         h += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                 <div style="font-weight:800; color:var(--accent); font-size:12px; text-transform:uppercase;">Статистика игроков`;
@@ -2304,182 +2253,6 @@ window.clearNotification = function() {
     window.updateMatchStatusLabel();
 };
 
-window.openMatchEditor = function(id) {
-    if (window.isDemoMode) return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно.");
-    if (window.currentRole !== 'admin') return;
-    window.editingMatchId = id; const m = window.matches.find(x => x.id === id); if(!m) return;
-    
-    document.getElementById('adminEditTitle').innerText = `РЕДАКТИРОВАТЬ МАТЧ`; document.getElementById('adminDelMatchBtn').style.display = 'block';
-    
-    let h = `<div style="display:flex; gap:5px; margin-bottom:10px;"><div style="flex:1"><label style="color:var(--gray); font-size:11px;">Дата:</label><input type="text" id="editMDate" class="player-input" value="${m.date}" style="width:100%; padding:6px; font-size:12px;"></div><div style="flex:1"><label style="color:var(--gray); font-size:11px;">Время:</label><input type="text" id="editMTime" class="player-input" value="${m.time}" style="width:100%; padding:6px; font-size:12px;"></div></div><div style="display:flex; gap:5px; margin-bottom:10px; align-items:center;"><div style="flex:1; text-align:right; font-weight:bold; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.t1}</div><input type="number" id="editMS1" class="player-input" value="${m.s1}" style="width:32px; text-align:center; padding:6px 2px; font-size:14px;"><span>:</span><input type="number" id="editMS2" class="player-input" value="${m.s2}" style="width:32px; text-align:center; padding:6px 2px; font-size:14px;"><div style="flex:1; text-align:left; font-weight:bold; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.t2}</div></div><div class="settings-divider" style="margin:8px 0;"></div><div style="font-weight:bold; margin-bottom:5px; font-size:12px; color:var(--accent);">Голы:</div>`;
-
-    if(m.events) {
-        m.events.forEach((e, idx) => {
-            h += `<div style="background:rgba(255,255,255,0.03); padding:4px; border-radius:6px; margin-bottom:4px; display:flex; gap:4px; align-items:center;">
-                <select id="editESide_${idx}" class="player-input" style="padding:6px 2px; flex: 0 0 50px; font-size:10px; margin-bottom:0;"><option value="1" ${e.side===1?'selected':''}>${m.t1}</option><option value="2" ${e.side===2?'selected':''}>${m.t2}</option></select>
-                <input type="text" id="editES_${idx}" class="player-input" value="${e.s||''}" placeholder="Автор" readonly onclick="window.openPlayerDropdownMatch(${idx}, 's')" style="flex:1; padding:6px 4px; font-size:10px; margin-bottom:0; cursor:pointer; text-align:center; min-width:0; caret-color:transparent;">
-                <input type="text" id="editEA_${idx}" class="player-input" value="${e.a||''}" placeholder="Пас" readonly onclick="window.openPlayerDropdownMatch(${idx}, 'a')" style="flex:1; padding:6px 4px; font-size:10px; margin-bottom:0; cursor:pointer; text-align:center; min-width:0; caret-color:transparent;">
-                <button class="btn-base icon-btn" style="background:var(--danger); flex:0 0 28px; height:28px; padding:0; margin-bottom:0;" onclick="window.removeEventFromEdit(${idx})"><svg class="icon" style="width:14px;height:14px;"><use href="#icon-trash"></use></svg></button></div>`;
-        });
-    }
-
-    h += `<button class="btn-base icon-btn" style="width:100%; margin-top:8px; padding:8px; font-size:11px;" onclick="window.addEventToEdit()"><svg class="icon"><use href="#icon-plus"></use></svg> ДОБАВИТЬ ГОЛ</button>`;
-    document.getElementById('adminEditContainer').innerHTML = h; window.openModal('adminEditorModal');
-};
-
-window.removeEventFromEdit = function(idx) { const m = window.matches.find(x => x.id === window.editingMatchId); if(m && m.events) { m.events.splice(idx, 1); window.openMatchEditor(window.editingMatchId); } };
-window.addEventToEdit = function() { const m = window.matches.find(x => x.id === window.editingMatchId); if(m) { if(!m.events) m.events = []; m.events.push({side: 1, s: '', a: ''}); window.openMatchEditor(window.editingMatchId); } };
-
-window.openAddPastMatch = function(targetDate) {
-    if (window.isDemoMode) return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно.");
-    if (window.currentRole !== 'admin') return;
-    window.editingMatchId = 'NEW'; document.getElementById('adminEditTitle').innerText = `ДОБАВИТЬ МАТЧ`; document.getElementById('adminDelMatchBtn').style.display = 'none';
-    let teamsOptions = window.colorKeys.map(t => `<option value="${t}">${t}</option>`).join(''); let defaultDate = targetDate || new Date().toLocaleDateString('ru-RU');
-    let h = `<div style="display:flex; gap:10px; margin-bottom:10px;"><div style="flex:1"><label style="color:var(--gray)">Дата:</label><input type="text" id="newMDate" class="player-input" value="${defaultDate}" style="width:100%"></div><div style="flex:1"><label style="color:var(--gray)">Время:</label><input type="text" id="newMTime" class="player-input" value="${new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'})}" style="width:100%"></div></div><div style="display:flex; gap:10px; margin-bottom:10px; align-items:center;"><select id="newMT1" class="player-input" style="flex:1">${teamsOptions}</select><input type="number" id="newMS1" class="player-input" value="0" style="width:40px; text-align:center;"><span>:</span><input type="number" id="newMS2" class="player-input" value="0" style="width:40px; text-align:center;"><select id="newMT2" class="player-input" style="flex:1">${teamsOptions}</select></div><div style="font-size:11px; color:var(--gray); margin-bottom:10px; text-align:center;">Сначала сохраните матч, затем откройте его снова, чтобы добавить авторов голов.</div>`;
-    document.getElementById('adminEditContainer').innerHTML = h; window.openModal('adminEditorModal');
-};
-
-window.saveAdminEdit = function() {
-    if(window.editingMatchId === 'NEW') {
-        const d = document.getElementById('newMDate').value;
-        const newM = { id: Date.now(), date: d, time: document.getElementById('newMTime').value, t1: document.getElementById('newMT1').value, t2: document.getElementById('newMT2').value, s1: parseInt(document.getElementById('newMS1').value) || 0, s2: parseInt(document.getElementById('newMS2').value) || 0, events: [] };
-        window.matches.unshift(newM); window.snapshotTourRoster(d);
-    } else {
-        const m = window.matches.find(x => x.id === window.editingMatchId); if(!m) return;
-        m.date = document.getElementById('editMDate').value; m.time = document.getElementById('editMTime').value; m.s1 = parseInt(document.getElementById('editMS1').value) || 0; m.s2 = parseInt(document.getElementById('editMS2').value) || 0;
-        if (m.events) { m.events.forEach((e, idx) => { const elSide = document.getElementById(`editESide_${idx}`), elS = document.getElementById(`editES_${idx}`), elA = document.getElementById(`editEA_${idx}`); if(elSide) e.side = parseInt(elSide.value); if(elS) e.s = elS.value.trim() || null; if(elA) e.a = elA.value.trim() || null; }); }
-    }
-    window.setStore("matches", window.matches); window.updateGlobalPlayersList(); window.syncToFirebase(true); window.closeModal('adminEditorModal'); window.renderCombinedStats();
-};
-
-window.deleteAdminMatch = function() { window.showConfirm("Точно удалить этот матч?", () => { window.matches = window.matches.filter(x => x.id !== window.editingMatchId); window.setStore("matches", window.matches); window.syncToFirebase(true); window.closeModal('adminEditorModal'); window.renderCombinedStats(); }); };
-
-window.openSettings = function() { 
-    if(window.interval && window.currentRole === 'admin') return; 
-    window.tempConfig = JSON.parse(JSON.stringify(window.config)); 
-    window.currentSettingsTarget = 'settingsContainer'; window.renderSettingsList(window.currentSettingsTarget); window.openModal('settings'); 
-};
-
-window.renderSettingsList = function(targetId = window.currentSettingsTarget) {
-    window.currentSettingsTarget = targetId; const c = document.getElementById(targetId); if(!c) return;
-    let goalLimitDisplay = window.tempConfig.goalLimit === 0 ? "∞" : window.tempConfig.goalLimit;
-    
-    let h = '';
-    if (targetId === 'createSettingsContainer' || (window.currentRole === 'admin' && !window.interval)) {
-        h += window.createStepRow("Время (мин)", "time", window.tempConfig.time/60) + window.createStepRow("Лимит голов", "goalLimit", goalLimitDisplay) + window.createCheckRow("Выбор команд после игры", "autoReset", window.tempConfig.autoReset) + `<div class="settings-divider"></div>` + window.createStepRow("Всего команд", "teamsCount", window.tempConfig.teams.length);
-        window.tempConfig.teams.forEach((t, i) => h += window.createColorRow(`Команда ${i+1}`, i, t));
-        h += `<div class="settings-divider"></div>` + window.createCheckRow("Игроки и составы", "usePlayers", window.tempConfig.usePlayers);
-        if(window.tempConfig.usePlayers) h += `<button class="full-btn icon-btn" style="margin:10px 0; font-size:12px;" onclick="window.openRosterEditor()"><svg class="icon"><use href="#icon-run"></use></svg> СОСТАВЫ КОМАНД</button>`;
-        h += `<div class="settings-divider"></div>` + window.createCheckRow("Овертайм", "useOT", window.tempConfig.useOT) + window.createStepRow("Лимит овертайма (мин)", "otLimit", window.tempConfig.otLimit || "∞") + window.createCheckRow("Золотой гол", "goldenGoal", window.tempConfig.goldenGoal);
-    } else if (window.currentRole === 'admin' && window.interval) {
-        h += `<div style="text-align:center; color:var(--warning); font-size:12px; margin-bottom:15px;">Изменение правил заблокировано во время матча</div>`;
-    } else if (window.currentRole === 'viewer') {
-        h += `<div style="text-align:center; color:var(--gray); font-size:12px; margin-bottom:15px;">Настройки просмотра</div>`;
-    }
-
-    h += `<div class="settings-divider"></div><div style="background:rgba(255,255,255,0.03); padding:12px; border-radius:12px; margin-top:10px;">
-          <div style="font-weight:bold; color:var(--accent); font-size:12px; text-align:left; margin-bottom:10px; text-transform:uppercase;">Звук и Вибрация</div>
-          ${window.createLocalCheckRow("Звук", "sound", window.localSettings.sound)}
-          ${window.createLocalCheckRow("Вибрация", "vibration", window.localSettings.vibration)}`;
-          
-    if (targetId === 'createSettingsContainer' || window.currentRole === 'admin') {
-        h += `<div style="margin-top:12px;"><div style="font-size:11px;color:var(--gray);margin-bottom:6px; text-align:left;">ЗВУК ОКОНЧАНИЯ МАТЧА (URL):</div><input type="text" class="player-input" style="width:100%;" value="${window.tempConfig.soundUrl}" onchange="window.tempConfig.soundUrl=this.value"></div>`;
-    }
-    h += `</div>`;
-
-    if (window.currentRole === 'admin' && targetId !== 'createSettingsContainer' && !window.isDemoMode) { 
-        h += `<div class="settings-divider"></div><div class="settings-checkbox-row" onclick="window.changeRoomName()"><div class="setting-label">НАЗВАНИЕ ТУРНИРА</div><div style="color:var(--gray); font-size:12px; font-weight:900; text-transform:uppercase;">ИЗМЕНИТЬ</div></div><div class="settings-checkbox-row" onclick="window.changeViewerPass()"><div class="setting-label">ПАРОЛЬ ИГРОКА</div><div style="color:var(--gray); font-size:12px; font-weight:900; text-transform:uppercase;">ИЗМЕНИТЬ</div></div><div class="settings-checkbox-row" onclick="window.changeAdminPass()"><div class="setting-label">ПАРОЛЬ АДМИНА</div><div style="color:var(--gray); font-size:12px; font-weight:900; text-transform:uppercase;">ИЗМЕНИТЬ</div></div>`; 
-    } else if (window.isDemoMode && targetId !== 'createSettingsContainer') {
-        h += `<div class="settings-divider"></div><div class="settings-checkbox-row" onclick="window.showAlert('Приложение тестируется. Изменение этих настроек в Demo режиме не доступно. Обратитесь к разработчику.');"><div class="setting-label">НАЗВАНИЕ ТУРНИРА</div><div style="color:var(--gray); font-size:12px; font-weight:900; text-transform:uppercase;">ИЗМЕНИТЬ</div></div><div class="settings-checkbox-row" onclick="window.showAlert('Приложение тестируется. Изменение этих настроек в Demo режиме не доступно. Обратитесь к разработчику.');"><div class="setting-label">ПАРОЛЬ ИГРОКА</div><div style="color:var(--gray); font-size:12px; font-weight:900; text-transform:uppercase;">ИЗМЕНИТЬ</div></div><div class="settings-checkbox-row" onclick="window.showAlert('Приложение тестируется. Изменение этих настроек в Demo режиме не доступно. Обратитесь к разработчику.');"><div class="setting-label">ПАРОЛЬ АДМИНА</div><div style="color:var(--gray); font-size:12px; font-weight:900; text-transform:uppercase;">ИЗМЕНИТЬ</div></div>`;
-    }
-    c.innerHTML = h;
-};
-
-window.createStepRow = function(l, k, v) { return `<div class="settings-row"><div class="setting-label">${l}</div><button class="step-btn" onclick="window.stepS('${k}',-1)">-</button><div class="step-value">${v}</div><button class="step-btn" onclick="window.stepS('${k}',1)"><svg class="icon" style="font-size: 12px;"><use href="#icon-plus"></use></svg></button></div>`; };
-window.createCheckRow = function(l, k, c) { return `<div class="settings-checkbox-row ${c?'checked':''}" onclick="window.toggleS('${k}')"><div class="setting-label">${l}</div><div class="custom-checkbox"></div></div>`; };
-window.createColorRow = function(l, i, v) { return `<div class="settings-row"><div class="setting-label">${l}</div><button class="step-btn" onclick="window.stepColor(${i},-1)">←</button><div class="step-value" style="background:${window.COLORS[v]}; color:${(v==='Белые'||v==='Желтые')?'#000':'#fff'}">${v}</div><button class="step-btn" onclick="window.stepColor(${i},1)">→</button></div>`; };
-window.createLocalCheckRow = function(l, k, c) { return `<div class="settings-checkbox-row ${c?'checked':''}" onclick="window.toggleLocalS('${k}')" style="margin-bottom:6px;"><div class="setting-label">${l}</div><div class="custom-checkbox"></div></div>`; };
-
-window.toggleLocalS = function(k) { window.localSettings[k] = !window.localSettings[k]; localStorage.setItem('mSmartPro_localSettings', JSON.stringify(window.localSettings)); window.renderSettingsList(window.currentSettingsTarget); };
-
-window.stepS = function(k, d) { 
-    if(k==='time') window.tempConfig.time = Math.max(60, window.tempConfig.time + d*60); 
-    if(k==='goalLimit') window.tempConfig.goalLimit = Math.max(0, window.tempConfig.goalLimit + d); 
-    if(k==='teamsCount') { if(d>0 && window.tempConfig.teams.length<7) window.tempConfig.teams.push(window.colorKeys.find(c=>!window.tempConfig.teams.includes(c))); else if(d<0 && window.tempConfig.teams.length>2) window.tempConfig.teams.pop(); }
-    if(k==='otLimit') window.tempConfig.otLimit = Math.max(0, (window.tempConfig.otLimit||0) + d);
-    window.renderSettingsList(window.currentSettingsTarget); 
-};
-window.toggleS = function(k) { window.tempConfig[k] = !window.tempConfig[k]; window.renderSettingsList(window.currentSettingsTarget); };
-window.stepColor = function(i, d) { let c=window.colorKeys.indexOf(window.tempConfig.teams[i]), n=(c+d+window.colorKeys.length)%window.colorKeys.length; while(window.tempConfig.teams.includes(window.colorKeys[n])) n=(n+d+window.colorKeys.length)%window.colorKeys.length; window.tempConfig.teams[i]=window.colorKeys[n]; window.renderSettingsList(window.currentSettingsTarget); };
-
-window.saveSettings = async function() { 
-    if (window.currentRole === 'viewer') {
-        window.closeModal('settings');
-        return;
-    }
-
-    if (window.tempConfig._pin && window.tempConfig._pin !== window.currentRoom) {
-        let newPin = window.tempConfig._pin.trim(); if (!newPin) newPin = window.currentRoom;
-        if (newPin !== window.currentRoom) {
-            if (localStorage.getItem("mSmartPro_config_" + newPin)) { return window.showAlert("Этот PIN уже существует! Придумайте другой."); }
-            let oldRoom = window.currentRoom; window.currentRoom = newPin;
-            window.setStore("config", window.tempConfig); window.setStore("matches", window.matches); window.setStore("customTours", window.customTours); window.setStore("tourRosters", window.tourRosters);
-            localStorage.removeItem("mSmartPro_config_" + oldRoom); localStorage.removeItem("mSmartPro_matches_" + oldRoom); localStorage.removeItem("mSmartPro_customTours_" + oldRoom); localStorage.removeItem("mSmartPro_tourRosters_" + oldRoom); localStorage.setItem("mSmartPro_lastRoom", window.currentRoom);
-        }
-    }
-
-    window.config = JSON.parse(JSON.stringify(window.tempConfig)); 
-    window.setStore("matches", window.matches); 
-    window.updateGlobalPlayersList(); 
-    if (typeof window.syncToFirebase === 'function') await window.syncToFirebase(true); 
-    
-    window.closeModal('settings');
-    window.ensureDefaultRosters();
-    window.updateSelectionUI(true);
-    window.updateTimerDisplay();
-    
-    window.otActive = window.config.useOT;
-    const otBtn = document.getElementById('otToggle');
-    if(otBtn && otBtn.parentElement) otBtn.parentElement.classList.toggle('active', window.otActive);
-};
-
-window.changeRosterSize = function(t, d) {
-    let r = window.tempConfig.rosters[t];
-    if (d > 0 && r.length < 15) r.push(""); else if (d < 0 && r.length > 1) r.pop();
-    window.renderRosterEditorUI(); 
-};
-
-window.renderRosterEditorUI = function() {
-    window.updateGlobalPlayersList();
-    const c = document.getElementById('rosterContainer'); c.innerHTML = "";
-    window.tempConfig.teams.forEach(t => {
-        let h = `<div style="margin-bottom:15px; background:rgba(0,0,0,0.1); border-radius:12px; overflow:hidden;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; background:${window.COLORS[t]}; color:${(t==='Белые'||t==='Желтые')?'#000':'#fff'}; padding:10px; font-weight:800; font-size:12px;">
-                        <span>${t}</span>
-                        <div style="display:flex; gap:6px;">
-                            <button style="background:rgba(0,0,0,0.2); border:none; color:inherit; width:24px; height:24px; border-radius:4px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:bold;" onclick="window.changeRosterSize('${t}', -1)">-</button>
-                            <button style="background:rgba(0,0,0,0.2); border:none; color:inherit; width:24px; height:24px; border-radius:4px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:bold;" onclick="window.changeRosterSize('${t}', 1)"><svg class="icon" style="font-size: 11px;"><use href="#icon-plus"></use></svg></button>
-                        </div>
-                    </div>`;
-        if(!window.tempConfig.rosters[t]) window.tempConfig.rosters[t] = Array(5).fill("");
-        window.tempConfig.rosters[t].forEach((n, i) => {
-            h += `<div class="player-row">
-                    <span class="player-num">${i+1}.</span>
-                    <div style="display:flex; gap:4px; flex:1;">
-                        <input type="text" class="player-input" value="${n}" readonly onclick="if(window.isDemoMode) { window.showAlert('Приложение тестируется. Изменение этих настроек в Demo режиме не доступно. Обратитесь к разработчику.'); return; } window.openPlayerDropdown('${t}', ${i}, 'config')" style="margin-bottom:0; cursor:pointer; caret-color:transparent; text-transform:none;" placeholder="Выбрать игрока...">
-                    </div>
-                  </div>`;
-        });
-        c.innerHTML += h + `</div>`;
-    });
-    window.openModal('rosterModal');
-};
-
-window.openRosterEditor = function() {
-    window.renderRosterEditorUI();
-    window.openModal('rosterModal');
-};
-
 window.handleReset = function() { window.openModal('confirmReset'); };
 
 window.confirmReset = async function(manual = true, skipSync = false) { 
@@ -2545,10 +2318,10 @@ window.updateUtilityBtns = function() {
 
 setInterval(() => { 
     if(!window.currentRoom) return;
-    const todayStr = new Date().toLocaleDateString('ru-RU');
-    const todayCount = window.matches.filter(m => m.date === todayStr).length + 1;
+    const activeD = typeof window.getActiveDate === 'function' ? window.getActiveDate() : new Date().toLocaleDateString('ru-RU');
+    const todayCount = window.matches.filter(m => m.date === activeD).length + 1;
     const meta = document.getElementById("gameMeta");
-    if(meta) meta.innerHTML = `Матч #${todayCount} • ${todayStr} • ${new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'})} • <span style="color:var(--gray); font-weight:bold;">${window.currentRoom}</span>`; 
+    if(meta) meta.innerHTML = `Матч #${todayCount} • ${activeD.split(' (')[0]} • ${new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'})} • <span style="color:var(--gray); font-weight:bold;">${window.currentRoom}</span>`; 
 }, 1000);
 
 if (!window.appInitialized && typeof __firebase_config === 'undefined') { window.initApp(); }
