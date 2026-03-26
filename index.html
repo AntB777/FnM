@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0f172a">
-    <title>Футбол на Манеже v20.00</title>
+    <title>Футбол на Манеже v20.01</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
@@ -331,7 +331,7 @@
                 <button class="btn-base" style="border: 1px solid var(--danger); color: var(--danger); width: 100%;" onclick="window.logout()">ВЫЙТИ ИЗ ЧЕМПИОНАТА</button>
             </div>
             <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
-                v20.00 • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
+                v20.01 • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
             </div>
         </div>
     </div>
@@ -593,7 +593,7 @@
     </div>
 
 <script>
-/* JS LOGIC v20.00 */
+/* JS LOGIC v20.01 */
 window.COLORS = { "Черные": "#000000", "Белые": "#ffffff", "Желтые": "#facc15", "Зеленые": "#22c55e", "Красные": "#ef4444", "Синие": "#3b82f6", "Разноцветные": "linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" };
 window.colorKeys = Object.keys(window.COLORS);
 window.audioCtx = null;
@@ -2220,14 +2220,17 @@ window.openNotifyModal = function() {
 };
 
 window.sendNotification = function() {
+    const incTime = document.getElementById('cbNotifTime').classList.contains('checked');
+    const incText = document.getElementById('cbNotifText').classList.contains('checked');
+    const showRosters = document.getElementById('notifRosters').classList.contains('checked');
+    
     const time = document.getElementById('notifTime').value;
     const text = document.getElementById('notifText').value.trim();
-    const showRosters = document.getElementById('notifRosters').classList.contains('checked');
     
     window.config.notification = {
         active: true,
-        time: time,
-        text: text,
+        time: incTime ? time : null,
+        text: incText ? text : null,
         showRosters: showRosters,
         date: window.getActiveDate()
     };
@@ -2235,6 +2238,14 @@ window.sendNotification = function() {
     window.syncToFirebase(true);
     window.closeModal('notifyModal');
     window.showAlert("Уведомление отправлено игрокам!");
+    window.updateMatchStatusLabel();
+};
+
+window.clearNotification = function() {
+    window.config.notification = { active: false };
+    window.setStore("config", window.config);
+    window.syncToFirebase(true);
+    window.closeModal('notifyModal');
     window.updateMatchStatusLabel();
 };
 
