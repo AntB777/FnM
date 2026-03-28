@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0f172a">
-    <title>Футбол на Манеже v20.03</title>
+    <title>Футбол на Манеже v20.04</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
@@ -310,7 +310,7 @@
                 <button class="btn-base" style="border: 1px solid var(--danger); color: var(--danger); width: 100%;" onclick="window.logout()">ВЫЙТИ ИЗ ЧЕМПИОНАТА</button>
             </div>
             <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
-                v20.03 • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
+                v20.04 • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
             </div>
         </div>
     </div>
@@ -572,7 +572,7 @@
     </div>
 
 <script>
-/* JS LOGIC v20.03 */
+/* JS LOGIC v20.04 */
 window.COLORS = { "Черные": "#000000", "Белые": "#ffffff", "Желтые": "#facc15", "Зеленые": "#22c55e", "Красные": "#ef4444", "Синие": "#3b82f6", "Разноцветные": "linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" };
 window.colorKeys = Object.keys(window.COLORS);
 window.audioCtx = null;
@@ -2388,14 +2388,31 @@ window.openMatchEditor = function(id) {
 
     if(m.events) {
         m.events.forEach((e, idx) => {
-            h += `<div style="background:rgba(255,255,255,0.03); padding:4px; border-radius:6px; margin-bottom:4px; display:flex; gap:4px; align-items:center;">
-                <select id="editESide_${idx}" class="player-input" style="padding:6px 2px; flex: 0 0 50px; font-size:10px; margin-bottom:0;"><option value="1" ${e.side===1?'selected':''}>${m.t1}</option><option value="2" ${e.side===2?'selected':''}>${m.t2}</option></select>
-               <input type="text" id="editEA_${idx}" class="player-input" value="${e.a||''}" placeholder="Пас" readonly onclick="window.openPlayerDropdownMatch(${idx}, 'a')" style="flex:1; padding:6px 4px; font-size:10px; margin-bottom:0; cursor:pointer; text-align:center; min-width:0; caret-color:transparent;">
-                <button class="btn-base icon-btn" style="background:var(--danger); flex:0 0 28px; height:28px; padding:0; margin-bottom:0;" onclick="window.removeEventFromEdit(${idx})"><svg class="icon" style="width:14px;height:14px;"><use href="#icon-trash"></use></svg></button></div>`;
+            h += `<div style="background:rgba(255,255,255,0.03); padding:10px; border-radius:8px; margin-bottom:8px; border: 1px solid rgba(255,255,255,0.05);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <select id="editESide_${idx}" class="player-input" style="padding:6px 8px; flex:1; font-size:12px; margin-bottom:0; font-weight:bold;">
+                        <option value="1" ${e.side===1?'selected':''}>${m.t1}</option>
+                        <option value="2" ${e.side===2?'selected':''}>${m.t2}</option>
+                    </select>
+                    <button class="btn-base icon-btn" style="background:var(--danger); flex:0 0 32px; height:32px; padding:0; margin-bottom:0; margin-left:8px;" onclick="window.removeEventFromEdit(${idx})">
+                        <svg class="icon" style="width:16px;height:16px;"><use href="#icon-trash"></use></svg>
+                    </button>
+                </div>
+                <div style="display:flex; gap:8px;">
+                    <div style="flex:1;">
+                        <div style="font-size:9px; color:var(--gray); margin-bottom:4px; text-transform:uppercase;">Забил гол:</div>
+                        <input type="text" id="editES_${idx}" class="player-input" value="${e.s||''}" placeholder="Выбрать..." readonly onclick="window.openPlayerDropdownMatch(${idx}, 's')" style="width:100%; padding:8px 6px; font-size:11px; margin-bottom:0; cursor:pointer; text-align:center; caret-color:transparent;">
+                    </div>
+                    <div style="flex:1;">
+                        <div style="font-size:9px; color:var(--gray); margin-bottom:4px; text-transform:uppercase;">Отдал пас:</div>
+                        <input type="text" id="editEA_${idx}" class="player-input" value="${e.a||''}" placeholder="Выбрать..." readonly onclick="window.openPlayerDropdownMatch(${idx}, 'a')" style="width:100%; padding:8px 6px; font-size:11px; margin-bottom:0; cursor:pointer; text-align:center; caret-color:transparent;">
+                    </div>
+                </div>
+            </div>`;
         });
     }
 
-    h += `<button class="btn-base icon-btn" style="width:100%; margin-top:8px; padding:8px; font-size:11px;" onclick="window.addEventToEdit()"><svg class="icon"><use href="#icon-plus"></use></svg> ДОБАВИТЬ ГОЛ</button>`;
+    h += `<button class="btn-base icon-btn" style="width:100%; margin-top:8px; padding:12px; font-size:12px;" onclick="window.addEventToEdit()"><svg class="icon"><use href="#icon-plus"></use></svg> ДОБАВИТЬ ГОЛ</button>`;
     document.getElementById('adminEditContainer').innerHTML = h; window.openModal('adminEditorModal');
 };
 
