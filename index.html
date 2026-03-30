@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0f172a">
-    <title>Футбол на Манеже v20.05 Demo</title>
+    <title>Футбол на Манеже v20.06 Demo</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
@@ -310,7 +310,7 @@
                 <button class="btn-base" style="border: 1px solid var(--danger); color: var(--danger); width: 100%;" onclick="window.logout()">ВЫЙТИ ИЗ ЧЕМПИОНАТА</button>
             </div>
             <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
-                v20.05 Demo • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
+                v20.06 Demo • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
             </div>
         </div>
     </div>
@@ -558,21 +558,23 @@
         </div>
     </div>
 
-    <div id="tourEditorModal" class="overlay hidden" style="z-index: 10000;">
-        <div class="modal-content" style="max-width: 550px;">
-            <h2 id="tourEditTitle" style="color:var(--accent); margin-top:0; margin-bottom:5px;">РЕДАКТИРОВАТЬ ТУРНИР</h2>
-            <div style="font-size:12px; color:var(--gray); margin-bottom:15px;">Ручные изменения заменят авто-подсчет</div>
-            <div class="scrollable" id="tourEditContainer" style="text-align: left; font-size: 12px;"></div>
-            <div class="row-3" style="margin-top: 15px;">
-                <button class="btn-base" style="background:var(--success)" onclick="window.saveTourEdit()">💾 СОХРАНИТЬ</button>
-                <button class="btn-base icon-btn" style="background:var(--danger)" onclick="window.resetTourEdit()"><svg class="icon"><use href="#icon-reset"></use></svg> СБРОС В АВТО</button>
-                <button class="btn-base" onclick="window.closeModal('tourEditorModal')">ОТМЕНА</button>
-            </div>
-        </div>
-    </div>
+```
+
+---
+
+### 2) Убираем кнопку с карандашиком из Таблицы в статистике
+**НАЙТИ:**
+```javascript
+    if (Object.keys(stats).length > 0) {
+        h += `<div style="border: 1px dashed rgba(255,255,255,0.15); border-radius: 12px; padding: 12px; margin-bottom: 15px; background: rgba(255,255,255,0.02);">`;
+        h += `<div style="font-weight:800; color:var(--accent); font-size:12px; text-align:left; margin-bottom:10px; text-transform:uppercase;">Таблица турнира</div>`;
+        h += `<table class="stats-table" style="margin-bottom:0;"><thead><tr><th style="text-align:left">КОМАНДА</th><th>И</th><th>В</th><th>Н</th><th>П</th><th>ГЗ</th><th>ГП</th><th>+/-</th><th>О</th></tr></thead>
+        <tbody>${Object.values(stats).sort((a,b)=>b.o-a.o || (b.gz-b.gp)-(a.gz-a.gp)).map(t => `<tr><td style="text-align:left"><div class="team-dot" style="background:${window.COLORS[t.n]||'var(--gray)'}"></div><b>${t.n}</b></td><td>${t.i}</td><td>${t.v}</td><td>${t.nch}</td><td>${t.p}</td><td>${t.gz}</td><td>${t.gp}</td><td>${t.gz-t.gp}</td><td style="color:var(--accent); font-weight:900; font-size: 14px;">${t.o}</td></tr>`).join('')}</tbody></table>`;
+        h += `</div>`;
+    } else {{
 
 <script>
-/* JS LOGIC v20.05 Demo */
+/* JS LOGIC v20.06 Demo */
 window.COLORS = { "Черные": "#000000", "Белые": "#ffffff", "Желтые": "#facc15", "Зеленые": "#22c55e", "Красные": "#ef4444", "Синие": "#3b82f6", "Разноцветные": "linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" };
 window.colorKeys = Object.keys(window.COLORS);
 window.audioCtx = null;
@@ -980,16 +982,18 @@ window.openPlayerDropdown = function(team, index, mode) {
 
 window.openPlayerDropdownMatch = function(idx, type) {
     if (window.isDemoMode) return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно.");
+    window.syncMatchEditorState();
     window.dropdownTarget = { idx, type, mode: 'match' };
     
-    // Используем временный матч, если мы его редактируем/создаем
-    const m = window.tempEditMatch || window.matches.find(x => x.id === window.editingMatchId);
+    const m = window.tempEditMatch;
     let players = new Set();
     
-    if (m) {
+    if (m && m.events && m.events[idx]) {
+        let targetTeam = m.events[idx].side === 1 ? m.t1 : m.t2;
         let dayRosters = window.tourRosters[m.date] ? window.tourRosters[m.date].rosters : window.config.rosters;
-        if (dayRosters[m.t1]) dayRosters[m.t1].forEach(p => { if(p && p.trim() && p !== '?') players.add(p.trim()); });
-        if (dayRosters[m.t2]) dayRosters[m.t2].forEach(p => { if(p && p.trim() && p !== '?') players.add(p.trim()); });
+        if (dayRosters[targetTeam]) {
+            dayRosters[targetTeam].forEach(p => { if(p && p.trim() && p !== '?') players.add(p.trim()); });
+        }
     } else {
         window.globalPlayers.forEach(p => players.add(p));
     }
@@ -2240,62 +2244,7 @@ window.addNewTournament = function() {
     }, null, "ДОБАВИТЬ ПРОШЕДШИЙ ТУРНИР В СТАТИСТИКУ");
 };
 
-window.openTourEditor = function(date) {
-    if (window.isDemoMode) return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно.");
-    if (window.currentRole !== 'admin') return;
-    window.editingTourDate = date; document.getElementById('tourEditTitle').innerText = `ТУРНИР ${date}`;
-    let stats = {};
-    if (window.customTours[date]) { stats = JSON.parse(JSON.stringify(window.customTours[date])); } 
-    else {
-        const dayMatches = window.matches.filter(m => m.date === date);
-        dayMatches.forEach(m => {
-            [m.t1, m.t2].forEach(t => { if(!stats[t]) stats[t] = {n:t,i:0,v:0,nch:0,p:0,gz:0,gp:0,o:0}; });
-            stats[m.t1].i++; stats[m.t2].i++; stats[m.t1].gz += m.s1; stats[m.t1].gp += m.s2; stats[m.t2].gz += m.s2; stats[m.t2].gp += m.s1;
-            if(m.s1 > m.s2) { stats[m.t1].o+=3; stats[m.t1].v++; stats[m.t2].p++; } else if(m.s2 > m.s1) { stats[m.t2].o+=3; stats[m.t2].v++; stats[m.t1].p++; } else { stats[m.t1].o++; stats[m.t2].o++; stats[m.t1].nch++; stats[m.t2].nch++; }
-        });
-    }
-
-    let h = `<div id="tourTeamsList">`; Object.values(stats).forEach(t => { h += window.renderTourTeamRow(t); }); h += `</div>`;
-    h += `<div style="margin-top:10px; display:flex; gap:5px;"><select id="tourAddTeamSel" class="player-input" style="flex:1">${window.colorKeys.map(t=>`<option value="${t}">${t}</option>`).join('')}</select><button class="btn-base icon-btn" onclick="window.addTeamToTourEdit()"><svg class="icon"><use href="#icon-plus"></use></svg> ДОБАВИТЬ КОМАНДУ</button></div>`;
-    document.getElementById('tourEditContainer').innerHTML = h; window.openModal('tourEditorModal');
-};
-
-window.renderTourTeamRow = function(t) {
-    return `<div class="tour-edit-row" data-team="${t.n}" style="background:rgba(255,255,255,0.05); padding:12px; margin-bottom:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.05);">
-        <div style="font-weight:900; margin-bottom:12px; color:${window.COLORS[t.n]||'var(--text)'}; font-size:14px; text-transform:uppercase; display:flex; justify-content:space-between; align-items:center;">
-            <span>${t.n}</span>
-            <button onclick="this.parentElement.parentElement.remove()" style="background:rgba(239, 68, 68, 0.2); border:1px solid var(--danger); color:var(--danger); border-radius:6px; cursor:pointer; padding:4px 8px; display:flex; align-items:center; justify-content:center;"><svg class="icon" style="width:14px; height:14px;"><use href="#icon-trash"></use></svg></button>
-        </div>
-        <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:6px; margin-bottom:6px;">
-            <div style="display:flex; flex-direction:column;"><div style="text-align:center; font-size:9px; color:var(--gray); margin-bottom:2px; font-weight:bold;">ИГРЫ</div><input type="number" class="player-input i-val" value="${t.i||0}" style="padding:8px 2px; text-align:center; margin:0; font-size:14px;"></div>
-            <div style="display:flex; flex-direction:column;"><div style="text-align:center; font-size:9px; color:var(--gray); margin-bottom:2px; font-weight:bold;">ПОБЕДЫ</div><input type="number" class="player-input v-val" value="${t.v||0}" style="padding:8px 2px; text-align:center; margin:0; font-size:14px;"></div>
-            <div style="display:flex; flex-direction:column;"><div style="text-align:center; font-size:9px; color:var(--gray); margin-bottom:2px; font-weight:bold;">НИЧЬИ</div><input type="number" class="player-input nch-val" value="${t.nch||0}" style="padding:8px 2px; text-align:center; margin:0; font-size:14px;"></div>
-            <div style="display:flex; flex-direction:column;"><div style="text-align:center; font-size:9px; color:var(--gray); margin-bottom:2px; font-weight:bold;">ПОРАЖ.</div><input type="number" class="player-input p-val" value="${t.p||0}" style="padding:8px 2px; text-align:center; margin:0; font-size:14px;"></div>
-        </div>
-        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:6px;">
-            <div style="display:flex; flex-direction:column;"><div style="text-align:center; font-size:9px; color:var(--gray); margin-bottom:2px; font-weight:bold;">ЗАБИТО</div><input type="number" class="player-input gz-val" value="${t.gz||0}" style="padding:8px 2px; text-align:center; margin:0; font-size:14px;"></div>
-            <div style="display:flex; flex-direction:column;"><div style="text-align:center; font-size:9px; color:var(--gray); margin-bottom:2px; font-weight:bold;">ПРОПУЩ.</div><input type="number" class="player-input gp-val" value="${t.gp||0}" style="padding:8px 2px; text-align:center; margin:0; font-size:14px;"></div>
-            <div style="display:flex; flex-direction:column;"><div style="text-align:center; font-size:9px; color:var(--accent); margin-bottom:2px; font-weight:bold;">ОЧКИ</div><input type="number" class="player-input o-val" value="${t.o||0}" style="padding:8px 2px; text-align:center; margin:0; font-size:14px; color:var(--accent); font-weight:bold; border-color:var(--accent);"></div>
-        </div>
-    </div>`;
-};
-
-window.addTeamToTourEdit = function() {
-    const tName = document.getElementById('tourAddTeamSel').value; const existing = document.querySelector(`.tour-edit-row[data-team="${tName}"]`);
-    if (existing) return window.showAlert("Команда уже в списке!");
-    document.getElementById('tourTeamsList').insertAdjacentHTML('beforeend', window.renderTourTeamRow({n: tName, i:0, v:0, nch:0, p:0, gz:0, gp:0, o:0}));
-};
-
-window.saveTourEdit = function() {
-    let stats = {};
-    document.querySelectorAll('.tour-edit-row').forEach(row => {
-        const n = row.getAttribute('data-team');
-        stats[n] = { n: n, i: parseInt(row.querySelector('.i-val').value)||0, v: parseInt(row.querySelector('.v-val').value)||0, nch: parseInt(row.querySelector('.nch-val').value)||0, p: parseInt(row.querySelector('.p-val').value)||0, gz: parseInt(row.querySelector('.gz-val').value)||0, gp: parseInt(row.querySelector('.gp-val').value)||0, o: parseInt(row.querySelector('.o-val').value)||0 };
-    });
-    window.customTours[window.editingTourDate] = stats; window.setStore("customTours", window.customTours); window.syncToFirebase(true); window.closeModal('tourEditorModal'); window.renderCombinedStats();
-};
-
-window.resetTourEdit = function() { window.showConfirm("Удалить ручные изменения и вернуть автоматический подсчет?", () => { delete window.customTours[window.editingTourDate]; window.setStore("customTours", window.customTours); window.syncToFirebase(true); window.closeModal('tourEditorModal'); window.renderCombinedStats(); }); };
+// Функции ручного редактирования турнирной таблицы удалены
 window.openShareModal = function(date) { window.currentShareDate = date; window.openModal('shareModal'); };
 
 function getPlural(n, forms) {
@@ -2414,6 +2363,7 @@ window.openMatchEditor = function(id, targetDate = null) {
     if (window.currentRole !== 'admin') return;
     
     window.editingMatchId = id; 
+    let activeTeams = window.config.teams || window.colorKeys;
     
     if (id === 'NEW') {
         if (!window.tempEditMatch || window.tempEditMatch.id !== 'NEW') {
@@ -2421,8 +2371,8 @@ window.openMatchEditor = function(id, targetDate = null) {
                 id: 'NEW', 
                 date: targetDate || new Date().toLocaleDateString('ru-RU'), 
                 time: new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'}), 
-                t1: window.colorKeys[0], 
-                t2: window.colorKeys.length > 1 ? window.colorKeys[1] : window.colorKeys[0], 
+                t1: activeTeams[0], 
+                t2: activeTeams.length > 1 ? activeTeams[1] : activeTeams[0], 
                 s1: 0, 
                 s2: 0, 
                 events: [] 
@@ -2442,8 +2392,9 @@ window.openMatchEditor = function(id, targetDate = null) {
     }
     
     const tm = window.tempEditMatch;
-    let teamsOptions1 = window.colorKeys.map(t => `<option value="${t}" ${t===tm.t1?'selected':''}>${t}</option>`).join('');
-    let teamsOptions2 = window.colorKeys.map(t => `<option value="${t}" ${t===tm.t2?'selected':''}>${t}</option>`).join('');
+    let availTeams = Array.from(new Set([...activeTeams, tm.t1, tm.t2]));
+    let teamsOptions1 = availTeams.map(t => `<option value="${t}" ${t===tm.t1?'selected':''}>${t}</option>`).join('');
+    let teamsOptions2 = availTeams.map(t => `<option value="${t}" ${t===tm.t2?'selected':''}>${t}</option>`).join('');
 
     let h = `<div style="display:flex; gap:10px; margin-bottom:15px;">
         <div style="flex:1"><div style="font-size:9px; color:var(--gray); margin-bottom:4px; text-transform:uppercase;">Дата:</div><input type="text" id="editMDate" class="player-input" value="${tm.date}" style="width:100%; margin:0;"></div>
@@ -2451,12 +2402,12 @@ window.openMatchEditor = function(id, targetDate = null) {
     </div>
     <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:15px; background:rgba(255,255,255,0.03); padding:12px; border-radius:8px; border: 1px solid rgba(255,255,255,0.05);">
         <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-            <select id="editMT1" class="player-input" style="flex:1; margin:0; font-weight:bold;">${teamsOptions1}</select>
+            <select id="editMT1" class="player-input" style="flex:1; margin:0; font-weight:bold;" onchange="window.syncMatchEditorState(); window.openMatchEditor(window.editingMatchId);">${teamsOptions1}</select>
             <input type="number" id="editMS1" class="player-input" value="${tm.s1}" style="width:50px; text-align:center; margin:0; font-size:18px; font-weight:bold; padding:8px 2px;">
         </div>
         <div style="text-align:center; color:var(--gray); font-size:10px; font-weight:900; padding:2px 0;">ПРОТИВ</div>
         <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-            <select id="editMT2" class="player-input" style="flex:1; margin:0; font-weight:bold;">${teamsOptions2}</select>
+            <select id="editMT2" class="player-input" style="flex:1; margin:0; font-weight:bold;" onchange="window.syncMatchEditorState(); window.openMatchEditor(window.editingMatchId);">${teamsOptions2}</select>
             <input type="number" id="editMS2" class="player-input" value="${tm.s2}" style="width:50px; text-align:center; margin:0; font-size:18px; font-weight:bold; padding:8px 2px;">
         </div>
     </div>
@@ -2466,7 +2417,7 @@ window.openMatchEditor = function(id, targetDate = null) {
         tm.events.forEach((e, idx) => {
             h += `<div style="background:rgba(255,255,255,0.03); padding:10px; border-radius:8px; margin-bottom:8px; border: 1px solid rgba(255,255,255,0.05);">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                    <select id="editESide_${idx}" class="player-input" style="padding:6px 8px; flex:1; font-size:12px; margin-bottom:0; font-weight:bold;">
+                    <select id="editESide_${idx}" class="player-input" style="padding:6px 8px; flex:1; font-size:12px; margin-bottom:0; font-weight:bold;" onchange="window.syncMatchEditorState();">
                         <option value="1" ${e.side===1?'selected':''}>${tm.t1}</option>
                         <option value="2" ${e.side===2?'selected':''}>${tm.t2}</option>
                     </select>
@@ -2520,6 +2471,10 @@ window.saveAdminEdit = function() {
     window.syncMatchEditorState();
     const tm = window.tempEditMatch;
     if(!tm) return;
+    
+    if (tm.t1 === tm.t2) {
+        return window.showAlert("Команды не могут быть одинаковыми!");
+    }
 
     if(window.editingMatchId === 'NEW') {
         tm.id = Date.now();
