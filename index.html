@@ -36,11 +36,8 @@
         onAuthStateChanged(auth, (user) => {
             window.dbUser = user;
             if (user) {
-                // Это сообщение увидишь только ты в консоли (F12)
-                console.log("ТВОЙ ЛИЧНЫЙ ID (UID):", user.uid);
-                
-                // Выдаем права Мастер-Админа, если UID совпадает
-                if (user.uid === "ЗДЕСЬ_БУДЕТ_ТВОЙ_ID") {
+                // UID
+                if (user.uid === "b3PpPolRYtfOCGizDED9zYWfRqt2") {
                     window.isMasterAdmin = true;
                 }
             }
