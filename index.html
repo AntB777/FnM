@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0f172a">
-    <title>Футбол на Манеже v20.07 Demo</title>
-    
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <title>Футбол на Манеже v20.08 Demo</title>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -37,6 +35,9 @@
 
         onAuthStateChanged(auth, (user) => {
             window.dbUser = user;
+            if (user) {
+                console.log("ТВОЙ ЛИЧНЫЙ ID (UID):", user.uid);
+            }
             if(user && !window.appInitialized) {
                 window.appInitialized = true;
                 if(window.initApp) window.initApp(); 
@@ -287,7 +288,9 @@
             <button id="undoBtn" class="btn-base icon-btn" onclick="window.openUndoModal()" disabled><svg class="icon"><use href="#icon-undo"></use></svg> отменить</button>
             <button id="finishBtn" class="btn-base icon-btn" style="color:var(--danger)" onclick="window.openFinish()" disabled><svg class="icon"><use href="#icon-stop"></use></svg> завершить</button>
         </div>
-        <button id="startBtn" class="full-btn" onclick="window.toggleTimer()" disabled>ВЫБЕРИТЕ КОМАНДЫ</button>
+        <div id="startBtnContainer" style="display:flex; gap:8px;">
+            <button id="startBtn" class="full-btn" onclick="window.toggleTimer()" disabled>ВЫБЕРИТЕ КОМАНДЫ</button>
+        </div>
         <button id="statsBtn" class="full-btn icon-btn" style="margin-top:5px; background:var(--card); color:var(--text); font-size:14px; padding: 14px;" onclick="window.renderCombinedStats()"><svg class="icon"><use href="#icon-stats"></use></svg> СТАТИСТИКА</button>
     </div>
 
@@ -309,8 +312,8 @@
             <div id="logoutBtnContainer" style="display:none; margin-top: 10px;">
                 <button class="btn-base" style="border: 1px solid var(--danger); color: var(--danger); width: 100%;" onclick="window.logout()">ВЫЙТИ ИЗ ЧЕМПИОНАТА</button>
             </div>
-            <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
-                v20.07 Demo • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
+            <div onclick="window.tryMasterLogin()" style="cursor:pointer; font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
+                v20.08 Demo • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
             </div>
         </div>
     </div>
@@ -546,7 +549,114 @@
         </div>
     </div>
 
+    <div id="adminEditorModal" class="overlay hidden" style="z-index: 10000;">
+        <div class="modal-content">
+            <h2 id="adminEditTitle">РЕДАКТОР МАТЧА</h2>
+            <div class="scrollable" id="adminEditContainer" style="text-align: left; font-size: 12px;"></div>
+            <div class="row-3" style="margin-top: 15px;">
+                <button class="btn-base" style="background:var(--success)" onclick="window.saveAdminEdit()">💾 СОХРАНИТЬ</button>
+                <button class="btn-base icon-btn" style="background:var(--danger)" id="adminDelMatchBtn" onclick="window.deleteAdminMatch()"><svg class="icon"><use href="#icon-trash"></use></svg> УДАЛИТЬ</button>
+                <button class="btn-base" onclick="window.closeModal('adminEditorModal')">ОТМЕНА</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+/* JS LOGIC v20.08 */
+window.COLORS = { "Черные": "#000000", "Белые": "#ffffff", "Желтые": "#facc15", "Зеленые": "#22c55e", "Красные": "#ef4444", "Синие": "#3b82f6", "Разноцветные": "linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" };
+window.colorKeys = Object.keys(window.COLORS);
+window.audioCtx = null;
+window.currentRoom = null; window.currentRole = 'viewer';
+window.defaultConfig = { time: 420, goalLimit: 2, teams: ["Зеленые", "Красные", "Белые"], autoReset: true, useOT: true, goldenGoal: true, otLimit: 0, usePlayers: true, rosters: {}, adminPass: "123", viewerPass: "000", soundUrl: "https://zvukoviku.ru/sounds/1616654354_whistle_haaa.mp3", otInitializedDate: "", finishedTours: [] };
+window.config = null; window.tempConfig = null; window.matches = []; window.customTours = {}; window.tourRosters = {}; window.globalPlayers = []; window.tourMvps = {};
+window.liveWinnerModal = { active: false };
+
+window.getActiveDate = function() {
+    let base = new Date().toLocaleDateString('ru-RU');
+    if(window.config && window.config.tourDayCounters && window.config.tourDayCounters[base]) {
+        return `${base} (${window.config.tourDayCounters[base]})`;
+    }
+    return base;
+};
+
+window.parseSortDate = function(dStr) {
+    let base = dStr.split(' (')[0];
+    let suf = dStr.includes('(') ? parseInt(dStr.split('(')[1]) : 0;
+    let p = base.split('.');
+    if (p.length !== 3) return dStr;
+    return `${p[2]}${p[1]}${p[0]}_${suf.toString().padStart(3, '0')}`;
+};
+
+window.time = 0; window.interval = null; window.currentMatch = null; window.selL = null; window.selR = null; window.otActive = false; window.isOT = false; window.otTime = 0; window.isFinishing = false; window.tSide = null; window.tScorer = null; 
+window.currentMvpDate = null; window.currentStatsPageIndex = 0; window.currentShareDate = null; window.editingMatchId = null; window.passMode = ''; window.editingTourPlayerDate = null; window.tempTourRosters = {}; window.editingTourDate = null; window.currentSettingsTarget = 'settingsContainer';
+
+window.playerDbSortCol = 'points'; window.playerDbSortDesc = true; window.playerDbStats = []; window.dropdownTarget = null;
+window.timerReference = Date.now(); window.timerBaseTime = 0; window.timerBaseOtTime = 0; window.syncTick = 0;
+
+window.localSettings = { sound: true, vibration: true };
+try { const storedLocal = localStorage.getItem('mSmartPro_localSettings'); if (storedLocal) { window.localSettings = JSON.parse(storedLocal); } } catch(e){}
+window.selectionHtmlState = { leftActive: '', leftCont: '', rightActive: '', rightCont: '', rendered: false };
+window.lastRenderedSelL = undefined; window.lastRenderedSelR = undefined;
+
+window.tgUser = null;
+window.isMasterAdmin = localStorage.getItem('mSmartPro_masterAccess') === 'true';
+window.isDemoMode = false;
+
+window.tryMasterLogin = function() {
+    window.showPrompt("ВВЕДИТЕ МАСТЕР-ПАРОЛЬ:", "", (pass) => {
+        if (pass === "777") {
+            localStorage.setItem('mSmartPro_masterAccess', 'true');
+            window.isMasterAdmin = true;
+            window.showAlert("РЕЖИМ МАСТЕР-АДМИНА АКТИВИРОВАН");
+            window.updateWelcomeButtons();
+        } else {
+            window.showAlert("НЕВЕРНЫЙ ПАРОЛЬ");
+        }
+    });
+};
+
+window.openModal = function(id) { const m = document.getElementById(id); if (m) { m.style.setProperty('display', 'flex', 'important'); m.classList.remove('hidden'); } };
+window.closeModal = function(id) { const m = document.getElementById(id); if (m) { m.style.display = 'none'; m.classList.add('hidden'); } };
+window.getStore = function(key, def) { if (window[key] !== undefined && window[key] !== null && window[key] !== '') return window[key]; return def; };
+window.setStore = function(key, val) { window[key] = val; };
+
+window.fetchWithTimeout = function(ref, ms = 8000) {
+    return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error("Timeout")), ms);
+        window.getDoc(ref).then(res => { clearTimeout(timer); resolve(res); }).catch(err => { clearTimeout(timer); reject(err); });
+    });
+};
+
+window.applyDataFromFirebase = function(data) {
+    if (window.isDemoMode) return;
     
+    window.config = data.config || JSON.parse(JSON.stringify(window.defaultConfig));
+    if (!window.config.soundUrl && window.config.soundUrl !== "") { window.config.soundUrl = "https://zvukoviku.ru/sounds/1616654354_whistle_haaa.mp3"; }
+    if (!window.config.finishedTours) window.config.finishedTours = [];
+    
+    window.matches = data.matches || []; 
+    window.customTours = data.customTours || {}; 
+    window.tourRosters = data.tourRosters || {}; 
+    window.globalPlayers = data.globalPlayers || []; 
+    window.tourMvps = data.tourMvps || {};
+    
+    if (window.currentRole !== 'viewer') window.ensureDefaultRosters();
+
+    let newGoalAdded = false;
+    if (window.currentMatch && data.currentMatch && data.currentMatch.id === window.currentMatch.id) {
+         if (data.currentMatch.events && (!window.currentMatch.events || data.currentMatch.events.length > window.currentMatch.events.length)) {
+             newGoalAdded = true;
+         }
+    }
+
+    if (data.liveState) {
+        let state = data.liveState;
+        
+        if (state.winnerModal) {
+            window.liveWinnerModal = state.winnerModal;
+            if (state.winnerModal.active && !window.isFinishing) {
+                let wm = state.winnerModal;
+                document.getElementById('winMatchNum').innerText = "МАТЧ #" + wm.matchNumber + " • " + wm.match.date + " " + wm.match.time;
                 const namePl = document.getElementById('winTeamName');
                 const win = wm.match.s1 > wm.match.s2 ? wm.match.t1 : (wm.match.s2 > wm.match.s1 ? wm.match.t2 : "НИЧЬЯ");
                 namePl.innerText = win.toUpperCase(); 
@@ -766,7 +876,7 @@ window.initApp = async function() {
             window.currentRoom = null;
             window.config = JSON.parse(JSON.stringify(window.defaultConfig));
             document.getElementById('loadingOverlay').style.display = 'none';
-            if(e.message === "Timeout") { window.showAlert("Ошибка сети: не удалось связаться с базой данных. Если вы в РФ, проверьте VPN или попробуйте Demo-режим."); }
+            if(e.message === "Timeout") { window.showAlert("Ошибка сети: не удалось связаться с базой данных. Проверьте VPN или попробуйте Demo-режим."); }
             window.openWelcomeModal();
         }
     } else {
@@ -2140,11 +2250,10 @@ window.addNewTournament = function() {
         if (!window.customTours[d] && !window.matches.some(m=>m.date===d)) { window.customTours[d] = {}; window.setStore("customTours", window.customTours); window.snapshotTourRoster(d); window.syncToFirebase(true); }
         const grouped = {}; window.matches.forEach(m => { if (!grouped[m.date]) grouped[m.date] = []; }); Object.keys(window.customTours).forEach(dt => { if (!grouped[dt]) grouped[dt] = []; });
         const tempDates = Object.keys(grouped).sort((a,b) => window.parseSortDate(b).localeCompare(window.parseSortDate(a)));
-        window.currentStatsPageIndex = tempDates.indexOf(d); window.renderCombinedStats(); window.openTourEditor(d);
+        window.currentStatsPageIndex = tempDates.indexOf(d); window.renderCombinedStats(); 
     }, null, "ДОБАВИТЬ ПРОШЕДШИЙ ТУРНИР В СТАТИСТИКУ");
 };
 
-// Функции ручного редактирования турнирной таблицы удалены
 window.openShareModal = function(date) { window.currentShareDate = date; window.openModal('shareModal'); };
 
 function getPlural(n, forms) {
