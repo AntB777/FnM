@@ -986,30 +986,41 @@ window.openPlayerDropdownMatch = function(idx, type) {
     window.dropdownTarget = { idx, type, mode: 'match' };
     
     const m = window.tempEditMatch;
-    let players = new Set();
+    let pArr = [];
+    let oppArr = [];
     
     if (m && m.events && m.events[idx]) {
         let targetTeam = m.events[idx].side === 1 ? m.t1 : m.t2;
-        let dayRosters = window.tourRosters[m.date] ? window.tourRosters[m.date].rosters : window.config.rosters;
-        if (dayRosters[targetTeam]) {
-            dayRosters[targetTeam].forEach(p => { if(p && p.trim() && p !== '?') players.add(p.trim()); });
+        let oppTeam = m.events[idx].side === 1 ? m.t2 : m.t1;
+        
+        let dayRosters = window.tourRosters[m.date] && window.tourRosters[m.date].rosters ? window.tourRosters[m.date].rosters : {};
+        let targetPlayers = dayRosters[targetTeam] || window.config.rosters[targetTeam] || [];
+        let oppPlayers = dayRosters[oppTeam] || window.config.rosters[oppTeam] || [];
+        
+        pArr = Array.from(new Set(targetPlayers.filter(p => p && p.trim() && p !== '?'))).sort();
+        if (type === 's') {
+            oppArr = Array.from(new Set(oppPlayers.filter(p => p && p.trim() && p !== '?'))).sort();
         }
     } else {
-        window.globalPlayers.forEach(p => players.add(p));
+        pArr = Array.from(new Set(window.globalPlayers)).sort();
     }
-    
-    let pArr = Array.from(players).sort();
     
     let h = `<button class="full-btn icon-btn" style="margin-bottom: 15px; font-size:12px; padding:12px; background:var(--success); color:var(--bg); border:none;" onclick="window.closeModal('playerDropdownModal'); window.addGlobalPlayer();"><svg class="icon"><use href="#icon-plus"></use></svg> ДОБАВИТЬ НОВОГО ИГРОКА</button>`;
     
-    h += pArr.map(p => `<button class="p-btn" style="margin-bottom:8px; width:100%; background:var(--card); border:1px solid var(--accent); color:var(--text); text-transform:none; text-align:left; padding:10px 15px; font-weight:bold;" onclick="window.selectDropdownPlayer('${p}')">${p}</button>`).join('');
+    if (pArr.length > 0) {
+        h += pArr.map(p => `<button class="p-btn" style="margin-bottom:8px; width:100%; background:var(--card); border:1px solid var(--accent); color:var(--text); text-transform:none; text-align:left; padding:10px 15px; font-weight:bold;" onclick="window.selectDropdownPlayer('${p}')">${p}</button>`).join('');
+    } else {
+        h += "<div style='color:var(--gray); margin-bottom: 15px;'>Нет игроков в составе</div>";
+    }
     
     if(type === 's') {
-        h += `<button class="p-btn" style="margin-bottom:8px; width:100%; background:var(--gray); border:1px solid var(--gray); color:#fff; text-align:center; padding:10px 15px;" onclick="window.selectDropdownPlayer('Автогол')">АВТОГОЛ</button>`;
+        h += `<div class="settings-divider" style="margin:10px 0;"></div><div style="font-size:11px; color:var(--gray); margin-bottom:8px; text-transform:uppercase; font-weight:bold;">Автогол (соперник):</div>`;
+        if (oppArr.length > 0) {
+            h += oppArr.map(p => `<button class="p-btn" style="margin-bottom:8px; width:100%; background:rgba(239, 68, 68, 0.1); border:1px solid var(--danger); color:var(--text); text-transform:none; text-align:left; padding:10px 15px; font-weight:bold;" onclick="window.selectDropdownPlayer('${p} (АГ)')">${p} (АГ)</button>`).join('');
+        }
+        h += `<button class="p-btn" style="margin-bottom:8px; width:100%; background:var(--gray); border:1px solid var(--gray); color:#fff; text-align:center; padding:10px 15px;" onclick="window.selectDropdownPlayer('Автогол')">НЕИЗВЕСТНО (АВТОГОЛ)</button>`;
     }
-    h += `<button class="p-btn" style="margin-bottom:8px; width:100%; background:var(--danger); border:1px solid var(--danger); color:#fff; text-align:center; padding:10px 15px;" onclick="window.selectDropdownPlayer('')">ОЧИСТИТЬ ПОЛЕ</button>`;
-    
-    if(pArr.length === 0) h += "<div style='color:var(--gray); margin-bottom: 15px;'>Нет игроков в текущих составах</div>";
+    h += `<button class="p-btn" style="margin-bottom:8px; width:100%; background:var(--danger); border:1px solid var(--danger); color:#fff; text-align:center; padding:10px 15px; margin-top:8px;" onclick="window.selectDropdownPlayer('')">ОЧИСТИТЬ ПОЛЕ</button>`;
     
     document.getElementById('playerDropdownGrid').innerHTML = h;
     window.openModal('playerDropdownModal');
@@ -2083,9 +2094,7 @@ window.renderCombinedStats = function() {
 
     if (Object.keys(stats).length > 0) {
         h += `<div style="border: 1px dashed rgba(255,255,255,0.15); border-radius: 12px; padding: 12px; margin-bottom: 15px; background: rgba(255,255,255,0.02);">`;
-        h += `<div style="font-weight:800; color:var(--accent); font-size:12px; text-align:left; margin-bottom:10px; text-transform:uppercase;">Таблица турнира`;
-        if (window.currentRole === 'admin') h += `&nbsp;&nbsp;&nbsp;<button class="admin-edit-btn icon-btn" style="background:var(--card); border:1px solid var(--accent); border-radius:8px; padding:4px 10px; color:var(--accent); display:inline-flex; vertical-align:middle; cursor:pointer;" onclick="window.openTourEditor('${date}')"><svg class="icon" style="width:14px; height:14px;"><use href="#icon-edit"></use></svg></button>`;
-        h += `</div>`;
+        h += `<div style="font-weight:800; color:var(--accent); font-size:12px; text-align:left; margin-bottom:10px; text-transform:uppercase;">Таблица турнира</div>`;
         h += `<table class="stats-table" style="margin-bottom:0;"><thead><tr><th style="text-align:left">КОМАНДА</th><th>И</th><th>В</th><th>Н</th><th>П</th><th>ГЗ</th><th>ГП</th><th>+/-</th><th>О</th></tr></thead>
         <tbody>${Object.values(stats).sort((a,b)=>b.o-a.o || (b.gz-b.gp)-(a.gz-a.gp)).map(t => `<tr><td style="text-align:left"><div class="team-dot" style="background:${window.COLORS[t.n]||'var(--gray)'}"></div><b>${t.n}</b></td><td>${t.i}</td><td>${t.v}</td><td>${t.nch}</td><td>${t.p}</td><td>${t.gz}</td><td>${t.gp}</td><td>${t.gz-t.gp}</td><td style="color:var(--accent); font-weight:900; font-size: 14px;">${t.o}</td></tr>`).join('')}</tbody></table>`;
         h += `</div>`;
