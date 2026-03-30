@@ -2260,15 +2260,23 @@ window.openTourEditor = function(date) {
 };
 
 window.renderTourTeamRow = function(t) {
-    return `<div class="tour-edit-row" data-team="${t.n}" style="background:rgba(255,255,255,0.05); padding:10px; margin-bottom:6px; border-radius:8px;">
-        <div style="font-weight:bold; margin-bottom:6px; color:${window.COLORS[t.n]||'var(--text)'}; font-size:13px;">${t.n} <button onclick="this.parentElement.parentElement.remove()" style="float:right; background:none; border:none; color:var(--danger); cursor:pointer;"><svg class="icon"><use href="#icon-trash"></use></svg></button></div>
-        <div style="display:grid; grid-template-columns: repeat(7, 1fr); gap:2px; text-align:center; font-size:10px; color:var(--gray);"><div>И</div><div>В</div><div>Н</div><div>П</div><div>ГЗ</div><div>ГП</div><div>О</div></div>
-        <div style="display:grid; grid-template-columns: repeat(7, 1fr); gap:2px;">
-            <input type="number" class="player-input i-val" value="${t.i||0}" style="padding:4px 2px; text-align:center;"><input type="number" class="player-input v-val" value="${t.v||0}" style="padding:4px 2px; text-align:center;">
-            <input type="number" class="player-input nch-val" value="${t.nch||0}" style="padding:4px 2px; text-align:center;"><input type="number" class="player-input p-val" value="${t.p||0}" style="padding:4px 2px; text-align:center;">
-            <input type="number" class="player-input gz-val" value="${t.gz||0}" style="padding:4px 2px; text-align:center;"><input type="number" class="player-input gp-val" value="${t.gp||0}" style="padding:4px 2px; text-align:center;">
-            <input type="number" class="player-input o-val" value="${t.o||0}" style="padding:4px 2px; text-align:center;">
-        </div></div>`;
+    return `<div class="tour-edit-row" data-team="${t.n}" style="background:rgba(255,255,255,0.05); padding:12px; margin-bottom:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.05);">
+        <div style="font-weight:900; margin-bottom:12px; color:${window.COLORS[t.n]||'var(--text)'}; font-size:14px; text-transform:uppercase; display:flex; justify-content:space-between; align-items:center;">
+            <span>${t.n}</span>
+            <button onclick="this.parentElement.parentElement.remove()" style="background:rgba(239, 68, 68, 0.2); border:1px solid var(--danger); color:var(--danger); border-radius:6px; cursor:pointer; padding:4px 8px; display:flex; align-items:center; justify-content:center;"><svg class="icon" style="width:14px; height:14px;"><use href="#icon-trash"></use></svg></button>
+        </div>
+        <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:6px; margin-bottom:6px;">
+            <div style="display:flex; flex-direction:column;"><div style="text-align:center; font-size:9px; color:var(--gray); margin-bottom:2px; font-weight:bold;">ИГРЫ</div><input type="number" class="player-input i-val" value="${t.i||0}" style="padding:8px 2px; text-align:center; margin:0; font-size:14px;"></div>
+            <div style="display:flex; flex-direction:column;"><div style="text-align:center; font-size:9px; color:var(--gray); margin-bottom:2px; font-weight:bold;">ПОБЕДЫ</div><input type="number" class="player-input v-val" value="${t.v||0}" style="padding:8px 2px; text-align:center; margin:0; font-size:14px;"></div>
+            <div style="display:flex; flex-direction:column;"><div style="text-align:center; font-size:9px; color:var(--gray); margin-bottom:2px; font-weight:bold;">НИЧЬИ</div><input type="number" class="player-input nch-val" value="${t.nch||0}" style="padding:8px 2px; text-align:center; margin:0; font-size:14px;"></div>
+            <div style="display:flex; flex-direction:column;"><div style="text-align:center; font-size:9px; color:var(--gray); margin-bottom:2px; font-weight:bold;">ПОРАЖ.</div><input type="number" class="player-input p-val" value="${t.p||0}" style="padding:8px 2px; text-align:center; margin:0; font-size:14px;"></div>
+        </div>
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:6px;">
+            <div style="display:flex; flex-direction:column;"><div style="text-align:center; font-size:9px; color:var(--gray); margin-bottom:2px; font-weight:bold;">ЗАБИТО</div><input type="number" class="player-input gz-val" value="${t.gz||0}" style="padding:8px 2px; text-align:center; margin:0; font-size:14px;"></div>
+            <div style="display:flex; flex-direction:column;"><div style="text-align:center; font-size:9px; color:var(--gray); margin-bottom:2px; font-weight:bold;">ПРОПУЩ.</div><input type="number" class="player-input gp-val" value="${t.gp||0}" style="padding:8px 2px; text-align:center; margin:0; font-size:14px;"></div>
+            <div style="display:flex; flex-direction:column;"><div style="text-align:center; font-size:9px; color:var(--accent); margin-bottom:2px; font-weight:bold;">ОЧКИ</div><input type="number" class="player-input o-val" value="${t.o||0}" style="padding:8px 2px; text-align:center; margin:0; font-size:14px; color:var(--accent); font-weight:bold; border-color:var(--accent);"></div>
+        </div>
+    </div>`;
 };
 
 window.addTeamToTourEdit = function() {
@@ -2424,7 +2432,22 @@ window.openAddPastMatch = function(targetDate) {
     if (window.currentRole !== 'admin') return;
     window.editingMatchId = 'NEW'; document.getElementById('adminEditTitle').innerText = `ДОБАВИТЬ МАТЧ`; document.getElementById('adminDelMatchBtn').style.display = 'none';
     let teamsOptions = window.colorKeys.map(t => `<option value="${t}">${t}</option>`).join(''); let defaultDate = targetDate || new Date().toLocaleDateString('ru-RU');
-    let h = `<div style="display:flex; gap:10px; margin-bottom:10px;"><div style="flex:1"><label style="color:var(--gray)">Дата:</label><input type="text" id="newMDate" class="player-input" value="${defaultDate}" style="width:100%"></div><div style="flex:1"><label style="color:var(--gray)">Время:</label><input type="text" id="newMTime" class="player-input" value="${new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'})}" style="width:100%"></div></div><div style="display:flex; gap:10px; margin-bottom:10px; align-items:center;"><select id="newMT1" class="player-input" style="flex:1">${teamsOptions}</select><input type="number" id="newMS1" class="player-input" value="0" style="width:40px; text-align:center;"><span>:</span><input type="number" id="newMS2" class="player-input" value="0" style="width:40px; text-align:center;"><select id="newMT2" class="player-input" style="flex:1">${teamsOptions}</select></div><div style="font-size:11px; color:var(--gray); margin-bottom:10px; text-align:center;">Сначала сохраните матч, затем откройте его снова, чтобы добавить авторов голов.</div>`;
+    let h = `<div style="display:flex; gap:10px; margin-bottom:15px;">
+        <div style="flex:1"><div style="font-size:9px; color:var(--gray); margin-bottom:4px; text-transform:uppercase;">Дата:</div><input type="text" id="newMDate" class="player-input" value="${defaultDate}" style="width:100%; margin:0;"></div>
+        <div style="flex:1"><div style="font-size:9px; color:var(--gray); margin-bottom:4px; text-transform:uppercase;">Время:</div><input type="text" id="newMTime" class="player-input" value="${new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'})}" style="width:100%; margin:0;"></div>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:15px; background:rgba(255,255,255,0.03); padding:12px; border-radius:8px; border: 1px solid rgba(255,255,255,0.05);">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+            <select id="newMT1" class="player-input" style="flex:1; margin:0; font-weight:bold;">${teamsOptions}</select>
+            <input type="number" id="newMS1" class="player-input" value="0" style="width:50px; text-align:center; margin:0; font-size:18px; font-weight:bold; padding:8px 2px;">
+        </div>
+        <div style="text-align:center; color:var(--gray); font-size:10px; font-weight:900; padding:2px 0;">ПРОТИВ</div>
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+            <select id="newMT2" class="player-input" style="flex:1; margin:0; font-weight:bold;">${teamsOptions}</select>
+            <input type="number" id="newMS2" class="player-input" value="0" style="width:50px; text-align:center; margin:0; font-size:18px; font-weight:bold; padding:8px 2px;">
+        </div>
+    </div>
+    <div style="font-size:11px; color:var(--gray); text-align:center; background:rgba(0,0,0,0.2); padding:10px; border-radius:8px;">Сначала сохраните матч, затем откройте его снова, чтобы добавить авторов голов.</div>`;
     document.getElementById('adminEditContainer').innerHTML = h; window.openModal('adminEditorModal');
 };
 
