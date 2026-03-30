@@ -36,7 +36,13 @@
         onAuthStateChanged(auth, (user) => {
             window.dbUser = user;
             if (user) {
+                // Это сообщение увидишь только ты в консоли (F12)
                 console.log("ТВОЙ ЛИЧНЫЙ ID (UID):", user.uid);
+                
+                // Выдаем права Мастер-Админа, если UID совпадает
+                if (user.uid === "ЗДЕСЬ_БУДЕТ_ТВОЙ_ID") {
+                    window.isMasterAdmin = true;
+                }
             }
             if(user && !window.appInitialized) {
                 window.appInitialized = true;
@@ -312,7 +318,7 @@
             <div id="logoutBtnContainer" style="display:none; margin-top: 10px;">
                 <button class="btn-base" style="border: 1px solid var(--danger); color: var(--danger); width: 100%;" onclick="window.logout()">ВЫЙТИ ИЗ ЧЕМПИОНАТА</button>
             </div>
-            <div onclick="window.tryMasterLogin()" style="cursor:pointer; font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
+            <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
                 v20.08 Demo • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
             </div>
         </div>
@@ -599,21 +605,9 @@ window.selectionHtmlState = { leftActive: '', leftCont: '', rightActive: '', rig
 window.lastRenderedSelL = undefined; window.lastRenderedSelR = undefined;
 
 window.tgUser = null;
-window.isMasterAdmin = localStorage.getItem('mSmartPro_masterAccess') === 'true';
+// isMasterAdmin теперь определяется выше по UID, здесь ставим false по умолчанию
+window.isMasterAdmin = false;
 window.isDemoMode = false;
-
-window.tryMasterLogin = function() {
-    window.showPrompt("ВВЕДИТЕ МАСТЕР-ПАРОЛЬ:", "", (pass) => {
-        if (pass === "777") {
-            localStorage.setItem('mSmartPro_masterAccess', 'true');
-            window.isMasterAdmin = true;
-            window.showAlert("РЕЖИМ МАСТЕР-АДМИНА АКТИВИРОВАН");
-            window.updateWelcomeButtons();
-        } else {
-            window.showAlert("НЕВЕРНЫЙ ПАРОЛЬ");
-        }
-    });
-};
 
 window.openModal = function(id) { const m = document.getElementById(id); if (m) { m.style.setProperty('display', 'flex', 'important'); m.classList.remove('hidden'); } };
 window.closeModal = function(id) { const m = document.getElementById(id); if (m) { m.style.display = 'none'; m.classList.add('hidden'); } };
