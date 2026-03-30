@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0f172a">
-    <title>Футбол на Манеже v20.04</title>
+    <title>Футбол на Манеже v20.05 Demo</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
@@ -310,7 +310,7 @@
                 <button class="btn-base" style="border: 1px solid var(--danger); color: var(--danger); width: 100%;" onclick="window.logout()">ВЫЙТИ ИЗ ЧЕМПИОНАТА</button>
             </div>
             <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
-                v20.04 • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
+                v20.05 Demo • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
             </div>
         </div>
     </div>
@@ -572,7 +572,7 @@
     </div>
 
 <script>
-/* JS LOGIC v20.04 */
+/* JS LOGIC v20.05 Demo */
 window.COLORS = { "Черные": "#000000", "Белые": "#ffffff", "Желтые": "#facc15", "Зеленые": "#22c55e", "Красные": "#ef4444", "Синие": "#3b82f6", "Разноцветные": "linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" };
 window.colorKeys = Object.keys(window.COLORS);
 window.audioCtx = null;
@@ -982,7 +982,8 @@ window.openPlayerDropdownMatch = function(idx, type) {
     if (window.isDemoMode) return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно.");
     window.dropdownTarget = { idx, type, mode: 'match' };
     
-    const m = window.matches.find(x => x.id === window.editingMatchId);
+    // Используем временный матч, если мы его редактируем/создаем
+    const m = window.tempEditMatch || window.matches.find(x => x.id === window.editingMatchId);
     let players = new Set();
     
     if (m) {
@@ -2385,22 +2386,89 @@ window.executeShare = function() {
     window.closeModal('shareModal');
 };
 
-window.openMatchEditor = function(id) {
+window.tempEditMatch = null;
+
+window.syncMatchEditorState = function() {
+    if(!window.tempEditMatch) return;
+    const elDate = document.getElementById('editMDate'); if(elDate) window.tempEditMatch.date = elDate.value;
+    const elTime = document.getElementById('editMTime'); if(elTime) window.tempEditMatch.time = elTime.value;
+    const elT1 = document.getElementById('editMT1'); if(elT1) window.tempEditMatch.t1 = elT1.value;
+    const elT2 = document.getElementById('editMT2'); if(elT2) window.tempEditMatch.t2 = elT2.value;
+    const elS1 = document.getElementById('editMS1'); if(elS1) window.tempEditMatch.s1 = parseInt(elS1.value) || 0;
+    const elS2 = document.getElementById('editMS2'); if(elS2) window.tempEditMatch.s2 = parseInt(elS2.value) || 0;
+    
+    if(window.tempEditMatch.events) {
+        window.tempEditMatch.events.forEach((e, idx) => {
+            const elSide = document.getElementById(`editESide_${idx}`);
+            const elS = document.getElementById(`editES_${idx}`);
+            const elA = document.getElementById(`editEA_${idx}`);
+            if(elSide) e.side = parseInt(elSide.value);
+            if(elS) e.s = elS.value.trim() || null;
+            if(elA) e.a = elA.value.trim() || null;
+        });
+    }
+};
+
+window.openMatchEditor = function(id, targetDate = null) {
     if (window.isDemoMode) return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно.");
     if (window.currentRole !== 'admin') return;
-    window.editingMatchId = id; const m = window.matches.find(x => x.id === id); if(!m) return;
     
-    document.getElementById('adminEditTitle').innerText = `РЕДАКТИРОВАТЬ МАТЧ`; document.getElementById('adminDelMatchBtn').style.display = 'block';
+    window.editingMatchId = id; 
     
-    let h = `<div style="display:flex; gap:5px; margin-bottom:10px;"><div style="flex:1"><label style="color:var(--gray); font-size:11px;">Дата:</label><input type="text" id="editMDate" class="player-input" value="${m.date}" style="width:100%; padding:6px; font-size:12px;"></div><div style="flex:1"><label style="color:var(--gray); font-size:11px;">Время:</label><input type="text" id="editMTime" class="player-input" value="${m.time}" style="width:100%; padding:6px; font-size:12px;"></div></div><div style="display:flex; gap:5px; margin-bottom:10px; align-items:center;"><div style="flex:1; text-align:right; font-weight:bold; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.t1}</div><input type="number" id="editMS1" class="player-input" value="${m.s1}" style="width:32px; text-align:center; padding:6px 2px; font-size:14px;"><span>:</span><input type="number" id="editMS2" class="player-input" value="${m.s2}" style="width:32px; text-align:center; padding:6px 2px; font-size:14px;"><div style="flex:1; text-align:left; font-weight:bold; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.t2}</div></div><div class="settings-divider" style="margin:8px 0;"></div><div style="font-weight:bold; margin-bottom:5px; font-size:12px; color:var(--accent);">Голы:</div>`;
+    if (id === 'NEW') {
+        if (!window.tempEditMatch || window.tempEditMatch.id !== 'NEW') {
+            window.tempEditMatch = { 
+                id: 'NEW', 
+                date: targetDate || new Date().toLocaleDateString('ru-RU'), 
+                time: new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'}), 
+                t1: window.colorKeys[0], 
+                t2: window.colorKeys.length > 1 ? window.colorKeys[1] : window.colorKeys[0], 
+                s1: 0, 
+                s2: 0, 
+                events: [] 
+            };
+        }
+        document.getElementById('adminEditTitle').innerText = `ДОБАВИТЬ МАТЧ`; 
+        document.getElementById('adminDelMatchBtn').style.display = 'none';
+    } else {
+        const m = window.matches.find(x => x.id === id); 
+        if(!m) return;
+        if (!window.tempEditMatch || window.tempEditMatch.id !== id) {
+            window.tempEditMatch = JSON.parse(JSON.stringify(m));
+            if (!window.tempEditMatch.events) window.tempEditMatch.events = [];
+        }
+        document.getElementById('adminEditTitle').innerText = `РЕДАКТИРОВАТЬ МАТЧ`; 
+        document.getElementById('adminDelMatchBtn').style.display = 'block';
+    }
+    
+    const tm = window.tempEditMatch;
+    let teamsOptions1 = window.colorKeys.map(t => `<option value="${t}" ${t===tm.t1?'selected':''}>${t}</option>`).join('');
+    let teamsOptions2 = window.colorKeys.map(t => `<option value="${t}" ${t===tm.t2?'selected':''}>${t}</option>`).join('');
 
-    if(m.events) {
-        m.events.forEach((e, idx) => {
+    let h = `<div style="display:flex; gap:10px; margin-bottom:15px;">
+        <div style="flex:1"><div style="font-size:9px; color:var(--gray); margin-bottom:4px; text-transform:uppercase;">Дата:</div><input type="text" id="editMDate" class="player-input" value="${tm.date}" style="width:100%; margin:0;"></div>
+        <div style="flex:1"><div style="font-size:9px; color:var(--gray); margin-bottom:4px; text-transform:uppercase;">Время:</div><input type="text" id="editMTime" class="player-input" value="${tm.time}" style="width:100%; margin:0;"></div>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:15px; background:rgba(255,255,255,0.03); padding:12px; border-radius:8px; border: 1px solid rgba(255,255,255,0.05);">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+            <select id="editMT1" class="player-input" style="flex:1; margin:0; font-weight:bold;">${teamsOptions1}</select>
+            <input type="number" id="editMS1" class="player-input" value="${tm.s1}" style="width:50px; text-align:center; margin:0; font-size:18px; font-weight:bold; padding:8px 2px;">
+        </div>
+        <div style="text-align:center; color:var(--gray); font-size:10px; font-weight:900; padding:2px 0;">ПРОТИВ</div>
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+            <select id="editMT2" class="player-input" style="flex:1; margin:0; font-weight:bold;">${teamsOptions2}</select>
+            <input type="number" id="editMS2" class="player-input" value="${tm.s2}" style="width:50px; text-align:center; margin:0; font-size:18px; font-weight:bold; padding:8px 2px;">
+        </div>
+    </div>
+    <div class="settings-divider" style="margin:8px 0;"></div><div style="font-weight:bold; margin-bottom:10px; font-size:12px; color:var(--accent); text-transform:uppercase;">Голы в матче:</div>`;
+
+    if(tm.events && tm.events.length > 0) {
+        tm.events.forEach((e, idx) => {
             h += `<div style="background:rgba(255,255,255,0.03); padding:10px; border-radius:8px; margin-bottom:8px; border: 1px solid rgba(255,255,255,0.05);">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                     <select id="editESide_${idx}" class="player-input" style="padding:6px 8px; flex:1; font-size:12px; margin-bottom:0; font-weight:bold;">
-                        <option value="1" ${e.side===1?'selected':''}>${m.t1}</option>
-                        <option value="2" ${e.side===2?'selected':''}>${m.t2}</option>
+                        <option value="1" ${e.side===1?'selected':''}>${tm.t1}</option>
+                        <option value="2" ${e.side===2?'selected':''}>${tm.t2}</option>
                     </select>
                     <button class="btn-base icon-btn" style="background:var(--danger); flex:0 0 32px; height:32px; padding:0; margin-bottom:0; margin-left:8px;" onclick="window.removeEventFromEdit(${idx})">
                         <svg class="icon" style="width:16px;height:16px;"><use href="#icon-trash"></use></svg>
@@ -2409,58 +2477,61 @@ window.openMatchEditor = function(id) {
                 <div style="display:flex; gap:8px;">
                     <div style="flex:1;">
                         <div style="font-size:9px; color:var(--gray); margin-bottom:4px; text-transform:uppercase;">Забил гол:</div>
-                        <input type="text" id="editES_${idx}" class="player-input" value="${e.s||''}" placeholder="Выбрать..." readonly onclick="window.openPlayerDropdownMatch(${idx}, 's')" style="width:100%; padding:8px 6px; font-size:11px; margin-bottom:0; cursor:pointer; text-align:center; caret-color:transparent;">
+                        <input type="text" id="editES_${idx}" class="player-input" value="${e.s||''}" placeholder="Выбрать..." readonly onclick="window.syncMatchEditorState(); window.openPlayerDropdownMatch(${idx}, 's')" style="width:100%; padding:8px 6px; font-size:11px; margin-bottom:0; cursor:pointer; text-align:center; caret-color:transparent;">
                     </div>
                     <div style="flex:1;">
                         <div style="font-size:9px; color:var(--gray); margin-bottom:4px; text-transform:uppercase;">Отдал пас:</div>
-                        <input type="text" id="editEA_${idx}" class="player-input" value="${e.a||''}" placeholder="Выбрать..." readonly onclick="window.openPlayerDropdownMatch(${idx}, 'a')" style="width:100%; padding:8px 6px; font-size:11px; margin-bottom:0; cursor:pointer; text-align:center; caret-color:transparent;">
+                        <input type="text" id="editEA_${idx}" class="player-input" value="${e.a||''}" placeholder="Выбрать..." readonly onclick="window.syncMatchEditorState(); window.openPlayerDropdownMatch(${idx}, 'a')" style="width:100%; padding:8px 6px; font-size:11px; margin-bottom:0; cursor:pointer; text-align:center; caret-color:transparent;">
                     </div>
                 </div>
             </div>`;
         });
+    } else {
+        h += `<div style="font-size:11px; color:var(--gray); text-align:center; margin-bottom:15px;">Голов пока нет.</div>`;
     }
 
     h += `<button class="btn-base icon-btn" style="width:100%; margin-top:8px; padding:12px; font-size:12px;" onclick="window.addEventToEdit()"><svg class="icon"><use href="#icon-plus"></use></svg> ДОБАВИТЬ ГОЛ</button>`;
     document.getElementById('adminEditContainer').innerHTML = h; window.openModal('adminEditorModal');
 };
 
-window.removeEventFromEdit = function(idx) { const m = window.matches.find(x => x.id === window.editingMatchId); if(m && m.events) { m.events.splice(idx, 1); window.openMatchEditor(window.editingMatchId); } };
-window.addEventToEdit = function() { const m = window.matches.find(x => x.id === window.editingMatchId); if(m) { if(!m.events) m.events = []; m.events.push({side: 1, s: '', a: ''}); window.openMatchEditor(window.editingMatchId); } };
+window.removeEventFromEdit = function(idx) { 
+    window.syncMatchEditorState();
+    if(window.tempEditMatch && window.tempEditMatch.events) { 
+        window.tempEditMatch.events.splice(idx, 1); 
+        window.openMatchEditor(window.editingMatchId); 
+    } 
+};
+
+window.addEventToEdit = function() { 
+    window.syncMatchEditorState();
+    if(window.tempEditMatch) { 
+        if(!window.tempEditMatch.events) window.tempEditMatch.events = []; 
+        window.tempEditMatch.events.push({side: 1, s: '', a: ''}); 
+        window.openMatchEditor(window.editingMatchId); 
+    } 
+};
 
 window.openAddPastMatch = function(targetDate) {
-    if (window.isDemoMode) return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно.");
-    if (window.currentRole !== 'admin') return;
-    window.editingMatchId = 'NEW'; document.getElementById('adminEditTitle').innerText = `ДОБАВИТЬ МАТЧ`; document.getElementById('adminDelMatchBtn').style.display = 'none';
-    let teamsOptions = window.colorKeys.map(t => `<option value="${t}">${t}</option>`).join(''); let defaultDate = targetDate || new Date().toLocaleDateString('ru-RU');
-    let h = `<div style="display:flex; gap:10px; margin-bottom:15px;">
-        <div style="flex:1"><div style="font-size:9px; color:var(--gray); margin-bottom:4px; text-transform:uppercase;">Дата:</div><input type="text" id="newMDate" class="player-input" value="${defaultDate}" style="width:100%; margin:0;"></div>
-        <div style="flex:1"><div style="font-size:9px; color:var(--gray); margin-bottom:4px; text-transform:uppercase;">Время:</div><input type="text" id="newMTime" class="player-input" value="${new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'})}" style="width:100%; margin:0;"></div>
-    </div>
-    <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:15px; background:rgba(255,255,255,0.03); padding:12px; border-radius:8px; border: 1px solid rgba(255,255,255,0.05);">
-        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-            <select id="newMT1" class="player-input" style="flex:1; margin:0; font-weight:bold;">${teamsOptions}</select>
-            <input type="number" id="newMS1" class="player-input" value="0" style="width:50px; text-align:center; margin:0; font-size:18px; font-weight:bold; padding:8px 2px;">
-        </div>
-        <div style="text-align:center; color:var(--gray); font-size:10px; font-weight:900; padding:2px 0;">ПРОТИВ</div>
-        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-            <select id="newMT2" class="player-input" style="flex:1; margin:0; font-weight:bold;">${teamsOptions}</select>
-            <input type="number" id="newMS2" class="player-input" value="0" style="width:50px; text-align:center; margin:0; font-size:18px; font-weight:bold; padding:8px 2px;">
-        </div>
-    </div>
-    <div style="font-size:11px; color:var(--gray); text-align:center; background:rgba(0,0,0,0.2); padding:10px; border-radius:8px;">Сначала сохраните матч, затем откройте его снова, чтобы добавить авторов голов.</div>`;
-    document.getElementById('adminEditContainer').innerHTML = h; window.openModal('adminEditorModal');
+    window.tempEditMatch = null;
+    window.openMatchEditor('NEW', targetDate);
 };
 
 window.saveAdminEdit = function() {
+    window.syncMatchEditorState();
+    const tm = window.tempEditMatch;
+    if(!tm) return;
+
     if(window.editingMatchId === 'NEW') {
-        const d = document.getElementById('newMDate').value;
-        const newM = { id: Date.now(), date: d, time: document.getElementById('newMTime').value, t1: document.getElementById('newMT1').value, t2: document.getElementById('newMT2').value, s1: parseInt(document.getElementById('newMS1').value) || 0, s2: parseInt(document.getElementById('newMS2').value) || 0, events: [] };
-        window.matches.unshift(newM); window.snapshotTourRoster(d);
+        tm.id = Date.now();
+        window.matches.unshift(tm); 
+        window.snapshotTourRoster(tm.date);
     } else {
-        const m = window.matches.find(x => x.id === window.editingMatchId); if(!m) return;
-        m.date = document.getElementById('editMDate').value; m.time = document.getElementById('editMTime').value; m.s1 = parseInt(document.getElementById('editMS1').value) || 0; m.s2 = parseInt(document.getElementById('editMS2').value) || 0;
-        if (m.events) { m.events.forEach((e, idx) => { const elSide = document.getElementById(`editESide_${idx}`), elS = document.getElementById(`editES_${idx}`), elA = document.getElementById(`editEA_${idx}`); if(elSide) e.side = parseInt(elSide.value); if(elS) e.s = elS.value.trim() || null; if(elA) e.a = elA.value.trim() || null; }); }
+        const idx = window.matches.findIndex(x => x.id === window.editingMatchId);
+        if(idx !== -1) {
+            window.matches[idx] = JSON.parse(JSON.stringify(tm));
+        }
     }
+    window.tempEditMatch = null;
     window.setStore("matches", window.matches); window.updateGlobalPlayersList(); window.syncToFirebase(true); window.closeModal('adminEditorModal'); window.renderCombinedStats();
 };
 
