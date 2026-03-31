@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0f172a">
-    <title>Футбол на Манеже v20.09 Demo</title>
+    <title>Футбол на Манеже v20.08 Demo</title>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -332,7 +332,7 @@
 
     <div id="welcomeOverlay" class="overlay lobby-bg" style="z-index: 9999;">
         <div class="modal-content">
-            <h2 style="color: var(--accent); margin-bottom: 25px; text-transform: uppercase; font-size: 24px; user-select: none;" onclick="window.handleMasterLoginClick()">Футбол на Манеже</h2>
+            <h2 style="color: var(--accent); margin-bottom: 25px; text-transform: uppercase; font-size: 24px; user-select: none; cursor: pointer;" onclick="window.handleMasterLoginClick()">Футбол на Манеже</h2>
             <button id="welcomeViewerBtn" class="full-btn" style="margin-bottom: 15px; padding: 18px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;" onclick="window.selectWelcomeMode('viewer')">
                 <span style="display: flex; align-items: center; gap: 6px;"><svg class="icon"><use href="#icon-eye"></use></svg> ИГРОК</span>
                 <span class="btn-subtext">Вам доступен просмотр игр и статистики</span>
@@ -348,8 +348,9 @@
             <div id="logoutBtnContainer" style="display:none; margin-top: 10px;">
                 <button class="btn-base" style="border: 1px solid var(--danger); color: var(--danger); width: 100%;" onclick="window.logout()">ВЫЙТИ ИЗ ЧЕМПИОНАТА</button>
             </div>
+            <!-- Скрытая кнопка для входа Мастера УБРАНА отсюда -->
             <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
-                v20.09 Demo • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
+                v20.08 Demo • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
             </div>
         </div>
     </div>
