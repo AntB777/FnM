@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0f172a">
-    <title>Футбол на Манеже v20.08 Demo</title>
+    <title>Футбол на Манеже v20.11 Demo</title>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -348,9 +348,9 @@
             <div id="logoutBtnContainer" style="display:none; margin-top: 10px;">
                 <button class="btn-base" style="border: 1px solid var(--danger); color: var(--danger); width: 100%;" onclick="window.logout()">ВЫЙТИ ИЗ ЧЕМПИОНАТА</button>
             </div>
-            <!-- Скрытая кнопка для входа Мастера УБРАНА отсюда -->
-            <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
-                v20.08 Demo • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
+            <!-- Скрытая кнопка для входа Мастера -->
+            <div onclick="window.loginWithGoogle()" style="cursor:pointer; font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
+                v20.11 Demo • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
             </div>
         </div>
     </div>
@@ -599,7 +599,7 @@
     </div>
 
 <script>
-/* JS LOGIC v20.08 */
+/* JS LOGIC v20.11 */
 window.COLORS = { "Черные": "#000000", "Белые": "#ffffff", "Желтые": "#facc15", "Зеленые": "#22c55e", "Красные": "#ef4444", "Синие": "#3b82f6", "Разноцветные": "linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" };
 window.colorKeys = Object.keys(window.COLORS);
 window.audioCtx = null;
@@ -645,7 +645,7 @@ window.closeModal = function(id) { const m = document.getElementById(id); if (m)
 window.getStore = function(key, def) { if (window[key] !== undefined && window[key] !== null && window[key] !== '') return window[key]; return def; };
 window.setStore = function(key, val) { window[key] = val; };
 
-window.fetchWithTimeout = function(ref, ms = 8000) {
+window.fetchWithTimeout = function(ref, ms = 10000) {
     return new Promise((resolve, reject) => {
         const timer = setTimeout(() => reject(new Error("Timeout")), ms);
         window.getDoc(ref).then(res => { clearTimeout(timer); resolve(res); }).catch(err => { clearTimeout(timer); reject(err); });
