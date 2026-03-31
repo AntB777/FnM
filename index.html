@@ -8,7 +8,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { initializeFirestore, doc, setDoc, getDoc, onSnapshot, collection, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         const firebaseConfig = {
@@ -26,7 +26,11 @@
 
         const app = initializeApp(canvasConfig);
         const auth = getAuth(app);
-        const db = getFirestore(app);
+        
+        // Принудительно включаем Long Polling для обхода блокировок WebSockets мобильными операторами
+        const db = initializeFirestore(app, {
+            experimentalForceLongPolling: true
+        });
 
         window.db = db; window.auth = auth; window.appId = canvasAppId; 
         window.doc = doc; window.setDoc = setDoc; window.getDoc = getDoc; window.onSnapshot = onSnapshot;
@@ -348,9 +352,8 @@
             <div id="logoutBtnContainer" style="display:none; margin-top: 10px;">
                 <button class="btn-base" style="border: 1px solid var(--danger); color: var(--danger); width: 100%;" onclick="window.logout()">ВЫЙТИ ИЗ ЧЕМПИОНАТА</button>
             </div>
-            <!-- Скрытая кнопка для входа Мастера -->
-            <div onclick="window.loginWithGoogle()" style="cursor:pointer; font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
-                v20.11 Demo • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
+            <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
+                v20.12 Demo • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
             </div>
         </div>
     </div>
@@ -599,7 +602,7 @@
     </div>
 
 <script>
-/* JS LOGIC v20.11 */
+/* JS LOGIC v20.12 */
 window.COLORS = { "Черные": "#000000", "Белые": "#ffffff", "Желтые": "#facc15", "Зеленые": "#22c55e", "Красные": "#ef4444", "Синие": "#3b82f6", "Разноцветные": "linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" };
 window.colorKeys = Object.keys(window.COLORS);
 window.audioCtx = null;
@@ -635,7 +638,6 @@ try { const storedLocal = localStorage.getItem('mSmartPro_localSettings'); if (s
 window.selectionHtmlState = { leftActive: '', leftCont: '', rightActive: '', rightCont: '', rendered: false };
 window.lastRenderedSelL = undefined; window.lastRenderedSelR = undefined;
 
-// Телега больше не используется для входа, Мастер задается по UID выше
 window.tgUser = null;
 if (typeof window.isMasterAdmin === 'undefined') window.isMasterAdmin = false;
 window.isDemoMode = false;
@@ -650,6 +652,18 @@ window.fetchWithTimeout = function(ref, ms = 10000) {
         const timer = setTimeout(() => reject(new Error("Timeout")), ms);
         window.getDoc(ref).then(res => { clearTimeout(timer); resolve(res); }).catch(err => { clearTimeout(timer); reject(err); });
     });
+};
+
+window._masterClickCount = 0;
+window._masterClickTimer = null;
+window.handleMasterLoginClick = function() {
+    window._masterClickCount++;
+    if(window._masterClickCount === 3) {
+        window.loginWithGoogle();
+        window._masterClickCount = 0;
+    }
+    clearTimeout(window._masterClickTimer);
+    window._masterClickTimer = setTimeout(() => { window._masterClickCount = 0; }, 1000);
 };
 
 window.applyDataFromFirebase = function(data) {
@@ -871,6 +885,8 @@ window.startApp = function() {
 
 window.initApp = async function() {
     document.getElementById('loadingOverlay').style.display = 'flex';
+    const user = await window.startAuth();
+    if (!user) { console.error("Firebase Auth Failed"); document.getElementById('loadingOverlay').style.display = 'none'; return; }
 
     window.currentRoom = localStorage.getItem("mSmartPro_lastRoom"); window.currentRole = localStorage.getItem("mSmartPro_lastRole") || 'viewer';
     window.isDemoMode = localStorage.getItem("mSmartPro_isDemo") === 'true';
@@ -884,7 +900,7 @@ window.initApp = async function() {
     if (window.currentRoom) {
         try {
             const roomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', window.currentRoom);
-            const snap = await window.fetchWithTimeout(roomRef, 8000);
+            const snap = await window.fetchWithTimeout(roomRef, 10000);
             if (snap.exists()) {
                 window.applyDataFromFirebase(snap.data());
                 document.getElementById('loadingOverlay').style.display = 'none';
@@ -899,7 +915,7 @@ window.initApp = async function() {
             window.currentRoom = null;
             window.config = JSON.parse(JSON.stringify(window.defaultConfig));
             document.getElementById('loadingOverlay').style.display = 'none';
-            if(e.message === "Timeout") { window.showAlert("Ошибка сети: не удалось связаться с базой данных. Если вы в РФ, проверьте VPN или попробуйте Demo-режим."); }
+            if(e.message === "Timeout") { window.showAlert("Ошибка сети: не удалось связаться с базой данных. Проверьте подключение."); }
             window.openWelcomeModal();
         }
     } else {
