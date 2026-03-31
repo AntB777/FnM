@@ -1300,9 +1300,8 @@ window.confirmCreateRoom = async function() {
     if(!pin || !aPass || !vPass) return window.showAlert("Заполните Название и Пароли!"); if(aPass === vPass) return window.showAlert("Пароли админа и игрока должны различаться!");
     document.getElementById('loadingOverlay').style.display = 'flex';
     try {
-        await window.startAuth();
         if (typeof window.getDoc === 'function' && typeof window.db !== 'undefined') {
-            const roomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', pin); const snap = await window.fetchWithTimeout(roomRef, 10000);
+            const roomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', pin); const snap = await window.fetchWithTimeout(roomRef, 8000);
             if(snap.exists()) { document.getElementById('loadingOverlay').style.display = 'none'; return window.showAlert("Это название уже занято! Придумайте другое."); }
         }
         window.currentRoom = pin; window.currentRole = 'admin'; window.isDemoMode = false; window.tempConfig.adminPass = aPass; window.tempConfig.viewerPass = vPass; window.config = JSON.parse(JSON.stringify(window.tempConfig)); window.matches = []; window.customTours = {}; window.tourRosters = {}; window.globalPlayers = []; window.tourMvps = {};
@@ -1321,10 +1320,9 @@ window.confirmJoinAdmin = async function() {
     if(!pin || !pass) return window.showAlert("Введите Название и Пароль!");
     document.getElementById('loadingOverlay').style.display = 'flex';
     try {
-        await window.startAuth();
         let c = null;
         if (typeof window.getDoc === 'function' && typeof window.db !== 'undefined') {
-            const roomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', pin); const snap = await window.fetchWithTimeout(roomRef, 10000);
+            const roomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', pin); const snap = await window.fetchWithTimeout(roomRef, 8000);
             if(!snap.exists()) { document.getElementById('loadingOverlay').style.display = 'none'; return window.showAlert("Чемпионат не найден!"); }
             let data = snap.data(); c = data.config; window.applyDataFromFirebase(data);
         } else {
@@ -1346,10 +1344,9 @@ window.confirmJoinViewer = async function() {
     if(!pin) return window.showAlert("Введите Название чемпионата!");
     document.getElementById('loadingOverlay').style.display = 'flex';
     try {
-        await window.startAuth();
         let c = null;
         if (typeof window.getDoc === 'function' && typeof window.db !== 'undefined') {
-            const roomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', pin); const snap = await window.fetchWithTimeout(roomRef, 10000);
+            const roomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', pin); const snap = await window.fetchWithTimeout(roomRef, 8000);
             if(!snap.exists()) { document.getElementById('loadingOverlay').style.display = 'none'; return window.showAlert("Чемпионат не найден!"); }
             let data = snap.data(); c = data.config; window.applyDataFromFirebase(data);
         } else {
