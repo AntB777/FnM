@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0f172a">
-    <title>Футбол на Манеже v20.12 Demo</title>
+    <title>Футбол на Манеже v20.13 Demo</title>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -71,14 +71,19 @@
         window.startAuth = async function() {
             if (window.dbUser) return window.dbUser;
             try {
-                let cred;
-                if (canvasToken) {
-                    try { cred = await signInWithCustomToken(auth, canvasToken); } 
-                    catch(e) { cred = await signInAnonymously(auth); }
-                } else {
-                    cred = await signInAnonymously(auth);
-                }
-                window.dbUser = cred.user;
+                const authPromise = new Promise(async (resolve) => {
+                    let cred;
+                    if (canvasToken) {
+                        try { cred = await signInWithCustomToken(auth, canvasToken); } 
+                        catch(e) { cred = await signInAnonymously(auth); }
+                    } else {
+                        cred = await signInAnonymously(auth);
+                    }
+                    resolve(cred.user);
+                });
+                // Защита от зависания авторизации: ждем максимум 5 секунд
+                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Auth Timeout")), 5000));
+                window.dbUser = await Promise.race([authPromise, timeoutPromise]);
                 return window.dbUser;
             } catch (error) {
                 console.error("Auth Error:", error);
@@ -355,7 +360,7 @@
                 <button class="btn-base" style="border: 1px solid var(--danger); color: var(--danger); width: 100%;" onclick="window.logout()">ВЫЙТИ ИЗ ЧЕМПИОНАТА</button>
             </div>
             <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
-                v20.12 Demo • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
+                v20.13 Demo • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
             </div>
         </div>
     </div>
@@ -604,7 +609,7 @@
     </div>
 
 <script>
-/* JS LOGIC v20.12 */
+/* JS LOGIC v20.13 */
 window.COLORS = { "Черные": "#000000", "Белые": "#ffffff", "Желтые": "#facc15", "Зеленые": "#22c55e", "Красные": "#ef4444", "Синие": "#3b82f6", "Разноцветные": "linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" };
 window.colorKeys = Object.keys(window.COLORS);
 window.audioCtx = null;
@@ -877,8 +882,8 @@ window.startApp = function() {
 window.initApp = async function() {
     document.getElementById('loadingOverlay').style.display = 'flex';
     
-    // Мягкая авторизация без блокировок
-    window.startAuth();
+    // ЖЕСТКО ждем получения токена, как это было во вчерашних рабочих версиях
+    await window.startAuth();
 
     window.currentRoom = localStorage.getItem("mSmartPro_lastRoom"); window.currentRole = localStorage.getItem("mSmartPro_lastRole") || 'viewer';
     window.isDemoMode = localStorage.getItem("mSmartPro_isDemo") === 'true';
@@ -1300,6 +1305,7 @@ window.confirmCreateRoom = async function() {
     if(!pin || !aPass || !vPass) return window.showAlert("Заполните Название и Пароли!"); if(aPass === vPass) return window.showAlert("Пароли админа и игрока должны различаться!");
     document.getElementById('loadingOverlay').style.display = 'flex';
     try {
+        await window.startAuth();
         if (typeof window.getDoc === 'function' && typeof window.db !== 'undefined') {
             const roomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', pin); const snap = await window.fetchWithTimeout(roomRef, 15000);
             if(snap.exists()) { document.getElementById('loadingOverlay').style.display = 'none'; return window.showAlert("Это название уже занято! Придумайте другое."); }
@@ -1320,6 +1326,7 @@ window.confirmJoinAdmin = async function() {
     if(!pin || !pass) return window.showAlert("Введите Название и Пароль!");
     document.getElementById('loadingOverlay').style.display = 'flex';
     try {
+        await window.startAuth();
         let c = null;
         if (typeof window.getDoc === 'function' && typeof window.db !== 'undefined') {
             const roomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', pin); const snap = await window.fetchWithTimeout(roomRef, 15000);
@@ -1344,6 +1351,7 @@ window.confirmJoinViewer = async function() {
     if(!pin) return window.showAlert("Введите Название чемпионата!");
     document.getElementById('loadingOverlay').style.display = 'flex';
     try {
+        await window.startAuth();
         let c = null;
         if (typeof window.getDoc === 'function' && typeof window.db !== 'undefined') {
             const roomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', pin); const snap = await window.fetchWithTimeout(roomRef, 15000);
