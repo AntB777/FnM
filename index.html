@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0f172a">
-    <title>Футбол на Манеже v20.08 Demo</title>
+    <title>Футбол на Манеже v20.10 Demo</title>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -350,7 +350,7 @@
             </div>
             <!-- Скрытая кнопка для входа Мастера УБРАНА отсюда -->
             <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
-                v20.08 Demo • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
+                v20.10 Demo • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
             </div>
         </div>
     </div>
@@ -599,7 +599,7 @@
     </div>
 
 <script>
-/* JS LOGIC v20.08 */
+/* JS LOGIC v20.10 */
 window.COLORS = { "Черные": "#000000", "Белые": "#ffffff", "Желтые": "#facc15", "Зеленые": "#22c55e", "Красные": "#ef4444", "Синие": "#3b82f6", "Разноцветные": "linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" };
 window.colorKeys = Object.keys(window.COLORS);
 window.audioCtx = null;
@@ -1290,8 +1290,9 @@ window.confirmCreateRoom = async function() {
     if(!pin || !aPass || !vPass) return window.showAlert("Заполните Название и Пароли!"); if(aPass === vPass) return window.showAlert("Пароли админа и игрока должны различаться!");
     document.getElementById('loadingOverlay').style.display = 'flex';
     try {
+        await window.startAuth();
         if (typeof window.getDoc === 'function' && typeof window.db !== 'undefined') {
-            const roomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', pin); const snap = await window.fetchWithTimeout(roomRef, 8000);
+            const roomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', pin); const snap = await window.fetchWithTimeout(roomRef, 10000);
             if(snap.exists()) { document.getElementById('loadingOverlay').style.display = 'none'; return window.showAlert("Это название уже занято! Придумайте другое."); }
         }
         window.currentRoom = pin; window.currentRole = 'admin'; window.isDemoMode = false; window.tempConfig.adminPass = aPass; window.tempConfig.viewerPass = vPass; window.config = JSON.parse(JSON.stringify(window.tempConfig)); window.matches = []; window.customTours = {}; window.tourRosters = {}; window.globalPlayers = []; window.tourMvps = {};
@@ -1300,7 +1301,7 @@ window.confirmCreateRoom = async function() {
         window.closeModal('createRoomModal'); window.startApp(); window.listenToRoom();
     } catch(e) { 
         console.error("Ошибка создания:", e); 
-        if(e.message === "Timeout") window.showAlert("Ошибка сети: не удалось связаться с base данных. Проверьте VPN."); 
+        if(e.message === "Timeout") window.showAlert("Ошибка сети: не удалось связаться с базой данных. Проверьте подключение."); 
         else window.showAlert("Ошибка при создании: " + e.message); 
     } finally { document.getElementById('loadingOverlay').style.display = 'none'; }
 };
@@ -1310,9 +1311,10 @@ window.confirmJoinAdmin = async function() {
     if(!pin || !pass) return window.showAlert("Введите Название и Пароль!");
     document.getElementById('loadingOverlay').style.display = 'flex';
     try {
+        await window.startAuth();
         let c = null;
         if (typeof window.getDoc === 'function' && typeof window.db !== 'undefined') {
-            const roomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', pin); const snap = await window.fetchWithTimeout(roomRef, 8000);
+            const roomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', pin); const snap = await window.fetchWithTimeout(roomRef, 10000);
             if(!snap.exists()) { document.getElementById('loadingOverlay').style.display = 'none'; return window.showAlert("Чемпионат не найден!"); }
             let data = snap.data(); c = data.config; window.applyDataFromFirebase(data);
         } else {
@@ -1324,7 +1326,7 @@ window.confirmJoinAdmin = async function() {
         window.closeModal('joinAdminModal'); window.startApp(); window.listenToRoom();
     } catch(e) { 
         console.error("Ошибка входа:", e); 
-        if(e.message === "Timeout") window.showAlert("Ошибка сети: не удалось связаться с базой данных. Если вы в РФ, проверьте VPN."); 
+        if(e.message === "Timeout") window.showAlert("Ошибка сети: не удалось связаться с базой данных. Проверьте подключение."); 
         else window.showAlert("Ошибка при подключении: " + e.message); 
     } finally { document.getElementById('loadingOverlay').style.display = 'none'; }
 };
@@ -1334,9 +1336,10 @@ window.confirmJoinViewer = async function() {
     if(!pin) return window.showAlert("Введите Название чемпионата!");
     document.getElementById('loadingOverlay').style.display = 'flex';
     try {
+        await window.startAuth();
         let c = null;
         if (typeof window.getDoc === 'function' && typeof window.db !== 'undefined') {
-            const roomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', pin); const snap = await window.fetchWithTimeout(roomRef, 8000);
+            const roomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', pin); const snap = await window.fetchWithTimeout(roomRef, 10000);
             if(!snap.exists()) { document.getElementById('loadingOverlay').style.display = 'none'; return window.showAlert("Чемпионат не найден!"); }
             let data = snap.data(); c = data.config; window.applyDataFromFirebase(data);
         } else {
@@ -1348,7 +1351,7 @@ window.confirmJoinViewer = async function() {
         window.closeModal('joinViewerModal'); window.startApp(); window.listenToRoom();
     } catch(e) { 
         console.error("Ошибка входа:", e); 
-        if(e.message === "Timeout") window.showAlert("Ошибка сети: не удалось связаться с базой данных. Если вы в РФ, проверьте VPN."); 
+        if(e.message === "Timeout") window.showAlert("Ошибка сети: не удалось связаться с базой данных. Проверьте подключение."); 
         else window.showAlert("Ошибка при подключении: " + e.message); 
     } finally { document.getElementById('loadingOverlay').style.display = 'none'; }
 };
