@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0f172a">
-    <title>Футбол на Манеже v20.08+ Demo</title>
+    <title>Футбол на Манеже v20.08 Demo</title>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -41,7 +41,7 @@
                 // Проверяем, зашел ли пользователь через Google
                 const isGoogle = user.providerData && user.providerData.some(p => p.providerId === 'google.com');
                 
-                // Твой личный UID (уже вшит!)
+                // СЮДА НУЖНО БУДЕТ ВСТАВИТЬ НОВЫЙ UID ВМЕСТО СТАРОГО
                 if (isGoogle && user.uid === "b3PpPolRYtfOCGizDED9zYWfRqt2") {
                     window.isMasterAdmin = true;
                     if(document.getElementById('welcomeOverlay') && !document.getElementById('welcomeOverlay').classList.contains('hidden')) {
@@ -81,10 +81,17 @@
                 const result = await window.signInWithPopup(window.auth, provider);
                 window.dbUser = result.user;
                 
-                if (result.user.uid === "b3PpPolRYtfOCGizDED9zYWfRqt2") {
+                console.log("==================================================");
+                console.log("ТВОЙ НОВЫЙ GOOGLE UID:", result.user.uid);
+                console.log("==================================================");
+                
+                if (result.user.uid === "b3PpPolRYtfOCGizDED9zYWfRqt2") { // Не забудь поменять и здесь тоже!
+                    window.isMasterAdmin = true;
                     window.showAlert("Вход выполнен. Права Мастер-Админа активированы!");
+                    window.updateWelcomeButtons();
                 } else {
-                    window.showAlert("Вход выполнен, но у вас нет прав Мастер-Админа.");
+                    // Выводим UID прямо на экран!
+                    window.showPrompt("Вы вошли! Скопируйте ваш новый UID из поля ниже и вставьте его в код, чтобы получить права Мастера:", result.user.uid, () => {}, null, "ТВОЙ НОВЫЙ UID");
                 }
             } catch (error) {
                 console.error("Ошибка Google Auth:", error);
@@ -343,7 +350,7 @@
             </div>
             <!-- Скрытая кнопка для входа Мастера -->
             <div onclick="window.loginWithGoogle()" style="cursor:pointer; font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
-                v20.08+ Demo • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
+                v20.08 Demo • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
             </div>
         </div>
     </div>
@@ -592,7 +599,7 @@
     </div>
 
 <script>
-/* JS LOGIC v20.08+ */
+/* JS LOGIC v20.08 */
 window.COLORS = { "Черные": "#000000", "Белые": "#ffffff", "Желтые": "#facc15", "Зеленые": "#22c55e", "Красные": "#ef4444", "Синие": "#3b82f6", "Разноцветные": "linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" };
 window.colorKeys = Object.keys(window.COLORS);
 window.audioCtx = null;
@@ -864,8 +871,6 @@ window.startApp = function() {
 
 window.initApp = async function() {
     document.getElementById('loadingOverlay').style.display = 'flex';
-    const user = await window.startAuth();
-    if (!user) { console.error("Firebase Auth Failed"); document.getElementById('loadingOverlay').style.display = 'none'; return; }
 
     window.currentRoom = localStorage.getItem("mSmartPro_lastRoom"); window.currentRole = localStorage.getItem("mSmartPro_lastRole") || 'viewer';
     window.isDemoMode = localStorage.getItem("mSmartPro_isDemo") === 'true';
@@ -1285,8 +1290,6 @@ window.confirmCreateRoom = async function() {
     if(!pin || !aPass || !vPass) return window.showAlert("Заполните Название и Пароли!"); if(aPass === vPass) return window.showAlert("Пароли админа и игрока должны различаться!");
     document.getElementById('loadingOverlay').style.display = 'flex';
     try {
-        const user = await window.startAuth();
-        if (!user) { document.getElementById('loadingOverlay').style.display = 'none'; return window.showAlert("Сбой авторизации Firebase (Анонимный вход отключен?)"); }
         if (typeof window.getDoc === 'function' && typeof window.db !== 'undefined') {
             const roomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', pin); const snap = await window.fetchWithTimeout(roomRef, 8000);
             if(snap.exists()) { document.getElementById('loadingOverlay').style.display = 'none'; return window.showAlert("Это название уже занято! Придумайте другое."); }
@@ -1307,8 +1310,6 @@ window.confirmJoinAdmin = async function() {
     if(!pin || !pass) return window.showAlert("Введите Название и Пароль!");
     document.getElementById('loadingOverlay').style.display = 'flex';
     try {
-        const user = await window.startAuth();
-        if (!user) { document.getElementById('loadingOverlay').style.display = 'none'; return window.showAlert("Сбой авторизации Firebase."); }
         let c = null;
         if (typeof window.getDoc === 'function' && typeof window.db !== 'undefined') {
             const roomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', pin); const snap = await window.fetchWithTimeout(roomRef, 8000);
@@ -1333,8 +1334,6 @@ window.confirmJoinViewer = async function() {
     if(!pin) return window.showAlert("Введите Название чемпионата!");
     document.getElementById('loadingOverlay').style.display = 'flex';
     try {
-        const user = await window.startAuth();
-        if (!user) { document.getElementById('loadingOverlay').style.display = 'none'; return window.showAlert("Сбой авторизации Firebase."); }
         let c = null;
         if (typeof window.getDoc === 'function' && typeof window.db !== 'undefined') {
             const roomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', pin); const snap = await window.fetchWithTimeout(roomRef, 8000);
@@ -1388,7 +1387,6 @@ window.submitPass = async function() {
         if (oldP !== window.currentRoom) return document.getElementById('passError').innerText = 'Неверное текущее название!'; if (newP === '') return document.getElementById('passError').innerText = 'Новое название не может быть пустым!'; if (newP !== confP) return document.getElementById('passError').innerText = 'Новые названия не совпадают!'; if (newP === window.currentRoom) return document.getElementById('passError').innerText = 'Новое название совпадает со старым!';
         document.getElementById('loadingOverlay').style.display = 'flex';
         try {
-            await window.startAuth();
             if (typeof window.getDoc === 'function' && typeof window.db !== 'undefined') {
                 const newRoomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', newP); const snap = await window.fetchWithTimeout(newRoomRef, 8000);
                 if(snap.exists()) { document.getElementById('loadingOverlay').style.display = 'none'; return document.getElementById('passError').innerText = 'Это название уже занято!'; }
