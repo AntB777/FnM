@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0f172a">
-    <title>Футбол на Манеже v20.13 Demo</title>
+    <title>Футбол на Манеже v20.14 Demo</title>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -360,7 +360,7 @@
                 <button class="btn-base" style="border: 1px solid var(--danger); color: var(--danger); width: 100%;" onclick="window.logout()">ВЫЙТИ ИЗ ЧЕМПИОНАТА</button>
             </div>
             <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
-                v20.13 Demo • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
+                v20.14 Demo • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
             </div>
         </div>
     </div>
@@ -459,8 +459,8 @@
 
     <div id="playerDBModal" class="overlay hidden" style="z-index: 10004;">
         <div class="modal-content" style="max-width:600px; width: 98%;">
-            <h2 style="color:var(--accent); margin-top:0; margin-bottom:15px; text-transform:uppercase;"><svg class="icon-inline"><use href="#icon-run"></use></svg> БАЗА ИГРОКОВ</h2>
-            <button class="full-btn icon-btn" style="margin-bottom: 15px; font-size:14px; padding:12px; background:var(--success);" onclick="window.addGlobalPlayer()"><svg class="icon"><use href="#icon-plus"></use></svg> ДОБАВИТЬ НОВОГО ИГРОКА</button>
+            <h2 style="color:var(--accent); margin-top:0; margin-bottom:15px; text-transform:uppercase;"><svg class="icon-inline"><use href="#icon-run"></use></svg> ВСЕ ИГРОКИ</h2>
+            <button id="addGlobalPlayerBtn" class="full-btn icon-btn" style="margin-bottom: 15px; font-size:14px; padding:12px; background:var(--success);" onclick="window.addGlobalPlayer()"><svg class="icon"><use href="#icon-plus"></use></svg> ДОБАВИТЬ НОВОГО ИГРОКА</button>
             <div class="scrollable" id="playerDBContainer" style="text-align:left; padding-right:5px;"></div>
             <button class="btn-base" style="margin-top:15px;" onclick="window.closeModal('playerDBModal')">ЗАКРЫТЬ</button>
         </div>
@@ -609,7 +609,7 @@
     </div>
 
 <script>
-/* JS LOGIC v20.13 */
+/* JS LOGIC v20.14 */
 window.COLORS = { "Черные": "#000000", "Белые": "#ffffff", "Желтые": "#facc15", "Зеленые": "#22c55e", "Красные": "#ef4444", "Синие": "#3b82f6", "Разноцветные": "linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" };
 window.colorKeys = Object.keys(window.COLORS);
 window.audioCtx = null;
@@ -1081,6 +1081,8 @@ window.selectDropdownPlayer = function(name) {
 };
 
 window.openPlayerDB = function() {
+    const addBtn = document.getElementById('addGlobalPlayerBtn');
+    if(addBtn) addBtn.style.display = (window.currentRole === 'admin') ? 'flex' : 'none';
     window.updateGlobalPlayersList(); const c = document.getElementById('playerDBContainer');
     if (window.globalPlayers.length === 0) { c.innerHTML = `<div style="text-align:center; color:var(--gray); margin-top:20px; font-size:12px;">База пуста. Игроки появятся здесь автоматически после первого матча.</div>`; window.openModal('playerDBModal'); return; } 
     let pStats = {}; window.globalPlayers.forEach(p => pStats[p] = {name: p, tours: new Set(), g: 0, a: 0, mvp: 0});
@@ -1108,10 +1110,12 @@ window.renderPlayerDBTable = function() {
         if (valA < valB) return window.playerDbSortDesc ? 1 : -1; if (valA > valB) return window.playerDbSortDesc ? -1 : 1; return a.name.localeCompare(b.name);
     });
     const getSortIcon = (col) => { if (window.playerDbSortCol === col || (col === 'points' && window.playerDbSortCol === 'points')) { return window.playerDbSortDesc ? '▼' : '▲'; } return '<span style="opacity:0.3">↕</span>'; };
-    let h = `<table class="stats-table" style="margin-bottom:0; width: 100%; border-collapse: separate; border-spacing: 0 4px;"><thead><tr><th style="width: 20px; text-align: center; color: var(--gray); border: none; padding-bottom: 5px;">#</th><th style="text-align: left; color: var(--gray); border: none; padding-bottom: 5px; cursor: pointer; user-select: none;" onclick="window.sortPlayerDB('name')">Игрок <span style="font-size:10px">${getSortIcon('name')}</span></th><th style="width: 50px; text-align: center; color: var(--gray); border: none; padding-bottom: 5px; cursor: pointer; user-select: none;" onclick="window.sortPlayerDB('g')">Голы <span style="font-size:10px">${getSortIcon('g')}</span></th><th style="width: 50px; text-align: center; color: var(--gray); border: none; padding-bottom: 5px; cursor: pointer; user-select: none;" onclick="window.sortPlayerDB('a')">Пасы <span style="font-size:10px">${getSortIcon('a')}</span></th><th style="width: 50px; text-align: center; color: var(--gray); border: none; padding-bottom: 5px; cursor: pointer; user-select: none;" onclick="window.sortPlayerDB('tours')">Игры <span style="font-size:10px">${getSortIcon('tours')}</span></th><th style="width: 50px; text-align: center; color: var(--gray); border: none; padding-bottom: 5px; cursor: pointer; user-select: none;" onclick="window.sortPlayerDB('mvp')">MVP <span style="font-size:10px">${getSortIcon('mvp')}</span></th></tr></thead><tbody>`;
+    let h = `<table class="stats-table" style="margin-bottom:0; width: 100%; border-collapse: separate; border-spacing: 0 4px;"><thead><tr><th style="width: 20px; text-align: center; color: var(--gray); border: none; padding-bottom: 5px;">#</th><th style="text-align: left; color: var(--gray); border: none; padding-bottom: 5px; cursor: pointer; user-select: none;" onclick="window.sortPlayerDB('name')">Игрок <span style="font-size:10px">${getSortIcon('name')}</span></th><th style="width: 40px; text-align: center; color: var(--gray); border: none; padding-bottom: 5px; cursor: pointer; user-select: none;" onclick="window.sortPlayerDB('g')">Голы <span style="font-size:10px">${getSortIcon('g')}</span></th><th style="width: 40px; text-align: center; color: var(--gray); border: none; padding-bottom: 5px; cursor: pointer; user-select: none;" onclick="window.sortPlayerDB('a')">Пасы <span style="font-size:10px">${getSortIcon('a')}</span></th><th style="width: 40px; text-align: center; color: var(--gray); border: none; padding-bottom: 5px; cursor: pointer; user-select: none;" onclick="window.sortPlayerDB('points')">Очки <span style="font-size:10px">${getSortIcon('points')}</span></th><th style="width: 40px; text-align: center; color: var(--gray); border: none; padding-bottom: 5px; cursor: pointer; user-select: none;" onclick="window.sortPlayerDB('tours')">Игры <span style="font-size:10px">${getSortIcon('tours')}</span></th><th style="width: 40px; text-align: center; color: var(--gray); border: none; padding-bottom: 5px; cursor: pointer; user-select: none;" onclick="window.sortPlayerDB('mvp')">MVP <span style="font-size:10px">${getSortIcon('mvp')}</span></th></tr></thead><tbody>`;
     window.playerDbStats.forEach((p, idx) => {
         let bgRow = idx % 2 === 0 ? 'rgba(255,255,255,0.03)' : 'transparent';
-        h += `<tr style="background: ${bgRow};"><td style="text-align: center; color: var(--gray); padding: 8px 2px; border-radius: 6px 0 0 6px;">${idx + 1}</td><td style="text-align: left; font-weight: bold; position: relative; padding: 8px 2px;"><span class="player-link" onclick="window.renameGlobalPlayer('${p.name}')" title="Редактировать">${p.name}</span></td><td style="text-align: center; font-weight: 800; padding: 8px 2px;">${p.g}</td><td style="text-align: center; padding: 8px 2px;">${p.a}</td><td style="text-align: center; padding: 8px 2px;">${p.tours.size}</td><td style="text-align: center; color: var(--accent); font-weight: 800; border-radius: 0 6px 6px 0; padding: 8px 2px;">${p.mvp > 0 ? p.mvp : ''}</td></tr>`;
+        let linkClass = window.currentRole === 'admin' ? `class="player-link" onclick="window.renameGlobalPlayer('${p.name}')" title="Редактировать"` : ``;
+        let pts = p.g + p.a;
+        h += `<tr style="background: ${bgRow};"><td style="text-align: center; color: var(--gray); padding: 8px 2px; border-radius: 6px 0 0 6px;">${idx + 1}</td><td style="text-align: left; font-weight: bold; position: relative; padding: 8px 2px;"><span ${linkClass}>${p.name}</span></td><td style="text-align: center; font-weight: 800; padding: 8px 2px;">${p.g}</td><td style="text-align: center; padding: 8px 2px;">${p.a}</td><td style="text-align: center; font-weight: 800; color: var(--accent); padding: 8px 2px;">${pts}</td><td style="text-align: center; padding: 8px 2px;">${p.tours.size}</td><td style="text-align: center; color: var(--accent); font-weight: 800; border-radius: 0 6px 6px 0; padding: 8px 2px;">${p.mvp > 0 ? p.mvp : ''}</td></tr>`;
     });
     h += `</tbody></table>`; c.innerHTML = h;
 };
@@ -1792,7 +1796,9 @@ window.renderSettingsList = function(targetId = window.currentSettingsTarget) {
     
     let h = '';
     if (targetId === 'createSettingsContainer' || (window.currentRole === 'admin' && !window.interval)) {
-        h += window.createStepRow("Время (мин)", "time", window.tempConfig.time/60) + window.createStepRow("Лимит голов", "goalLimit", goalLimitDisplay) + window.createCheckRow("Выбор команд после игры", "autoReset", window.tempConfig.autoReset) + `<div class="settings-divider"></div>` + window.createStepRow("Всего команд", "teamsCount", window.tempConfig.teams.length);
+        let currentMins = Math.floor(window.tempConfig.time / 60);
+        let currentSecs = window.tempConfig.time % 60;
+        h += window.createStepRow("Время (мин)", "timeMin", currentMins) + window.createStepRow("Время (сек)", "timeSec", currentSecs) + window.createStepRow("Лимит голов", "goalLimit", goalLimitDisplay) + window.createCheckRow("Выбор команд после игры", "autoReset", window.tempConfig.autoReset) + `<div class="settings-divider"></div>` + window.createStepRow("Всего команд", "teamsCount", window.tempConfig.teams.length);
         window.tempConfig.teams.forEach((t, i) => h += window.createColorRow(`Команда ${i+1}`, i, t));
         h += `<div class="settings-divider"></div>` + window.createCheckRow("Игроки и составы", "usePlayers", window.tempConfig.usePlayers);
         if(window.tempConfig.usePlayers) h += `<button class="full-btn icon-btn" style="margin:10px 0; font-size:12px;" onclick="window.openRosterEditor()"><svg class="icon"><use href="#icon-run"></use></svg> СОСТАВЫ КОМАНД</button>`;
@@ -1829,8 +1835,9 @@ window.createLocalCheckRow = function(l, k, c) { return `<div class="settings-ch
 window.toggleLocalS = function(k) { window.localSettings[k] = !window.localSettings[k]; localStorage.setItem('mSmartPro_localSettings', JSON.stringify(window.localSettings)); window.renderSettingsList(window.currentSettingsTarget); };
 
 window.stepS = function(k, d) { 
-    if(k==='time') window.tempConfig.time = Math.max(60, window.tempConfig.time + d*60); 
-    if(k==='goalLimit') window.tempConfig.goalLimit = Math.max(0, window.tempConfig.goalLimit + d); 
+    if(k==='timeMin') window.tempConfig.time = Math.max(15, window.tempConfig.time + d*60); 
+    if(k==='timeSec') window.tempConfig.time = Math.max(15, window.tempConfig.time + d*5); 
+    if(k==='goalLimit') window.tempConfig.goalLimit = Math.max(0, window.tempConfig.goalLimit + d);
     if(k==='teamsCount') { if(d>0 && window.tempConfig.teams.length<7) window.tempConfig.teams.push(window.colorKeys.find(c=>!window.tempConfig.teams.includes(c))); else if(d<0 && window.tempConfig.teams.length>2) window.tempConfig.teams.pop(); }
     if(k==='otLimit') window.tempConfig.otLimit = Math.max(0, (window.tempConfig.otLimit||0) + d);
     window.renderSettingsList(window.currentSettingsTarget); 
@@ -2113,19 +2120,20 @@ window.renderCombinedStats = function() {
             <button class="stats-page-btn" ${window.currentStatsPageIndex === 0 ? 'disabled' : ''} onclick="window.changeStatsPage(-1)">▶</button>
           </div>`;
 
+    h += `<div style="display:flex; gap:5px; margin-bottom:15px; justify-content:center; flex-wrap:wrap;">
+            <button class="admin-edit-btn icon-btn" style="width:auto; padding:8px 14px; font-size:11px; background:var(--card); border:1px solid #facc15; border-radius:8px; color:#facc15;" onclick="window.openPlayerDB()"><svg class="icon"><use href="#icon-run"></use></svg> ВСЕ ИГРОКИ</button>`;
+            
     if (window.currentRole === 'admin') {
-        h += `<div style="display:flex; gap:5px; margin-bottom:15px; justify-content:center; flex-wrap:wrap;">
-                <button class="admin-edit-btn icon-btn" style="width:auto; padding:8px 14px; font-size:11px; background:var(--card); border:1px solid #facc15; border-radius:8px; color:#facc15;" onclick="window.openPlayerDB()"><svg class="icon"><use href="#icon-run"></use></svg> ВСЕ ИГРОКИ</button>
-                <button class="admin-edit-btn icon-btn" style="width:auto; padding:8px 14px; font-size:11px; background:var(--card); border:1px solid #a855f7; border-radius:8px; color:#a855f7;" onclick="window.addNewTournament()"><svg class="icon"><use href="#icon-plus"></use></svg> ПРОШЛЫЙ ТУРНИР</button>`;
+        h += `  <button class="admin-edit-btn icon-btn" style="width:auto; padding:8px 14px; font-size:11px; background:var(--card); border:1px solid #a855f7; border-radius:8px; color:#a855f7;" onclick="window.addNewTournament()"><svg class="icon"><use href="#icon-plus"></use></svg> ПРОШЛЫЙ ТУРНИР</button>`;
         
         if (!isFinished && date === activeD) {
              h += `<button class="admin-edit-btn icon-btn" style="width:auto; padding:8px 14px; font-size:11px; background:var(--card); border:1px solid var(--success); border-radius:8px; color:var(--success);" onclick="window.startNewTournament('${date}')"><svg class="icon"><use href="#icon-stop"></use></svg> ЗАВЕРШИТЬ ТЕКУЩИЙ</button>`;
         }
 
         h += `  <button class="admin-edit-btn icon-btn" style="width:auto; padding:8px 14px; font-size:11px; background:var(--card); border:1px solid var(--accent); border-radius:8px; color:var(--accent);" onclick="window.openShareModal('${date}')"><svg class="icon"><use href="#icon-share"></use></svg> ПОДЕЛИТЬСЯ</button>
-                <button class="admin-edit-btn icon-btn" style="width:auto; padding:8px 14px; font-size:13px; background:var(--card); border:1px solid var(--danger); border-radius:8px; color:var(--danger);" onclick="window.deleteDay('${date}')"><svg class="icon"><use href="#icon-trash"></use></svg></button>
-              </div>`;
+                <button class="admin-edit-btn icon-btn" style="width:auto; padding:8px 14px; font-size:13px; background:var(--card); border:1px solid var(--danger); border-radius:8px; color:var(--danger);" onclick="window.deleteDay('${date}')"><svg class="icon"><use href="#icon-trash"></use></svg></button>`;
     }
+    h += `</div>`;
 
     if (Object.keys(stats).length > 0) {
         h += `<div style="border: 1px dashed rgba(255,255,255,0.15); border-radius: 12px; padding: 12px; margin-bottom: 15px; background: rgba(255,255,255,0.02);">`;
@@ -2353,7 +2361,7 @@ window.executeShare = function() {
             }
         });
         
-        let pFound = Object.values(playerStats).filter(p => p.g > 0 || p.a > 0 || p.og > 0);
+        let pFound = Object.values(playerStats);
         if(pFound.length > 0) {
             t += `\n👟 СТАТИСТИКА ИГРОКОВ:\n`; if(currentMvp) t += `⭐ MVP ТУРНИРА: ${currentMvp}\n\n`;
             let teamsWithPlayers = [...new Set(pFound.map(p => p.team))];
@@ -2373,7 +2381,7 @@ window.executeShare = function() {
         }
     }
     
-    t += `⚡ @antoni_bel`;
+    t += `⚡ antb777.github.io/FnM/`;
     if(navigator.share) { navigator.share({text: t}); } else { navigator.clipboard.writeText(t); window.showAlert("Текст скопирован в буфер обмена!"); }
     window.closeModal('shareModal');
 };
