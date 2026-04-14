@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0f172a">
-    <title>Футбол на Манеже v20.17 Demo</title>
+    <title>Футбол на Манеже v20.18 Demo</title>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -361,7 +361,7 @@
                 <button class="btn-base" style="border: 1px solid var(--danger); color: var(--danger); width: 100%;" onclick="window.logout()">ВЫЙТИ ИЗ ЧЕМПИОНАТА</button>
             </div>
             <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
-                v20.17 Demo • <a href="https://antb777.github.io/FnM/" target="_blank" style="color: inherit; text-decoration: none;">antb777.github.io/FnM/</a>
+                v20.18 Demo • <a href="https://antb777.github.io/FnM/" target="_blank" style="color: inherit; text-decoration: none;">antb777.github.io/FnM/</a>
             </div>
         </div>
     </div>
@@ -563,10 +563,8 @@
     <div id="rosterModal" class="overlay hidden" style="z-index: 10003;">
         <div class="modal-content">
             <h2 style="margin-bottom:15px;"><svg class="icon-inline"><use href="#icon-run"></use></svg> Составы команд</h2>
-            <div style="display:flex; gap:8px; margin-bottom:15px;">
-                <button class="btn-base icon-btn" style="flex:1; padding:10px 4px; background:var(--card); border:1px solid var(--accent); color:var(--accent);" onclick="window.openPlayerDB()"><svg class="icon"><use href="#icon-run"></use></svg> ВСЕ ИГРОКИ</button>
-                <button class="admin-edit-btn icon-btn" style="flex:1; padding:10px 4px; font-size:11px; font-weight:bold; background:var(--card); border:1px solid var(--warning); border-radius:10px; color:var(--warning);" onclick="window.shuffleRostersByRank()"><svg class="icon" style="width:14px;height:14px;"><use href="#icon-shuffle"></use></svg> СМЕШАТЬ РАНДОМНО</button>
-            </div>
+            <button class="btn-base icon-btn" style="width:100%; margin-bottom:8px; padding:14px; background:var(--card); border:1px solid var(--accent); color:var(--accent); font-size:14px;" onclick="window.openPlayerDB()"><svg class="icon"><use href="#icon-run"></use></svg> ВСЕ ИГРОКИ</button>
+            <button class="admin-edit-btn icon-btn" style="width:100%; margin-bottom:15px; padding:10px; font-size:11px; font-weight:bold; background:var(--card); border:1px dashed var(--warning); border-radius:10px; color:var(--warning);" onclick="window.showConfirm('Вы хотите сформировать составы команд случайно?', window.shuffleRostersByRank)"><svg class="icon" style="width:14px;height:14px;"><use href="#icon-shuffle"></use></svg> СМЕШАТЬ РАНДОМНО</button>
             <div class="scrollable" id="rosterContainer"></div>
             <button class="full-btn" style="margin-top: 10px;" onclick="window.closeModal('rosterModal')">ГОТОВО</button>
         </div>
@@ -613,7 +611,7 @@
     </div>
 
 <script>
-/* JS LOGIC v20.17 */
+/* JS LOGIC v20.18 */
 window.COLORS = { "Черные": "#000000", "Белые": "#ffffff", "Желтые": "#facc15", "Зеленые": "#22c55e", "Красные": "#ef4444", "Синие": "#3b82f6", "Разноцветные": "linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" };
 window.colorKeys = Object.keys(window.COLORS);
 window.audioCtx = null;
@@ -1887,25 +1885,24 @@ window.shuffleRostersByRank = function() {
     let rosters = window.tempConfig.rosters;
     let maxLen = 0;
     
-    // Узнаем максимальное количество игроков в любой из команд
     teams.forEach(t => { if (rosters[t] && rosters[t].length > maxLen) maxLen = rosters[t].length; });
 
-    // Проходимся по каждому месту (от 0 до maxLen)
     for (let i = 0; i < maxLen; i++) {
-        let playersAtI = [];
+        // Отбираем только те команды, у которых на i-ом месте стоит реальный выбранный игрок
+        let validTeams = teams.filter(t => rosters[t] && rosters[t][i] && rosters[t][i].trim() !== '' && !rosters[t][i].includes(' игрок '));
         
-        // Собираем всех игроков, которые стоят на i-ом месте во всех командах
-        teams.forEach(t => { if (rosters[t] && i < rosters[t].length) playersAtI.push(rosters[t][i]); });
-        
-        // Перемешиваем их алгоритмом Фишера-Йейтса
-        for (let j = playersAtI.length - 1; j > 0; j--) {
-            const k = Math.floor(Math.random() * (j + 1));
-            [playersAtI[j], playersAtI[k]] = [playersAtI[k], playersAtI[j]];
+        if (validTeams.length > 1) {
+            let playersAtI = validTeams.map(t => rosters[t][i]);
+            
+            // Перемешиваем их алгоритмом Фишера-Йейтса
+            for (let j = playersAtI.length - 1; j > 0; j--) {
+                const k = Math.floor(Math.random() * (j + 1));
+                [playersAtI[j], playersAtI[k]] = [playersAtI[k], playersAtI[j]];
+            }
+            
+            // Возвращаем перемешанных игроков обратно только на их занятые места
+            validTeams.forEach((t, idx) => { rosters[t][i] = playersAtI[idx]; });
         }
-        
-        // Возвращаем перемешанных игроков обратно на их места
-        let pIdx = 0;
-        teams.forEach(t => { if (rosters[t] && i < rosters[t].length) rosters[t][i] = playersAtI[pIdx++]; });
     }
     
     if (navigator.vibrate && window.localSettings.vibration) navigator.vibrate(30);
