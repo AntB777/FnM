@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0f172a">
-    <title>Футбол на Манеже v20.16 Demo</title>
+    <title>Футбол на Манеже v20.17 Demo</title>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -280,6 +280,7 @@
         <symbol id="icon-stop" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4 11H8c-.55 0-1-.45-1-1s.45-1 1-1h8c.55 0 1 .45 1 1s-.45 1-1 1h8c.55 0 1 .45 1 1s-.45 1-1 1h8c.55 0 1 .45 1 1s-.45 1-1 1h8c.55 0 1 .45 1 1s-.45 1-1 1h8c.55 0 1 .45 1 1s-.45 1-1 1z"/></symbol>
         <symbol id="icon-door" viewBox="0 0 24 24"><path d="M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59zM19 3H5c-1.11 0-2 .9-2 2v4h2V5h14v14H5v-4H3v4c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></symbol>
         <symbol id="icon-star" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></symbol>
+        <symbol id="icon-shuffle" viewBox="0 0 24 24"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></symbol>
     </svg>
 
     <div class="header">
@@ -356,11 +357,11 @@
                 <span style="display: flex; align-items: center; gap: 6px;"><svg class="icon"><use href="#icon-run"></use></svg> DEMO</span>
                 <span class="btn-subtext" style="color: #000;">Режим тестирования</span>
             </button>
-            <div id="logoutBtnContainer" style="display:none; margin-top: 10px;">
+           <div id="logoutBtnContainer" style="display:none; margin-top: 10px;">
                 <button class="btn-base" style="border: 1px solid var(--danger); color: var(--danger); width: 100%;" onclick="window.logout()">ВЫЙТИ ИЗ ЧЕМПИОНАТА</button>
             </div>
             <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
-                v20.16 Demo • <svg class="icon-inline" style="width: 14px;"><use href="#icon-telegram"></use></svg> @antoni_bel
+                v20.17 Demo • <a href="https://antb777.github.io/FnM/" target="_blank" style="color: inherit; text-decoration: none;">antb777.github.io/FnM/</a>
             </div>
         </div>
     </div>
@@ -561,8 +562,11 @@
     
     <div id="rosterModal" class="overlay hidden" style="z-index: 10003;">
         <div class="modal-content">
-            <h2><svg class="icon-inline"><use href="#icon-run"></use></svg> Составы команд</h2>
-            <button class="btn-base icon-btn" style="width:100%; margin-bottom:15px; background:var(--card); border:1px solid var(--accent); color:var(--accent);" onclick="window.openPlayerDB()"><svg class="icon"><use href="#icon-run"></use></svg> ВСЕ ИГРОКИ</button>
+            <h2 style="margin-bottom:15px;"><svg class="icon-inline"><use href="#icon-run"></use></svg> Составы команд</h2>
+            <div style="display:flex; gap:8px; margin-bottom:15px;">
+                <button class="btn-base icon-btn" style="flex:1; padding:10px 4px; background:var(--card); border:1px solid var(--accent); color:var(--accent);" onclick="window.openPlayerDB()"><svg class="icon"><use href="#icon-run"></use></svg> ВСЕ ИГРОКИ</button>
+                <button class="admin-edit-btn icon-btn" style="flex:1; padding:10px 4px; font-size:11px; font-weight:bold; background:var(--card); border:1px solid var(--warning); border-radius:10px; color:var(--warning);" onclick="window.shuffleRostersByRank()"><svg class="icon" style="width:14px;height:14px;"><use href="#icon-shuffle"></use></svg> СМЕШАТЬ РАНДОМНО</button>
+            </div>
             <div class="scrollable" id="rosterContainer"></div>
             <button class="full-btn" style="margin-top: 10px;" onclick="window.closeModal('rosterModal')">ГОТОВО</button>
         </div>
@@ -609,7 +613,7 @@
     </div>
 
 <script>
-/* JS LOGIC v20.16 */
+/* JS LOGIC v20.17 */
 window.COLORS = { "Черные": "#000000", "Белые": "#ffffff", "Желтые": "#facc15", "Зеленые": "#22c55e", "Красные": "#ef4444", "Синие": "#3b82f6", "Разноцветные": "linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" };
 window.colorKeys = Object.keys(window.COLORS);
 window.audioCtx = null;
@@ -1874,6 +1878,38 @@ window.saveSettings = async function() {
     window.otActive = window.config.useOT;
     const otBtn = document.getElementById('otToggle');
     if(otBtn && otBtn.parentElement) otBtn.parentElement.classList.toggle('active', window.otActive);
+};
+
+window.shuffleRostersByRank = function() {
+    if (window.isDemoMode) return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно.");
+    
+    let teams = window.tempConfig.teams;
+    let rosters = window.tempConfig.rosters;
+    let maxLen = 0;
+    
+    // Узнаем максимальное количество игроков в любой из команд
+    teams.forEach(t => { if (rosters[t] && rosters[t].length > maxLen) maxLen = rosters[t].length; });
+
+    // Проходимся по каждому месту (от 0 до maxLen)
+    for (let i = 0; i < maxLen; i++) {
+        let playersAtI = [];
+        
+        // Собираем всех игроков, которые стоят на i-ом месте во всех командах
+        teams.forEach(t => { if (rosters[t] && i < rosters[t].length) playersAtI.push(rosters[t][i]); });
+        
+        // Перемешиваем их алгоритмом Фишера-Йейтса
+        for (let j = playersAtI.length - 1; j > 0; j--) {
+            const k = Math.floor(Math.random() * (j + 1));
+            [playersAtI[j], playersAtI[k]] = [playersAtI[k], playersAtI[j]];
+        }
+        
+        // Возвращаем перемешанных игроков обратно на их места
+        let pIdx = 0;
+        teams.forEach(t => { if (rosters[t] && i < rosters[t].length) rosters[t][i] = playersAtI[pIdx++]; });
+    }
+    
+    if (navigator.vibrate && window.localSettings.vibration) navigator.vibrate(30);
+    window.renderRosterEditorUI(); 
 };
 
 window.changeRosterSize = function(t, d) {
