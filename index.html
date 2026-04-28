@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0f172a">
-    <title>Футбол на Манеже v20.21 Demo</title>
+    <title>Футбол на Манеже v20.22 Demo</title>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -361,7 +361,7 @@
                 <button class="btn-base" style="border: 1px solid var(--danger); color: var(--danger); width: 100%;" onclick="window.logout()">ВЫЙТИ ИЗ ЧЕМПИОНАТА</button>
             </div>
             <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
-                v20.21 Demo • <a href="https://antb777.github.io/FnM/" target="_blank" style="color: inherit; text-decoration: none;">antb777.github.io/FnM/</a>
+                v20.22 Demo • <a href="https://antb777.github.io/FnM/" target="_blank" style="color: inherit; text-decoration: none;">antb777.github.io/FnM/</a>
             </div>
         </div>
     </div>
@@ -610,7 +610,7 @@
     </div>
 
 <script>
-/* JS LOGIC v20.21 */
+/* JS LOGIC v20.22 */
 window.COLORS = { "Черные": "#000000", "Белые": "#ffffff", "Желтые": "#facc15", "Зеленые": "#22c55e", "Красные": "#ef4444", "Синие": "#3b82f6", "Разноцветные": "linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" };
 window.colorKeys = Object.keys(window.COLORS);
 window.audioCtx = null;
@@ -982,8 +982,30 @@ window.updateGlobalPlayersList = function() {
     if (window.config && window.config.rosters) { Object.values(window.config.rosters).forEach(arr => arr.forEach(addName)); }
     if (window.tourRosters) { Object.values(window.tourRosters).forEach(tr => { if (tr && tr.rosters) { Object.values(tr.rosters).forEach(arr => arr.forEach(addName)); } }); }
     if (window.matches) { window.matches.forEach(m => { if (m && m.events) { m.events.forEach(e => { addName(e.s); addName(e.a); }); } }); }
-    let mvps = window.getStore("tourMvps", {}); if (mvps) { Object.values(mvps).forEach(addName); }
-    window.globalPlayers = Array.from(names).sort(); window.setStore("globalPlayers", window.globalPlayers);
+    
+    // Правильно обрабатываем MVP (теперь это может быть массив)
+    let mvps = window.getStore("tourMvps", {}); 
+    if (mvps) { 
+        Object.values(mvps).forEach(v => {
+            if (Array.isArray(v)) { v.forEach(addName); } else { addName(v); }
+        }); 
+    }
+    
+    // Авто-очистка базы: разбиваем случайно склеенных игроков обратно
+    let cleanedArray = [];
+    Array.from(names).forEach(n => {
+        if (n.includes(',')) {
+            n.split(',').forEach(splitName => {
+                let sn = splitName.trim();
+                if (sn && sn !== '?' && sn !== 'Автогол' && !sn.includes('(АГ)')) cleanedArray.push(sn);
+            });
+        } else {
+            cleanedArray.push(n);
+        }
+    });
+    
+    window.globalPlayers = [...new Set(cleanedArray)].sort(); 
+    window.setStore("globalPlayers", window.globalPlayers);
 };
 
 window.replacePlayerNameGlobally = function(oldName, newName) {
