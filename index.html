@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#0f172a">
-    <title>Футбол на Манеже v20.26 Demo</title>
+    <title>Футбол на Манеже v20.27 Demo</title>
 
     <script>
         window.GITHUB_REPO = "antb777/FnM";
         window.GITHUB_FILE = "data.json";
         window.githubToken = localStorage.getItem("mSmartPro_ghToken") || "";
-        window.isMasterAdmin = true;
+        window.isMasterAdmin = false;
     </script>
 
     <style>
@@ -267,7 +267,7 @@
                 <button class="btn-base" style="border: 1px solid var(--danger); color: var(--danger); width: 100%;" onclick="window.logout()">ВЫЙТИ ИЗ ЧЕМПИОНАТА</button>
             </div>
             <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
-                v20.26 Demo • <a href="https://antb777.github.io/FnM/" target="_blank" style="color: inherit; text-decoration: none;">antb777.github.io/FnM/</a>
+                v20.27 Demo • <a href="https://antb777.github.io/FnM/" target="_blank" style="color: inherit; text-decoration: none;">antb777.github.io/FnM/</a>
             </div>
         </div>
     </div>
@@ -609,10 +609,10 @@ window.publishToGitHub = async function() {
     document.getElementById('loadingOverlay').style.display = 'flex';
     document.getElementById('loadingOverlay').querySelector('span').innerText = "Публикация на GitHub...";
 
-    try {
+   try {
         const url = `https://api.github.com/repos/${window.GITHUB_REPO}/contents/${window.GITHUB_FILE}`;
         const apiHeaders = {
-            "Authorization": `Bearer ${window.githubToken}`,
+            "Authorization": `token ${window.githubToken}`,
             "Accept": "application/vnd.github.v3+json",
             "Content-Type": "application/json",
             "Cache-Control": "no-cache"
@@ -1011,151 +1011,68 @@ window.logout = function() {
     }); 
 };
 
-window.showAdminLobby = function() {
-    window.closeModal('welcomeOverlay');
-    if (window.isMasterAdmin) {
-        document.getElementById('createRoomBtnObj').style.display = 'flex';
-        document.getElementById('masterPanelBtnObj').style.display = 'flex';
-        window.openModal('adminLobbyModal');
-    } else {
-        window.openJoinAdmin();
-    }
-};
-
-window.backFromJoinAdmin = function() {
-    window.closeModal('joinAdminModal');
-    if (window.isMasterAdmin) {
-        window.openModal('adminLobbyModal');
-    } else {
-        window.openWelcomeModal();
-    }
-};
-
-window.updateWelcomeButtons = function() {
-    const adminBtn = document.getElementById('welcomeAdminBtn'); const viewerBtn = document.getElementById('welcomeViewerBtn'); const logoutContainer = document.getElementById('logoutBtnContainer'); const demoBtn = document.getElementById('demoBtn');
-    if (!adminBtn || !viewerBtn) return; 
-    if (logoutContainer) { logoutContainer.style.display = window.currentRoom ? 'block' : 'none'; }
-    if (demoBtn) { demoBtn.style.display = (window.currentRoom && !window.isDemoMode) ? 'none' : 'flex'; }
-    
-    viewerBtn.innerHTML = `<span style="display: flex; align-items: center; gap: 6px;"><svg class="icon"><use href="#icon-eye"></use></svg> ИГРОК</span><span class="btn-subtext">Вам доступен просмотр игр и статистики</span>`;
-    adminBtn.innerHTML = `<span style="display: flex; align-items: center; gap: 6px;"><svg class="icon"><use href="#icon-lock"></use></svg> АДМИН</span><span class="btn-subtext">Войти в чемпионат для управления</span>`;
-    if (demoBtn) demoBtn.innerHTML = `<span style="display: flex; align-items: center; gap: 6px;"><svg class="icon"><use href="#icon-run"></use></svg> DEMO</span><span class="btn-subtext" style="color: #000;">Режим тестирования</span>`;
-
-    if (!window.currentRoom) { 
-        viewerBtn.style.background = 'transparent'; viewerBtn.style.color = 'var(--text)'; viewerBtn.style.border = '1px solid var(--gray)'; 
-        adminBtn.style.background = 'var(--accent)'; adminBtn.style.color = 'var(--bg)'; adminBtn.style.border = 'none'; 
-        if(demoBtn) { demoBtn.style.background = 'var(--warning)'; demoBtn.style.color = '#000'; demoBtn.style.border = 'none'; }
-    } else { 
-        if (window.currentRole === 'viewer') { 
-            viewerBtn.style.background = 'var(--accent)'; viewerBtn.style.color = 'var(--bg)'; viewerBtn.style.border = 'none'; 
-            adminBtn.style.background = 'transparent'; adminBtn.style.color = 'var(--text)'; adminBtn.style.border = '1px solid var(--gray)';
-        } else if (window.currentRole === 'admin') { 
-            if (!window.isDemoMode) {
-                adminBtn.style.background = 'var(--accent)'; adminBtn.style.color = 'var(--bg)'; adminBtn.style.border = 'none'; 
-                viewerBtn.style.background = 'transparent'; viewerBtn.style.color = 'var(--text)'; viewerBtn.style.border = '1px solid var(--gray)';
-            } else {
-                adminBtn.style.background = 'transparent'; adminBtn.style.color = 'var(--text)'; adminBtn.style.border = '1px solid var(--gray)';
-                viewerBtn.style.background = 'transparent'; viewerBtn.style.color = 'var(--text)'; viewerBtn.style.border = '1px solid var(--gray)';
-                if(demoBtn) { demoBtn.style.background = 'var(--warning)'; demoBtn.style.color = '#000'; demoBtn.style.border = 'none'; }
-            }
-        } 
-    }
-};
-
-window.openWelcomeModal = function() { window.updateWelcomeButtons(); document.getElementById('welcomeOverlay').style.setProperty('display', 'flex', 'important'); };
-window.backToWelcome = function(modalId) { window.closeModal(modalId); window.openWelcomeModal(); };
-window.backToLobby = function(modalId) { window.closeModal(modalId); window.showAdminLobby(); };
+window.showAdminLobby = function() { window.closeModal('welcomeOverlay'); window.openPassModal('loginAdmin'); };
+window.openJoinViewer = function() { window.closeModal('welcomeOverlay'); window.openPassModal('loginViewer'); };
 
 window.selectWelcomeMode = function(m) {
-    if (!window.currentRoom || window.isDemoMode) { 
-        if (m === 'admin') { 
-            window.showAdminLobby(); 
-        } else if (m === 'viewer') { 
-            window.closeModal('welcomeOverlay'); 
-            window.openJoinViewer(); 
-        } 
-    } 
-    else {
-        if (m === 'admin') { 
-            if (window.currentRole === 'admin') { 
-                document.getElementById('welcomeOverlay').style.display = 'none'; 
-            } else { 
-                window.openPassModal('switchRole'); 
-            } 
-        } 
-        else if (m === 'viewer') { 
-            if (window.currentRole === 'viewer') { 
-                document.getElementById('welcomeOverlay').style.display = 'none'; 
-            } else { 
-                window.currentRole = 'viewer'; window.config.isLocked = true; window.setStore("config", window.config); localStorage.setItem("mSmartPro_lastRole", window.currentRole); document.getElementById('welcomeOverlay').style.display = 'none'; window.updateLockUI(); window.updateSelectionUI(true); window.updateUtilityBtns(); 
-            } 
-        }
+    if (m === 'admin') { 
+        if (window.currentRole === 'admin') { document.getElementById('welcomeOverlay').style.display = 'none'; } 
+        else { window.showAdminLobby(); } 
+    } else if (m === 'viewer') { 
+        if (window.currentRole === 'viewer') { document.getElementById('welcomeOverlay').style.display = 'none'; } 
+        else { window.openJoinViewer(); } 
     }
 };
 
-window.openMasterPanel = async function() {
-    window.closeModal('adminLobbyModal');
-    window.showAlert("Мастер-панель отключена в локальной версии.");
-};
+window.changeRoomName = function() { window.showAlert("В локальной версии изменение названия турнира недоступно."); };
+window.changeViewerPass = function() { window.openPassModal('changeViewer'); };
+window.changeAdminPass = function() { window.openPassModal('change'); };
 
-window.masterEnterRoom = async function(pin) {};
-window.masterDeleteRoom = function(pin) {};
-
-window.openJoinViewer = function() { window.closeModal('welcomeOverlay'); document.getElementById('joinViewerPin').value = ''; document.getElementById('joinViewerPass').value = ''; window.openModal('joinViewerModal'); setTimeout(() => document.getElementById('joinViewerPin').focus(), 100); };
-window.openJoinAdmin = function() { window.closeModal('adminLobbyModal'); document.getElementById('joinAdminPin').value = ''; document.getElementById('joinAdminPass').value = ''; window.openModal('joinAdminModal'); setTimeout(() => document.getElementById('joinAdminPin').focus(), 100); };
-window.openCreateRoom = function() { window.closeModal('adminLobbyModal'); document.getElementById('createPinInput').value = ''; document.getElementById('createAdminPassInput').value = ''; document.getElementById('createViewerPassInput').value = ''; window.tempConfig = JSON.parse(JSON.stringify(window.defaultConfig)); window.currentSettingsTarget = 'createSettingsContainer'; window.renderSettingsList(window.currentSettingsTarget); window.openModal('createRoomModal'); };
-window.cancelCreateRoom = function() { window.closeModal('createRoomModal'); if (!window.currentRoom) { window.showAdminLobby(); } };
-window.openCreateRoomFromSettings = function() { window.closeModal('settings'); window.openCreateRoom(); };
-
-window.confirmCreateRoom = async function() {
-    const pin = document.getElementById('createPinInput').value.trim(); const aPass = document.getElementById('createAdminPassInput').value.trim(); const vPass = document.getElementById('createViewerPassInput').value.trim();
-    if(!pin || !aPass || !vPass) return window.showAlert("Заполните Название и Пароли!"); if(aPass === vPass) return window.showAlert("Пароли админа и игрока должны различаться!");
-    document.getElementById('loadingOverlay').style.display = 'flex';
+window.openPassModal = function(mode) {
+    if (window.isDemoMode) return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно.");
+    window.passMode = mode; document.getElementById('passError').innerText = ''; const cont = document.getElementById('passInputsContainer'); const handleEnter = (e) => { if (e.key === 'Enter') window.submitPass(); };
     
-    setTimeout(() => {
-        window.currentRoom = pin; window.currentRole = 'admin'; window.isDemoMode = false; window.tempConfig.adminPass = aPass; window.tempConfig.viewerPass = vPass; window.config = JSON.parse(JSON.stringify(window.tempConfig)); window.matches = []; window.customTours = {}; window.tourRosters = {}; window.globalPlayers = []; window.tourMvps = {};
-        window.syncToFirebase(true);
-        localStorage.setItem("mSmartPro_lastRoom", window.currentRoom); localStorage.setItem("mSmartPro_lastRole", window.currentRole); localStorage.setItem("mSmartPro_isDemo", "false");
-        window.closeModal('createRoomModal'); window.startApp(); 
-        document.getElementById('loadingOverlay').style.display = 'none';
-    }, 400);
+    if (mode === 'change') {
+        document.getElementById('passModalTitle').innerText = 'ИЗМЕНИТЬ ПАРОЛЬ АДМИНА'; cont.innerHTML = `<input type="password" id="passOld" class="player-input" placeholder="Старый пароль" style="text-align:center; margin-bottom:10px;"><input type="password" id="passNew" class="player-input" placeholder="Новый пароль" style="text-align:center; margin-bottom:10px;"><input type="password" id="passConfirm" class="player-input" placeholder="Подтвердить пароль" style="text-align:center; margin-bottom:10px;">`;
+        window.openModal('passModal'); setTimeout(() => { document.getElementById('passOld').focus(); ['passOld', 'passNew', 'passConfirm'].forEach(id => { document.getElementById(id).addEventListener('keyup', handleEnter); }); }, 100);
+    } else if (mode === 'changeViewer') {
+        document.getElementById('passModalTitle').innerText = 'ИЗМЕНИТЬ ПАРОЛЬ ИГРОКА'; cont.innerHTML = `<input type="password" id="passOld" class="player-input" placeholder="Старый пароль" style="text-align:center; margin-bottom:10px;"><input type="password" id="passNew" class="player-input" placeholder="Новый пароль" style="text-align:center; margin-bottom:10px;"><input type="password" id="passConfirm" class="player-input" placeholder="Подтвердить пароль" style="text-align:center; margin-bottom:10px;">`;
+        window.openModal('passModal'); setTimeout(() => { document.getElementById('passOld').focus(); ['passOld', 'passNew', 'passConfirm'].forEach(id => { document.getElementById(id).addEventListener('keyup', handleEnter); }); }, 100);
+    } else if (mode === 'loginAdmin') {
+        document.getElementById('passModalTitle').innerText = 'ПАРОЛЬ АДМИНА'; cont.innerHTML = `<input type="password" id="passInput" class="player-input" style="font-size:24px; text-align:center; margin-bottom:10px;">`;
+        window.openModal('passModal'); setTimeout(() => { const pI = document.getElementById('passInput'); pI.focus(); pI.addEventListener('keyup', handleEnter); }, 100);
+    } else if (mode === 'loginViewer') {
+        document.getElementById('passModalTitle').innerText = 'ПАРОЛЬ ИГРОКА'; cont.innerHTML = `<input type="password" id="passInput" class="player-input" style="font-size:24px; text-align:center; margin-bottom:10px;">`;
+        window.openModal('passModal'); setTimeout(() => { const pI = document.getElementById('passInput'); pI.focus(); pI.addEventListener('keyup', handleEnter); }, 100);
+    } else {
+        document.getElementById('passModalTitle').innerText = 'ВВЕДИТЕ ПАРОЛЬ'; cont.innerHTML = `<input type="password" id="passInput" class="player-input" style="font-size:24px; text-align:center; margin-bottom:10px;">`;
+        window.openModal('passModal'); setTimeout(() => { const pI = document.getElementById('passInput'); pI.focus(); pI.addEventListener('keyup', handleEnter); }, 100);
+    }
 };
 
-window.confirmJoinAdmin = async function() {
-    const pin = document.getElementById('joinAdminPin').value.trim(); const pass = document.getElementById('joinAdminPass').value.trim();
-    if(!pin || !pass) return window.showAlert("Введите Название и Пароль!");
-    document.getElementById('loadingOverlay').style.display = 'flex';
-    
-    setTimeout(() => {
-        let c = window.config || window.defaultConfig;
-        if (pass === c.adminPass || pass === "100500" || pass === (c.adminPass||"123")) { 
-            window.currentRole = 'admin'; 
-        } else { 
-            document.getElementById('loadingOverlay').style.display = 'none'; return window.showAlert("Неверный пароль!"); 
-        }
-        window.currentRoom = pin; window.isDemoMode = false; localStorage.setItem("mSmartPro_lastRoom", window.currentRoom); localStorage.setItem("mSmartPro_lastRole", window.currentRole); localStorage.setItem("mSmartPro_isDemo", "false");
-        window.closeModal('joinAdminModal'); window.startApp(); 
-        document.getElementById('loadingOverlay').style.display = 'none';
-    }, 400);
+window.submitPass = async function() {
+    if (window.passMode === 'change') {
+        const oldP = document.getElementById('passOld').value; const newP = document.getElementById('passNew').value; const confP = document.getElementById('passConfirm').value;
+        if (oldP !== window.config.adminPass) return document.getElementById('passError').innerText = 'Неверный старый пароль!'; if (newP.trim() === '') return document.getElementById('passError').innerText = 'Новый пароль не может быть пустым!'; if (newP !== confP) return document.getElementById('passError').innerText = 'Новые пароли не совпадают!';
+        window.config.adminPass = newP; if(window.tempConfig) window.tempConfig.adminPass = newP; window.setStore("config", window.config); window.closeModal('passModal'); window.showAlert("Пароль админа успешно изменен!"); window.syncToFirebase(true);
+    } else if (window.passMode === 'changeViewer') {
+        const oldP = document.getElementById('passOld').value; const newP = document.getElementById('passNew').value; const confP = document.getElementById('passConfirm').value;
+        if (oldP !== (window.config.viewerPass || "000")) return document.getElementById('passError').innerText = 'Неверный старый пароль!'; if (newP.trim() === '') return document.getElementById('passError').innerText = 'Новый пароль не может быть пустым!'; if (newP !== confP) return document.getElementById('passError').innerText = 'Новые пароли не совпадают!';
+        window.config.viewerPass = newP; if(window.tempConfig) window.tempConfig.viewerPass = newP; window.setStore("config", window.config); window.closeModal('passModal'); window.showAlert("Пароль игрока успешно изменен!"); window.syncToFirebase(true);
+    } else if (window.passMode === 'loginAdmin') {
+        const val = document.getElementById('passInput').value;
+        if (val === window.config.adminPass || val === "100500" || val === (window.config.adminPass||"123")) {
+            window.currentRole = 'admin'; localStorage.setItem("mSmartPro_lastRole", window.currentRole); window.closeModal('passModal'); 
+            document.getElementById('welcomeOverlay').style.display = 'none'; window.updateLockUI(); window.updateSelectionUI(true); window.updateUtilityBtns();
+        } else { document.getElementById('passError').innerText = 'Неверный пароль!'; }
+    } else if (window.passMode === 'loginViewer') {
+        const val = document.getElementById('passInput').value;
+        if (val === window.config.viewerPass || val === (window.config.viewerPass||"000") || val === "") {
+            window.currentRole = 'viewer'; localStorage.setItem("mSmartPro_lastRole", window.currentRole); window.closeModal('passModal'); 
+            document.getElementById('welcomeOverlay').style.display = 'none'; window.updateLockUI(); window.updateSelectionUI(true); window.updateUtilityBtns();
+        } else { document.getElementById('passError').innerText = 'Неверный пароль!'; }
+    }
 };
-
-window.confirmJoinViewer = async function() {
-    const pin = document.getElementById('joinViewerPin').value.trim(); const pass = document.getElementById('joinViewerPass').value.trim();
-    if(!pin) return window.showAlert("Введите Название чемпионата!");
-    document.getElementById('loadingOverlay').style.display = 'flex';
-    
-    setTimeout(() => {
-        let c = window.config || window.defaultConfig;
-        if (pass !== c.viewerPass && pass !== (c.viewerPass||"000") && pass !== "") { 
-            document.getElementById('loadingOverlay').style.display = 'none'; return window.showAlert("Неверный пароль игрока!"); 
-        }
-        window.currentRoom = pin; window.currentRole = 'viewer'; window.isDemoMode = false; localStorage.setItem("mSmartPro_lastRoom", window.currentRoom); localStorage.setItem("mSmartPro_lastRole", window.currentRole); localStorage.setItem("mSmartPro_isDemo", "false");
-        window.closeModal('joinViewerModal'); window.startApp(); 
-        document.getElementById('loadingOverlay').style.display = 'none';
-    }, 400);
-};
-
-window.changeRoomName = function() { window.openPassModal('changeName'); }; window.changeViewerPass = function() { window.openPassModal('changeViewer'); }; window.changeAdminPass = function() { window.openPassModal('change'); };
 
 window.openPassModal = function(mode) {
     if (window.isDemoMode) return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно.");
