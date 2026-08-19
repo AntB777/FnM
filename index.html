@@ -418,6 +418,7 @@
         </div>
     </div>
 
+    <!-- Модальное окно победителя -->
     <div id="winnerModal" class="overlay hidden">
         <div class="modal-content">
             <div id="winMatchNum" style="font-size:11px; opacity:0.8; font-weight:800; color:var(--gray);"></div>
@@ -934,7 +935,7 @@ window.renderPlayerDBTable = function() {
             • <b>Г / П / О</b>: Голы / Передачи / Очки (Г+П). Дают прямой вклад в атаку.<br>
             • <b>DEF (±)</b>: Разница забитых и пропущенных мячей команды, пока вы на поле. Вытягивает рейтинг защитникам.<br>
             • <b>ПОБЕДЫ</b>: Винрейт (% побед) и статистика (В-Н-П).<br>
-            • <b>🏆 ТИТУЛЫ / ⭐ MVP</b>: +1.0 за золото, +0.5 за серебро дня, +1.5 за MVP. Штраф -1.0 за автогол.<br>
+            • <b>🏆 ТИТУЛЫ / ⭐ MVP</b>: Дополнительные бонусы за 1-е места по итогам дня и награды лучшего игрока.<br>
             • <b>* Калибровка</b>: Первые 5 игровых дней демпфер плавно выводит рейтинг на ваш уровень (макс 69).
           </div>`;
     c.innerHTML = h;
@@ -965,7 +966,7 @@ window.openPlayerCard = function(playerName) {
                 <div>${p.def > 0 ? '+'+p.def : p.def} <span style="font-weight:normal; font-size:11px; opacity:0.7">DEF</span></div>
                 <div>${p.matches} <span style="font-weight:normal; font-size:11px; opacity:0.7">МАТЧЕЙ</span></div>
                 <div>${p.mvp} <span style="font-weight:normal; font-size:11px; opacity:0.7">MVP</span></div>
-                <div>${p.titles} <span style="font-weight:normal; font-size:11px; opacity:0.7">ТИТУЛОВ</span></div>
+                <div>${p.titles} <span style="font-weight:normal; font-size:11px; opacity:0.7">ТИУТЛОВ</span></div>
             </div>
         </div>
         ${p.isCalibrating ? `<div style="font-size:10px; color:#ef4444; padding: 10px; background:#fff; font-weight:bold; margin-top: -2px; border-radius: 0 0 13px 13px;">* ПРОХОДИТ КАЛИБРОВКУ (СЫГРАНО ${p.days}/5 ДНЕЙ)</div>` : ''}
@@ -2071,4 +2072,25 @@ window.openMatchEditor = function(id, targetDate = null) {
 
 window.removeEventFromEdit = function(idx) { window.syncMatchEditorState(); if(window.tempEditMatch && window.tempEditMatch.events) { window.tempEditMatch.events.splice(idx, 1); window.openMatchEditor(window.editingMatchId); } };
 window.addEventToEdit = function() { window.syncMatchEditorState(); if(window.tempEditMatch) { if(!window.tempEditMatch.events) window.tempEditMatch.events = []; window.tempEditMatch.events.push({side: 1, s: '', a: ''}); window.openMatchEditor(window.editingMatchId); } };
-window.openAddPastMatch = function(targetDate) { window.tempEditMatch = null; window.openMatchEditor('NEW', targetDate);Такие вопросы и задачи не для меня. Я всего лишь языковая модель.
+window.openAddPastMatch = function(targetDate) { window.tempEditMatch = null; window.openMatchEditor('NEW', targetDate); };
+
+window.saveAdminEdit = function() {
+    window.syncMatchEditorState(); const tm = window.tempEditMatch; if(!tm) return;
+    if (tm.t1 === tm.t2) { return window.showAlert("Команды не могут быть одинаковыми!"); }
+    if(window.editingMatchId === 'NEW') { tm.id = Date.now(); window.matches.unshift(tm); window.snapshotTourRoster(tm.date); } else { const idx = window.matches.findIndex(x => x.id === window.editingMatchId); if(idx !== -1) { window.matches[idx] = JSON.parse(JSON.stringify(tm)); } }
+    window.tempEditMatch = null; window.setStore("matches", window.matches); window.updateGlobalPlayersList(); window.syncToFirebase(true); window.closeModal('adminEditorModal'); window.switchTab('stats');
+};
+
+window.deleteAdminMatch = function() { window.showConfirm("Точно удалить этот матч?", () => { window.matches = window.matches.filter(x => x.id !== window.editingMatchId); window.setStore("matches", window.matches); window.syncToFirebase(true); window.closeModal('adminEditorModal'); window.switchTab('stats'); }); };
+
+setInterval(() => { 
+    const activeD = typeof window.getActiveDate === 'function' ? window.getActiveDate() : new Date().toLocaleDateString('ru-RU');
+    const todayCount = window.matches.filter(m => m.date === activeD).length + 1;
+    const meta = document.getElementById("gameMeta");
+    if(meta) meta.innerHTML = `Матч #${todayCount} • ${activeD.split(' (')[0]} • ${new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'})}`; 
+}, 1000);
+
+window.initApp();
+</script>
+</body>
+</html>
