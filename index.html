@@ -290,7 +290,7 @@
         </button>
         <h1 id="appTitle">Футбол на Манеже</h1>
         <div style="display:flex; gap:6px; z-index:10;">
-            <button id="publishHeaderBtn" class="head-icon border-blue" style="background: var(--success); color: #fff; border:none; display:none;" onclick="window.publishToGitHub()" title="Опубликовать в GitHub">
+            <button id="publishHeaderBtn" class="head-icon border-blue" style="background: transparent; display:none;" onclick="window.publishToGitHub()" title="Опубликовать в GitHub">
                 <svg class="icon"><use href="#icon-cloud-upload"></use></svg>
             </button>
             <button id="settingsBtn" class="head-icon border-blue" style="background: transparent;" onclick="window.openSettings()">
@@ -367,7 +367,7 @@
                 <button class="btn-base" style="border: 1px solid var(--danger); color: var(--danger); width: 100%;" onclick="window.logout()">ВЫЙТИ ИЗ ЧЕМПИОНАТА</button>
             </div>
             <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
-                v20.24 Demo • <a href="https://antb777.github.io/FnM/" target="_blank" style="color: inherit; text-decoration: none;">antb777.github.io/FnM/</a>
+                v20.25 Demo • <a href="https://antb777.github.io/FnM/" target="_blank" style="color: inherit; text-decoration: none;">antb777.github.io/FnM/</a>
             </div>
         </div>
     </div>
@@ -616,7 +616,7 @@
     </div>
 
 <script>
-/* JS LOGIC v20.24 (GitHub JSON Storage) */
+/* JS LOGIC v20.25 (GitHub JSON Storage) */
 window.COLORS = { "Черные": "#000000", "Белые": "#ffffff", "Желтые": "#facc15", "Зеленые": "#22c55e", "Красные": "#ef4444", "Синие": "#3b82f6", "Разноцветные": "linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" };
 window.colorKeys = Object.keys(window.COLORS);
 window.audioCtx = null;
@@ -696,7 +696,8 @@ window.publishToGitHub = async function() {
     
     if (!window.githubToken) {
         return window.showPrompt("Введите ваш GitHub Token (ghp_...):", "", (token) => {
-            let t = token.trim();
+            // Жестко вычищаем любые пробелы и спецсимволы
+            let t = token.replace(/\s+/g, '').trim();
             if (t) {
                 window.githubToken = t;
                 localStorage.setItem("mSmartPro_ghToken", t);
@@ -710,18 +711,21 @@ window.publishToGitHub = async function() {
 
     try {
         const url = `https://api.github.com/repos/${window.GITHUB_REPO}/contents/${window.GITHUB_FILE}`;
+        const apiHeaders = {
+            "Authorization": `Bearer ${window.githubToken}`,
+            "Accept": "application/vnd.github.v3+json",
+            "Content-Type": "application/json"
+        };
         
         // 1. Получаем SHA существующего файла
         let sha = "";
         try {
-            const getRes = await fetch(url + `?t=${Date.now()}`, {
-                headers: { "Authorization": `token ${window.githubToken}` }
-            });
+            const getRes = await fetch(url + `?t=${Date.now()}`, { headers: apiHeaders });
             if (getRes.ok) {
                 const fileData = await getRes.json();
                 sha = fileData.sha;
             }
-        } catch(e) {}
+        } catch(e) { console.warn("GET file error:", e); }
 
         // 2. Формируем данные
         const payload = {
@@ -744,10 +748,7 @@ window.publishToGitHub = async function() {
 
         const putRes = await fetch(url, {
             method: "PUT",
-            headers: {
-                "Authorization": `token ${window.githubToken}`,
-                "Content-Type": "application/json"
-            },
+            headers: apiHeaders,
             body: JSON.stringify(putBody)
         });
 
@@ -759,7 +760,12 @@ window.publishToGitHub = async function() {
         window.showAlert("✅ Результаты успешно опубликованы на GitHub!");
     } catch(err) {
         console.error("Publish Error:", err);
-        if (err.message.includes("Bad credentials")) {
+        // Обработка NetworkError (CORS, сломанный токен или блок провайдера)
+        if (err.message.includes("NetworkError") || err.message.includes("fetch")) {
+            localStorage.removeItem("mSmartPro_ghToken");
+            window.githubToken = "";
+            window.showAlert("Сетевая ошибка (NetworkError). Возможные причины:\n1. Токен был скопирован с пробелом (токен сброшен, введите заново).\n2. Блокировщик рекламы режет запрос.\n3. Ошибка связи с GitHub API.");
+        } else if (err.message.includes("Bad credentials")) {
             localStorage.removeItem("mSmartPro_ghToken");
             window.githubToken = "";
             window.showAlert("Неверный токен GitHub. Попробуйте ввести его снова.");
