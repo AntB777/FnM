@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#0f172a">
-    <title>Футбол на Манеже v20.30 Demo</title>
+    <title>Футбол на Манеже v20.31 Demo</title>
 
     <script>
         window.GITHUB_REPO = "antb777/FnM";
@@ -263,11 +263,8 @@
                 <span style="display: flex; align-items: center; gap: 6px;"><svg class="icon"><use href="#icon-run"></use></svg> DEMO</span>
                 <span class="btn-subtext" style="color: #000;">Режим тестирования</span>
             </button>
-          <div id="logoutBtnContainer" style="display:none; margin-top: 10px;">
-                <button class="btn-base" style="border: 1px solid var(--danger); color: var(--danger); width: 100%;" onclick="window.logout()">ВЫЙТИ ИЗ РЕЖИМА АДМИНА</button>
-            </div>
             <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
-                v20.30 Demo • <a href="https://antb777.github.io/FnM/" target="_blank" style="color: inherit; text-decoration: none;">antb777.github.io/FnM/</a>
+                v20.31 Demo • <a href="https://antb777.github.io/FnM/" target="_blank" style="color: inherit; text-decoration: none;">antb777.github.io/FnM/</a>
             </div>
         </div>
     </div>
@@ -457,7 +454,7 @@
     </div>
 
 <script>
-/* JS LOGIC v20.30 (GitHub JSON Storage) */
+/* JS LOGIC v20.31 (GitHub JSON Storage) */
 window.COLORS = { "Черные": "#000000", "Белые": "#ffffff", "Желтые": "#facc15", "Зеленые": "#22c55e", "Красные": "#ef4444", "Синие": "#3b82f6", "Разноцветные": "linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" };
 window.colorKeys = Object.keys(window.COLORS);
 window.audioCtx = null;
@@ -528,7 +525,7 @@ window.publishToGitHub = async function() {
     document.getElementById('loadingOverlay').querySelector('span').innerText = "Публикация на GitHub...";
    try {
         const url = `https://api.github.com/repos/${window.GITHUB_REPO}/contents/${window.GITHUB_FILE}`;
-        const apiHeaders = { "Authorization": `token ${window.githubToken}`, "Accept": "application/vnd.github.v3+json", "Content-Type": "application/json", "Cache-Control": "no-cache" };
+        const apiHeaders = { "Authorization": `Bearer ${window.githubToken}`, "Accept": "application/vnd.github.v3+json", "Content-Type": "application/json" };
         let sha = "";
         try { const getRes = await fetch(url + '?t=' + Date.now(), { headers: apiHeaders }); if (getRes.ok) { const fileData = await getRes.json(); sha = fileData.sha; } } catch(e) { console.warn("GET file error:", e); }
         const payload = { config: window.config, matches: window.matches, customTours: window.customTours, tourRosters: window.tourRosters, globalPlayers: window.globalPlayers, tourMvps: window.tourMvps };
@@ -766,6 +763,7 @@ window.renameGlobalPlayer = function(oldName) {
 };
 
 window.deleteGlobalPlayer = function(name) { 
+    if (window.isDemoMode) return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно. Обратитесь к разработчику.");
     window.showConfirm(`Вы действительно хотите удалить игрока "${name}"?`, () => { 
         window.colorKeys.forEach(t => { if(window.config.rosters[t]) { window.config.rosters[t] = window.config.rosters[t].map(p => String(p).trim() === name ? "" : p); } });
         Object.keys(window.tourRosters).forEach(date => { Object.keys(window.tourRosters[date].rosters).forEach(t => { window.tourRosters[date].rosters[t] = window.tourRosters[date].rosters[t].map(p => String(p).trim() === name ? "" : p); }); });
@@ -781,23 +779,26 @@ window.addGlobalPlayer = function() {
 };
 
 window.updateWelcomeButtons = function() {
-    const adminBtn = document.getElementById('welcomeAdminBtn'); const viewerBtn = document.getElementById('welcomeViewerBtn'); const logoutContainer = document.getElementById('logoutBtnContainer'); const demoBtn = document.getElementById('demoBtn');
+    const adminBtn = document.getElementById('welcomeAdminBtn'); const viewerBtn = document.getElementById('welcomeViewerBtn'); const demoBtn = document.getElementById('demoBtn');
     if (!adminBtn || !viewerBtn) return; 
-    
-    if (logoutContainer) { 
-        logoutContainer.style.display = (window.currentRole === 'admin' && !window.isDemoMode) ? 'block' : 'none'; 
-        const btn = logoutContainer.querySelector('button');
-        if(btn) btn.innerText = "ВЫЙТИ ИЗ РЕЖИМА АДМИНА";
-    }
+
     if (demoBtn) { demoBtn.style.display = 'flex'; }
     
     viewerBtn.innerHTML = `<span style="display: flex; align-items: center; gap: 6px;"><svg class="icon"><use href="#icon-eye"></use></svg> ИГРОК</span><span class="btn-subtext">Вам доступен просмотр игр и статистики</span>`;
     adminBtn.innerHTML = `<span style="display: flex; align-items: center; gap: 6px;"><svg class="icon"><use href="#icon-lock"></use></svg> АДМИН</span><span class="btn-subtext">Войти для управления турниром</span>`;
     if (demoBtn) demoBtn.innerHTML = `<span style="display: flex; align-items: center; gap: 6px;"><svg class="icon"><use href="#icon-run"></use></svg> DEMO</span><span class="btn-subtext" style="color: #000;">Режим тестирования</span>`;
 
-    viewerBtn.style.background = 'var(--success)'; viewerBtn.style.color = '#fff'; viewerBtn.style.border = 'none'; 
-    adminBtn.style.background = 'var(--accent)'; adminBtn.style.color = 'var(--bg)'; adminBtn.style.border = 'none'; 
-    if(demoBtn) { demoBtn.style.background = 'var(--warning)'; demoBtn.style.color = '#000'; demoBtn.style.border = 'none'; }
+    viewerBtn.style.background = 'transparent'; viewerBtn.style.color = 'var(--text)'; viewerBtn.style.border = '1px solid var(--gray)'; 
+    adminBtn.style.background = 'transparent'; adminBtn.style.color = 'var(--text)'; adminBtn.style.border = '1px solid var(--gray)'; 
+    if(demoBtn) { demoBtn.style.background = 'transparent'; demoBtn.style.color = 'var(--text)'; demoBtn.style.border = '1px solid var(--gray)'; }
+
+    if (window.isDemoMode) {
+        if(demoBtn) { demoBtn.style.background = 'var(--warning)'; demoBtn.style.color = '#000'; demoBtn.style.border = 'none'; }
+    } else if (window.currentRole === 'admin') {
+        adminBtn.style.background = 'var(--accent)'; adminBtn.style.color = 'var(--bg)'; adminBtn.style.border = 'none'; 
+    } else {
+        viewerBtn.style.background = 'var(--success)'; viewerBtn.style.color = '#fff'; viewerBtn.style.border = 'none'; 
+    }
 };
 
 window.showAdminLobby = function() { window.closeModal('welcomeOverlay'); window.openPassModal('loginAdmin'); };
@@ -807,11 +808,29 @@ window.backToWelcome = function(modalId) { window.closeModal(modalId); window.op
 
 window.selectWelcomeMode = function(m) {
     if (m === 'admin') { 
-        window.showAdminLobby(); 
+        if (window.currentRole === 'admin' && !window.isDemoMode) { 
+            document.getElementById('welcomeOverlay').style.display = 'none'; 
+        } else { 
+            let savedPass = localStorage.getItem('mSmartPro_adminToken');
+            let actualPass = window.config.adminPass || "123";
+            if (savedPass === actualPass || savedPass === "100500") {
+                window.currentRole = 'admin'; window.isDemoMode = false;
+                localStorage.setItem("mSmartPro_lastRole", "admin"); localStorage.setItem("mSmartPro_isDemo", "false");
+                document.getElementById('welcomeOverlay').style.display = 'none'; 
+                window.updateLockUI(); window.updateSelectionUI(true); window.updateUtilityBtns(); window.startApp();
+            } else {
+                window.showAdminLobby(); 
+            }
+        } 
     } else if (m === 'viewer') { 
-        window.isDemoMode = false; window.currentRole = 'viewer';
-        localStorage.setItem("mSmartPro_lastRole", "viewer"); localStorage.setItem("mSmartPro_isDemo", "false");
-        window.closeModal('welcomeOverlay'); window.updateLockUI(); window.updateSelectionUI(true); window.updateUtilityBtns(); window.startApp();
+        if (window.currentRole === 'viewer' && !window.isDemoMode) { 
+            document.getElementById('welcomeOverlay').style.display = 'none'; 
+        } else { 
+            window.isDemoMode = false; window.currentRole = 'viewer';
+            localStorage.setItem("mSmartPro_lastRole", "viewer"); localStorage.setItem("mSmartPro_isDemo", "false");
+            document.getElementById('welcomeOverlay').style.display = 'none'; 
+            window.updateLockUI(); window.updateSelectionUI(true); window.updateUtilityBtns(); window.startApp();
+        } 
     }
 };
 
@@ -851,6 +870,7 @@ window.submitPass = async function() {
     } else if (window.passMode === 'loginAdmin') {
         const val = document.getElementById('passInput').value;
         if (val === window.config.adminPass || val === "100500" || val === (window.config.adminPass||"123")) {
+            localStorage.setItem('mSmartPro_adminToken', val); 
             window.currentRole = 'admin'; window.isDemoMode = false; localStorage.setItem("mSmartPro_lastRole", window.currentRole); localStorage.setItem("mSmartPro_isDemo", "false"); window.closeModal('passModal'); 
             document.getElementById('welcomeOverlay').style.display = 'none'; window.updateLockUI(); window.updateSelectionUI(true); window.updateUtilityBtns(); window.startApp();
         } else { document.getElementById('passError').innerText = 'Неверный пароль!'; }
@@ -1244,8 +1264,6 @@ window.renderSettingsList = function(targetId = window.currentSettingsTarget) {
         h += `<div class="settings-divider"></div>`;
         h += `<div class="settings-checkbox-row" onclick="window.changeViewerPass()"><div class="setting-label">ПАРОЛЬ ИГРОКА</div><div style="color:var(--gray); font-size:12px; font-weight:900; text-transform:uppercase;">ИЗМЕНИТЬ</div></div>`;
         h += `<div class="settings-checkbox-row" onclick="window.changeAdminPass()"><div class="setting-label">ПАРОЛЬ АДМИНА</div><div style="color:var(--gray); font-size:12px; font-weight:900; text-transform:uppercase;">ИЗМЕНИТЬ</div></div>`; 
-    } else if (window.isDemoMode && targetId !== 'createSettingsContainer') {
-        h += `<div class="settings-divider"></div><div class="settings-checkbox-row" onclick="window.showAlert('Приложение тестируется. Изменение этих настроек в Demo режиме не доступно. Обратитесь к разработчику.');"><div class="setting-label">ПАРОЛЬ ИГРОКА</div><div style="color:var(--gray); font-size:12px; font-weight:900; text-transform:uppercase;">ИЗМЕНИТЬ</div></div><div class="settings-checkbox-row" onclick="window.showAlert('Приложение тестируется. Изменение этих настроек в Demo режиме не доступно. Обратитесь к разработчику.');"><div class="setting-label">ПАРОЛЬ АДМИНА</div><div style="color:var(--gray); font-size:12px; font-weight:900; text-transform:uppercase;">ИЗМЕНИТЬ</div></div>`;
     }
     c.innerHTML = h;
 };
