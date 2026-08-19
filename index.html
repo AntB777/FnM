@@ -281,6 +281,7 @@
         <symbol id="icon-door" viewBox="0 0 24 24"><path d="M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59zM19 3H5c-1.11 0-2 .9-2 2v4h2V5h14v14H5v-4H3v4c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></symbol>
         <symbol id="icon-star" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></symbol>
         <symbol id="icon-shuffle" viewBox="0 0 24 24"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></symbol>
+        <symbol id="icon-cloud-upload" viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></symbol>
     </svg>
 
     <div class="header">
@@ -288,9 +289,14 @@
             <svg class="icon" id="lockEmoji"><use href="#icon-eye"></use></svg><span id="lockText">ИГРОК</span>
         </button>
         <h1 id="appTitle">Футбол на Манеже</h1>
-        <button id="settingsBtn" class="head-icon border-blue" style="background: transparent;" onclick="window.openSettings()">
-            <svg class="icon"><use href="#icon-settings"></use></svg>
-        </button>
+        <div style="display:flex; gap:6px; z-index:10;">
+            <button id="publishHeaderBtn" class="head-icon border-blue" style="background: var(--success); color: #fff; border:none; display:none;" onclick="window.publishToGitHub()" title="Опубликовать в GitHub">
+                <svg class="icon"><use href="#icon-cloud-upload"></use></svg>
+            </button>
+            <button id="settingsBtn" class="head-icon border-blue" style="background: transparent;" onclick="window.openSettings()">
+                <svg class="icon"><use href="#icon-settings"></use></svg>
+            </button>
+        </div>
     </div>
 
     <div class="game-meta" id="gameMeta">Загрузка...</div>
@@ -357,11 +363,11 @@
                 <span style="display: flex; align-items: center; gap: 6px;"><svg class="icon"><use href="#icon-run"></use></svg> DEMO</span>
                 <span class="btn-subtext" style="color: #000;">Режим тестирования</span>
             </button>
-           <div id="logoutBtnContainer" style="display:none; margin-top: 10px;">
+          <div id="logoutBtnContainer" style="display:none; margin-top: 10px;">
                 <button class="btn-base" style="border: 1px solid var(--danger); color: var(--danger); width: 100%;" onclick="window.logout()">ВЫЙТИ ИЗ ЧЕМПИОНАТА</button>
             </div>
             <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
-                v20.22 Demo • <a href="https://antb777.github.io/FnM/" target="_blank" style="color: inherit; text-decoration: none;">antb777.github.io/FnM/</a>
+                v20.24 Demo • <a href="https://antb777.github.io/FnM/" target="_blank" style="color: inherit; text-decoration: none;">antb777.github.io/FnM/</a>
             </div>
         </div>
     </div>
@@ -610,11 +616,11 @@
     </div>
 
 <script>
-/* JS LOGIC v20.22 */
+/* JS LOGIC v20.24 (GitHub JSON Storage) */
 window.COLORS = { "Черные": "#000000", "Белые": "#ffffff", "Желтые": "#facc15", "Зеленые": "#22c55e", "Красные": "#ef4444", "Синие": "#3b82f6", "Разноцветные": "linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" };
 window.colorKeys = Object.keys(window.COLORS);
 window.audioCtx = null;
-window.currentRoom = null; window.currentRole = 'viewer';
+window.currentRoom = "MAIN"; window.currentRole = 'viewer';
 window.defaultConfig = { time: 420, goalLimit: 2, teams: ["Зеленые", "Красные", "Белые"], autoReset: true, useOT: true, goldenGoal: true, otLimit: 0, usePlayers: true, rosters: {}, adminPass: "123", viewerPass: "000", soundUrl: "https://zvukoviku.ru/sounds/1616654354_whistle_haaa.mp3", otInitializedDate: "", finishedTours: [] };
 window.config = null; window.tempConfig = null; window.matches = []; window.customTours = {}; window.tourRosters = {}; window.globalPlayers = []; window.tourMvps = {};
 window.liveWinnerModal = { active: false };
@@ -645,9 +651,6 @@ window.localSettings = { sound: true, vibration: true };
 try { const storedLocal = localStorage.getItem('mSmartPro_localSettings'); if (storedLocal) { window.localSettings = JSON.parse(storedLocal); } } catch(e){}
 window.selectionHtmlState = { leftActive: '', leftCont: '', rightActive: '', rightCont: '', rendered: false };
 window.lastRenderedSelL = undefined; window.lastRenderedSelR = undefined;
-
-window.tgUser = null;
-if (typeof window.isMasterAdmin === 'undefined') window.isMasterAdmin = false;
 window.isDemoMode = false;
 
 window.openModal = function(id) { const m = document.getElementById(id); if (m) { m.style.setProperty('display', 'flex', 'important'); m.classList.remove('hidden'); } };
@@ -655,17 +658,8 @@ window.closeModal = function(id) { const m = document.getElementById(id); if (m)
 window.getStore = function(key, def) { if (window[key] !== undefined && window[key] !== null && window[key] !== '') return window[key]; return def; };
 window.setStore = function(key, val) { window[key] = val; };
 
-// Увеличенный таймаут для мобильного интернета
-window.fetchWithTimeout = function(ref, ms = 15000) {
-    return new Promise((resolve, reject) => {
-        const timer = setTimeout(() => reject(new Error("Timeout")), ms);
-        window.getDoc(ref).then(res => { clearTimeout(timer); resolve(res); }).catch(err => { clearTimeout(timer); reject(err); });
-    });
-};
-
-window.applyDataFromFirebase = function(data) {
-    if (window.isDemoMode) return;
-    
+window.applyDataFromJSON = function(data) {
+    if (!data) return;
     window.config = data.config || JSON.parse(JSON.stringify(window.defaultConfig));
     if (!window.config.soundUrl && window.config.soundUrl !== "") { window.config.soundUrl = "https://zvukoviku.ru/sounds/1616654354_whistle_haaa.mp3"; }
     if (!window.config.finishedTours) window.config.finishedTours = [];
@@ -677,183 +671,108 @@ window.applyDataFromFirebase = function(data) {
     window.tourMvps = data.tourMvps || {};
     
     if (window.currentRole !== 'viewer') window.ensureDefaultRosters();
-
-    let newGoalAdded = false;
-    if (window.currentMatch && data.currentMatch && data.currentMatch.id === window.currentMatch.id) {
-         if (data.currentMatch.events && (!window.currentMatch.events || data.currentMatch.events.length > window.currentMatch.events.length)) {
-             newGoalAdded = true;
-         }
-    }
-
-    if (data.liveState) {
-        let state = data.liveState;
-        
-        if (state.winnerModal) {
-            window.liveWinnerModal = state.winnerModal;
-            if (state.winnerModal.active && !window.isFinishing) {
-                let wm = state.winnerModal;
-                document.getElementById('winMatchNum').innerText = "МАТЧ #" + wm.matchNumber + " • " + wm.match.date + " " + wm.match.time;
-                const namePl = document.getElementById('winTeamName');
-                const win = wm.match.s1 > wm.match.s2 ? wm.match.t1 : (wm.match.s2 > wm.match.s1 ? wm.match.t2 : "НИЧЬЯ");
-                namePl.innerText = win.toUpperCase(); 
-                namePl.style.background = win === "НИЧЬЯ" ? "var(--gray)" : window.COLORS[win]; 
-                namePl.style.color = (win === 'Белые' || win === 'Желтые') ? '#000' : '#fff';
-                document.getElementById('winScoreText').innerText = wm.match.s1 + " : " + wm.match.s2;
-                window.openModal('winnerModal');
-                
-                if (wm.timestamp) {
-                    let elapsed = (Date.now() - wm.timestamp) / 1000;
-                    if (elapsed >= 0 && elapsed <= 5) {
-                        if (window.localSettings.vibration && navigator.vibrate) navigator.vibrate([50, 50, 50, 200, 50, 50, 50]);
-                        if (window.localSettings.sound) window.playEndSound();
-                    }
-                }
-
-                window.isFinishing = true;
-                if(window.interval) { clearInterval(window.interval); window.interval = null; }
-                window.currentMatch = null; 
-            } else if (!state.winnerModal.active && window.isFinishing) {
-                window.closeModal('winnerModal');
-                window.isFinishing = false;
-                if (window.currentRole === 'viewer' || window.currentRole === 'admin') {
-                    window.confirmReset(false, true); 
-                    if(window.config.autoReset){window.selL=null; window.selR=null; window.updateSelectionUI(true);}
-                    document.getElementById('otTimerPlate').style.display='none';
-                }
-            }
-        }
-        
-        if (!state.winnerModal || !state.winnerModal.active) {
-            let selectionChanged = false;
-            if (window.selL !== state.selL || window.selR !== state.selR) selectionChanged = true;
-            
-            window.selL = state.selL; window.selR = state.selR;
-            
-            window.currentMatch = data.currentMatch || null;
-
-            if (window.currentMatch) {
-                document.getElementById('score').innerText = window.currentMatch.s1 + " : " + window.currentMatch.s2;
-            } else {
-                document.getElementById('score').innerText = "0 : 0";
-            }
-
-            if (state.isRunning) {
-                let targetTime = state.time;
-                let targetOtTime = state.otTime || 0;
-
-                if (state.syncTimestamp) {
-                    let elapsed = (Date.now() - state.syncTimestamp) / 1000;
-                    if (elapsed > 0 && elapsed < 86400) { 
-                        if (state.isOT) targetOtTime += elapsed;
-                        else targetTime = Math.max(0, targetTime - elapsed);
-                    }
-                }
-
-                if (Math.abs(window.time - targetTime) > 2) {
-                    window.time = targetTime;
-                    window.timerBaseTime = window.time;
-                    window.timerReference = Date.now();
-                }
-                if (Math.abs(window.otTime - targetOtTime) > 2) {
-                    window.otTime = targetOtTime;
-                    window.timerBaseOtTime = window.otTime;
-                    window.timerReference = Date.now();
-                }
-            } else {
-                window.time = state.time !== undefined ? state.time : window.config.time;
-                window.otTime = state.otTime || 0;
-            }
-
-            if (state.isOT && !window.isOT) {
-                window.isOT = true;
-                document.getElementById('otTimerPlate').style.display='flex';
-            } else if (!state.isOT && window.isOT) {
-                window.isOT = false;
-                document.getElementById('otTimerPlate').style.display='none';
-            }
-
-            if (state.isRunning && !window.interval) {
-                window.startLocalTimer();
-            } else if (!state.isRunning && window.interval) {
-                clearInterval(window.interval);
-                window.interval = null;
-                if (window.currentRole === 'admin') document.getElementById('startBtn').innerText = window.currentMatch ? "ПРОДОЛЖИТЬ" : "СТАРТ МАТЧА";
-            }
-            
-            if (selectionChanged) window.updateSelectionUI(true);
-            window.updateUtilityBtns();
-        }
-    }
-    
-    if (newGoalAdded && window.localSettings.vibration && navigator.vibrate) navigator.vibrate(30);
+    window.saveToLocalStorage();
 };
 
-window.syncTimeout = null;
-window.syncToFirebase = async function(force = false) {
-    if (window.isDemoMode) {
-        let payload = { 
-            config: window.config, matches: window.matches, customTours: window.customTours, 
-            tourRosters: window.tourRosters, globalPlayers: window.globalPlayers, tourMvps: window.tourMvps || {},
-            liveState: { selL: window.selL, selR: window.selR, time: window.time, otTime: window.otTime, isOT: window.isOT, isRunning: window.interval !== null, syncTimestamp: Date.now(), winnerModal: window.liveWinnerModal || { active: false } },
-            currentMatch: window.currentMatch
-        };
-        localStorage.setItem('mSmartPro_demo_data', JSON.stringify(payload));
-        return;
-    }
-    
-    if (!window.currentRoom || !window.dbUser) return;
-    
-    const doSync = async () => {
-        try {
-            const roomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', window.currentRoom);
-            let payload = { 
-                config: window.config, 
-                matches: window.matches, 
-                customTours: window.customTours, 
-                tourRosters: window.tourRosters, 
-                globalPlayers: window.globalPlayers, 
-                tourMvps: window.tourMvps || {},
-                liveState: {
-                    selL: window.selL,
-                    selR: window.selR,
-                    time: window.time,
-                    otTime: window.otTime,
-                    isOT: window.isOT,
-                    isRunning: window.interval !== null,
-                    syncTimestamp: Date.now(),
-                    winnerModal: window.liveWinnerModal || { active: false }
-                },
-                currentMatch: window.currentMatch
-            };
-            await window.setDoc(roomRef, payload);
-        } catch(e) { console.error("Sync Error:", e); }
+window.saveToLocalStorage = function() {
+    let payload = {
+        config: window.config,
+        matches: window.matches,
+        customTours: window.customTours,
+        tourRosters: window.tourRosters,
+        globalPlayers: window.globalPlayers,
+        tourMvps: window.tourMvps
     };
+    localStorage.setItem("mSmartPro_local_data", JSON.stringify(payload));
+};
 
-    if (force) {
-        if (window.syncTimeout) { clearTimeout(window.syncTimeout); window.syncTimeout = null; }
-        await doSync();
-    } else {
-        if (window.syncTimeout) clearTimeout(window.syncTimeout);
-        window.syncTimeout = setTimeout(doSync, 500);
+window.syncToFirebase = async function(force = false) {
+    window.saveToLocalStorage();
+};
+
+// Функция публикации данных в GitHub-репозиторий
+window.publishToGitHub = async function() {
+    if (window.isDemoMode) return window.showAlert("В Demo-режиме публикация недоступна.");
+    
+    if (!window.githubToken) {
+        return window.showPrompt("Введите ваш GitHub Token (ghp_...):", "", (token) => {
+            let t = token.trim();
+            if (t) {
+                window.githubToken = t;
+                localStorage.setItem("mSmartPro_ghToken", t);
+                window.publishToGitHub();
+            }
+        }, null, "АВТОРИЗАЦИЯ GITHUB");
+    }
+
+    document.getElementById('loadingOverlay').style.display = 'flex';
+    document.getElementById('loadingOverlay').querySelector('span').innerText = "Публикация на GitHub...";
+
+    try {
+        const url = `https://api.github.com/repos/${window.GITHUB_REPO}/contents/${window.GITHUB_FILE}`;
+        
+        // 1. Получаем SHA существующего файла
+        let sha = "";
+        try {
+            const getRes = await fetch(url + `?t=${Date.now()}`, {
+                headers: { "Authorization": `token ${window.githubToken}` }
+            });
+            if (getRes.ok) {
+                const fileData = await getRes.json();
+                sha = fileData.sha;
+            }
+        } catch(e) {}
+
+        // 2. Формируем данные
+        const payload = {
+            config: window.config,
+            matches: window.matches,
+            customTours: window.customTours,
+            tourRosters: window.tourRosters,
+            globalPlayers: window.globalPlayers,
+            tourMvps: window.tourMvps
+        };
+        
+        const contentBase64 = btoa(unescape(encodeURIComponent(JSON.stringify(payload, null, 2))));
+        
+        // 3. Отправляем PUT запрос
+        const putBody = {
+            message: `Update tournament data • ${new Date().toLocaleString('ru-RU')}`,
+            content: contentBase64
+        };
+        if (sha) putBody.sha = sha;
+
+        const putRes = await fetch(url, {
+            method: "PUT",
+            headers: {
+                "Authorization": `token ${window.githubToken}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(putBody)
+        });
+
+        if (!putRes.ok) {
+            const errJson = await putRes.json();
+            throw new Error(errJson.message || "Ошибка записи");
+        }
+
+        window.showAlert("✅ Результаты успешно опубликованы на GitHub!");
+    } catch(err) {
+        console.error("Publish Error:", err);
+        if (err.message.includes("Bad credentials")) {
+            localStorage.removeItem("mSmartPro_ghToken");
+            window.githubToken = "";
+            window.showAlert("Неверный токен GitHub. Попробуйте ввести его снова.");
+        } else {
+            window.showAlert("Ошибка при публикации: " + err.message);
+        }
+    } finally {
+        document.getElementById('loadingOverlay').style.display = 'none';
+        document.getElementById('loadingOverlay').querySelector('span').innerText = "Синхронизация...";
     }
 };
 
-window.roomUnsubscribe = null;
-window.listenToRoom = function() {
-    if (window.isDemoMode) return;
-    if (window.roomUnsubscribe) window.roomUnsubscribe();
-    if (!window.currentRoom || !window.dbUser) return;
-    const roomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', window.currentRoom);
-    window.roomUnsubscribe = window.onSnapshot(roomRef, (doc) => {
-        if (doc.exists()) {
-            window.applyDataFromFirebase(doc.data());
-            if (!document.getElementById('statsModal').classList.contains('hidden')) window.renderCombinedStats();
-            if (!document.getElementById('playerDBModal').classList.contains('hidden')) window.openPlayerDB();
-            window.updateTimerDisplay(); window.updateLastGoalDisplay(); window.checkReady(); window.updateMatchStatusLabel(); window.updateSelectionUI(); window.updateUtilityBtns();
-        }
-    });
-};
-
+window.listenToRoom = function() {};
 function getDefaultPlayerName(team, index) { return `${team} игрок ${index + 1}`; }
 
 window.ensureDefaultRosters = function() {
@@ -883,10 +802,8 @@ window.startApp = function() {
 window.initApp = async function() {
     document.getElementById('loadingOverlay').style.display = 'flex';
     
-    // ЖЕСТКО ждем получения токена, как это было во вчерашних рабочих версиях
-    await window.startAuth();
-
-    window.currentRoom = localStorage.getItem("mSmartPro_lastRoom"); window.currentRole = localStorage.getItem("mSmartPro_lastRole") || 'viewer';
+    window.currentRoom = "MAIN";
+    window.currentRole = localStorage.getItem("mSmartPro_lastRole") || 'viewer';
     window.isDemoMode = localStorage.getItem("mSmartPro_isDemo") === 'true';
 
     if (window.isDemoMode) {
@@ -894,37 +811,31 @@ window.initApp = async function() {
         document.getElementById('loadingOverlay').style.display = 'none';
         return;
     }
-    
-    if (window.currentRoom) {
-        try {
-            const roomRef = window.doc(window.db, 'artifacts', window.appId, 'public', 'data', 'rooms', window.currentRoom);
-            const snap = await window.fetchWithTimeout(roomRef, 15000);
-            if (snap.exists()) {
-                window.applyDataFromFirebase(snap.data());
-                document.getElementById('loadingOverlay').style.display = 'none';
-                window.listenToRoom();
-                window.startApp();
-            } else {
-                throw new Error("Room not found");
-            }
-        } catch (e) {
-            console.error("Fetch error:", e);
-            localStorage.removeItem("mSmartPro_lastRoom");
-            window.currentRoom = null;
-            window.config = JSON.parse(JSON.stringify(window.defaultConfig));
-            document.getElementById('loadingOverlay').style.display = 'none';
-            if(e.message === "Timeout" || e.message.includes("offline")) { 
-                window.showAlert("Проблемы с сетью: не удалось связаться с базой данных Firebase. Если вы с мобильного, попробуйте Wi-Fi или VPN."); 
-            }
-            window.openWelcomeModal();
-        }
-    } else {
-        window.config = JSON.parse(JSON.stringify(window.defaultConfig));
-        document.getElementById('loadingOverlay').style.display = 'none';
-        window.openWelcomeModal();
-    }
-};
 
+    // 1. Сначала пробуем загрузить локальные данные (для мгновенного старта)
+    try {
+        const local = localStorage.getItem("mSmartPro_local_data");
+        if (local) window.applyDataFromJSON(JSON.parse(local));
+    } catch(e) {}
+
+    // 2. Затем скачиваем свежий data.json из репозитория
+    try {
+        const res = await fetch(`./data.json?t=${Date.now()}`);
+        if (res.ok) {
+            const data = await res.json();
+            if (data && (data.matches || data.config)) {
+                window.applyDataFromJSON(data);
+            }
+        }
+    } catch(e) {
+        console.warn("Не удалось загрузить data.json из сети, используем локальные данные:", e);
+    }
+
+    if (!window.config) window.config = JSON.parse(JSON.stringify(window.defaultConfig));
+
+    document.getElementById('loadingOverlay').style.display = 'none';
+    window.startApp();
+};
 window.startDemo = function(fromInit = false) {
     window.isDemoMode = true;
     window.currentRoom = "DEMO";
@@ -1495,7 +1406,7 @@ window.updateMatchStatusLabel = function() {
 };
 
 window.updateLockUI = function() {
-    const e = document.getElementById("lockEmoji"), t = document.getElementById("lockText"), sBtn = document.getElementById("settingsBtn"), adminRow = document.getElementById("adminControlsRow"), startBtn = document.getElementById("startBtn"), statsBtn = document.getElementById("statsBtn"), lockBtn = document.getElementById("lockBtn");
+    const e = document.getElementById("lockEmoji"), t = document.getElementById("lockText"), sBtn = document.getElementById("settingsBtn"), adminRow = document.getElementById("adminControlsRow"), startBtn = document.getElementById("startBtn"), statsBtn = document.getElementById("statsBtn"), lockBtn = document.getElementById("lockBtn"), pubBtn = document.getElementById("publishHeaderBtn");
     
     if (e && t) { 
         if (window.isDemoMode) { 
@@ -1511,6 +1422,7 @@ window.updateLockUI = function() {
     }
     
     if(sBtn) sBtn.style.display = 'flex';
+    if(pubBtn) pubBtn.style.display = (window.currentRole === 'admin') ? 'flex' : 'none';
     
     document.getElementById('otToggle').parentElement.classList.toggle('active', window.otActive);
     document.getElementById('winnerAcceptBtn').style.display = (window.currentRole === 'admin') ? 'block' : 'none';
@@ -2402,7 +2314,13 @@ window.addNewTournament = function() {
     }, null, "ДОБАВИТЬ ПРОШЕДШИЙ ТУРНИР В СТАТИСТИКУ");
 };
 
-window.openShareModal = function(date) { window.currentShareDate = date; window.openModal('shareModal'); };
+window.openShareModal = function(date) { 
+    window.currentShareDate = date; 
+    window.openModal('shareModal'); 
+    if (window.currentRole === 'admin') {
+        window.publishToGitHub();
+    }
+};
 
 function getPlural(n, forms) {
     let n10 = Math.abs(n) % 100;
@@ -2657,7 +2575,7 @@ setInterval(() => {
     if(meta) meta.innerHTML = `Матч #${todayCount} • ${activeD.split(' (')[0]} • ${new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'})} • <span style="color:var(--gray); font-weight:bold;">${window.currentRoom}</span>`; 
 }, 1000);
 
-if (!window.appInitialized && typeof __firebase_config === 'undefined') { window.initApp(); }
+window.initApp();
 </script>
 </body>
 </html>
