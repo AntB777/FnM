@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#0f172a">
-    <title>Футбол на Манеже v20.32 Demo</title>
+    <title>Футбол на Манеже v20.33 Demo</title>
 
     <script>
         window.GITHUB_REPO = "antb777/FnM";
@@ -159,6 +159,7 @@
         .nav-tab { flex: 1; padding: 10px 0; background: var(--card); border: 1px solid rgba(255,255,255,0.05); color: var(--gray); border-radius: 10px; font-size: 11px; font-weight: 900; text-transform: uppercase; cursor: pointer; text-align: center; transition: all 0.2s; }
         .nav-tab.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
         .page-view { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+        .page-constrained { max-width: 600px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; flex: 1; overflow: hidden; }
     </style>
 </head>
 <body class="viewer-mode">
@@ -201,8 +202,8 @@
         </div>
     </div>
 
-    <!-- Вкладки навигации (только для Админа) -->
-    <div class="nav-tabs" id="adminNavTabs" style="display: none;">
+    <!-- Вкладки навигации (Общие) -->
+    <div class="nav-tabs" id="mainNavTabs" style="display: none;">
         <div class="nav-tab active" id="tabBtn-game" onclick="window.switchTab('game')">ИГРА</div>
         <div class="nav-tab" id="tabBtn-stats" onclick="window.switchTab('stats')">СТАТИСТИКА</div>
         <div class="nav-tab" id="tabBtn-players" onclick="window.switchTab('players')">ИГРОКИ</div>
@@ -258,19 +259,25 @@
 
     <!-- 2. СТРАНИЦА: СТАТИСТИКА -->
     <div id="statsView" class="page-view hidden">
-        <div class="scrollable" id="combinedStatsContainer" style="margin-top:0;"></div>
+        <div class="page-constrained">
+            <div class="scrollable" id="combinedStatsContainer" style="margin-top:0;"></div>
+        </div>
     </div>
 
     <!-- 3. СТРАНИЦА: ИГРОКИ -->
     <div id="playersView" class="page-view hidden">
-        <button id="addGlobalPlayerBtn" class="full-btn icon-btn" style="margin-bottom: 15px; font-size:14px; padding:12px; background:var(--success); flex:0 0 auto;" onclick="window.addGlobalPlayer()"><svg class="icon"><use href="#icon-plus"></use></svg> ДОБАВИТЬ НОВОГО ИГРОКА</button>
-        <div class="scrollable" id="playerDBContainer" style="text-align:left; padding-right:5px;"></div>
+        <div class="page-constrained">
+            <button id="addGlobalPlayerBtn" class="full-btn icon-btn" style="margin-bottom: 15px; font-size:14px; padding:12px; background:var(--success); flex:0 0 auto;" onclick="window.addGlobalPlayer()"><svg class="icon"><use href="#icon-plus"></use></svg> ДОБАВИТЬ НОВОГО ИГРОКА</button>
+            <div class="scrollable" id="playerDBContainer" style="text-align:left; padding-right:5px;"></div>
+        </div>
     </div>
 
     <!-- 4. СТРАНИЦА: НАСТРОЙКИ -->
     <div id="settingsView" class="page-view hidden">
-        <div class="scrollable" id="settingsContainer"></div>
-        <button class="full-btn" style="margin-top:12px; flex:0 0 auto;" onclick="window.saveSettings()">💾 СОХРАНИТЬ</button>
+        <div class="page-constrained">
+            <div class="scrollable" id="settingsContainer"></div>
+            <button class="full-btn" style="margin-top:12px; flex:0 0 auto;" onclick="window.saveSettings()">💾 СОХРАНИТЬ</button>
+        </div>
     </div>
 
     <div id="welcomeOverlay" class="overlay lobby-bg" style="z-index: 9999;">
@@ -289,7 +296,7 @@
                 <span class="btn-subtext" style="color: #000;">Режим тестирования</span>
             </button>
             <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
-                v20.32 Demo • <a href="https://antb777.github.io/FnM/" target="_blank" style="color: inherit; text-decoration: none;">antb777.github.io/FnM/</a>
+                v20.33 Demo • <a href="https://antb777.github.io/FnM/" target="_blank" style="color: inherit; text-decoration: none;">antb777.github.io/FnM/</a>
             </div>
         </div>
     </div>
@@ -453,7 +460,7 @@
     </div>
 
 <script>
-/* JS LOGIC v20.32 (GitHub JSON Storage) */
+/* JS LOGIC v20.33 (GitHub JSON Storage) */
 window.COLORS = { "Черные": "#000000", "Белые": "#ffffff", "Желтые": "#facc15", "Зеленые": "#22c55e", "Красные": "#ef4444", "Синие": "#3b82f6", "Разноцветные": "linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" };
 window.colorKeys = Object.keys(window.COLORS);
 window.audioCtx = null;
@@ -524,7 +531,7 @@ window.publishToGitHub = async function() {
     document.getElementById('loadingOverlay').querySelector('span').innerText = "Публикация на GitHub...";
    try {
         const url = `https://api.github.com/repos/${window.GITHUB_REPO}/contents/${window.GITHUB_FILE}`;
-        const apiHeaders = { "Authorization": `token ${window.githubToken}`, "Accept": "application/vnd.github.v3+json", "Content-Type": "application/json" };
+        const apiHeaders = { "Authorization": `token ${window.githubToken}`, "Accept": "application/vnd.github.v3+json", "Content-Type": "application/json", "Cache-Control": "no-cache" };
         let sha = "";
         try { const getRes = await fetch(url + '?t=' + Date.now(), { headers: apiHeaders }); if (getRes.ok) { const fileData = await getRes.json(); sha = fileData.sha; } } catch(e) { console.warn("GET file error:", e); }
         const payload = { config: window.config, matches: window.matches, customTours: window.customTours, tourRosters: window.tourRosters, globalPlayers: window.globalPlayers, tourMvps: window.tourMvps };
@@ -774,23 +781,27 @@ window.deleteGlobalPlayer = function(name) {
 };
 
 window.addGlobalPlayer = function() { 
-    if (window.isDemoMode) return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно. Обратитесь к разработчику.");
     window.showPrompt("Имя нового игрока:", "", (name) => { let n = name.trim(); if (n && n !== '?' && n !== 'Автогол' && !window.globalPlayers.includes(n)) { window.globalPlayers.push(n); window.setStore("globalPlayers", window.globalPlayers); window.updateGlobalPlayersList(); window.openPlayerDB(); window.syncToFirebase(true); } }); 
 };
 
 window.updateWelcomeButtons = function() {
-    const adminBtn = document.getElementById('welcomeAdminBtn'); const viewerBtn = document.getElementById('welcomeViewerBtn'); const demoBtn = document.getElementById('demoBtn');
+    const adminBtn = document.getElementById('welcomeAdminBtn'); const viewerBtn = document.getElementById('welcomeViewerBtn'); const logoutContainer = document.getElementById('logoutBtnContainer'); const demoBtn = document.getElementById('demoBtn');
     if (!adminBtn || !viewerBtn) return; 
     
+    if (logoutContainer) { 
+        logoutContainer.style.display = (window.currentRole === 'admin' && !window.isDemoMode) ? 'block' : 'none'; 
+        const btn = logoutContainer.querySelector('button');
+        if(btn) btn.innerText = "ВЫЙТИ ИЗ РЕЖИМА АДМИНА";
+    }
     if (demoBtn) { demoBtn.style.display = 'flex'; }
     
-    viewerBtn.innerHTML = `<span style="display: flex; align-items: center; gap: 6px;"><svg class="icon"><use href="#icon-eye"></use></svg> ИГРОК</span><span class="btn-subtext">Вам доступен просмотр игр и статистики</span>`;
-    adminBtn.innerHTML = `<span style="display: flex; align-items: center; gap: 6px;"><svg class="icon"><use href="#icon-lock"></use></svg> АДМИН</span><span class="btn-subtext">Войти для управления турниром</span>`;
-    if (demoBtn) demoBtn.innerHTML = `<span style="display: flex; align-items: center; gap: 6px;"><svg class="icon"><use href="#icon-run"></use></svg> DEMO</span><span class="btn-subtext" style="color: var(--bg);">Режим тестирования</span>`;
+    viewerBtn.innerHTML = `<span style="display: flex; align-items: center; gap: 6px;"><svg class="icon"><use href="#icon-eye"></use></svg> ИГРОК</span><span class="btn-subtext" style="color: #000;">Вам доступен просмотр игр и статистики</span>`;
+    adminBtn.innerHTML = `<span style="display: flex; align-items: center; gap: 6px;"><svg class="icon"><use href="#icon-lock"></use></svg> АДМИН</span><span class="btn-subtext" style="color: #000;">Войти для управления турниром</span>`;
+    if (demoBtn) demoBtn.innerHTML = `<span style="display: flex; align-items: center; gap: 6px;"><svg class="icon"><use href="#icon-run"></use></svg> DEMO</span><span class="btn-subtext" style="color: #000;">Режим тестирования</span>`;
 
-    viewerBtn.style.background = 'var(--success)'; viewerBtn.style.color = 'var(--bg)'; viewerBtn.style.border = 'none'; 
-    adminBtn.style.background = 'var(--accent)'; adminBtn.style.color = 'var(--bg)'; adminBtn.style.border = 'none'; 
-    if(demoBtn) { demoBtn.style.background = 'var(--warning)'; demoBtn.style.color = 'var(--bg)'; demoBtn.style.border = 'none'; }
+    viewerBtn.style.background = 'var(--success)'; viewerBtn.style.color = '#000'; viewerBtn.style.border = 'none'; 
+    adminBtn.style.background = 'var(--accent)'; adminBtn.style.color = '#000'; adminBtn.style.border = 'none'; 
+    if(demoBtn) { demoBtn.style.background = 'var(--warning)'; demoBtn.style.color = '#000'; demoBtn.style.border = 'none'; }
 
     viewerBtn.style.opacity = (window.currentRole === 'viewer' && !window.isDemoMode) ? '1' : '0.4';
     adminBtn.style.opacity = (window.currentRole === 'admin' && !window.isDemoMode) ? '1' : '0.4';
@@ -899,6 +910,9 @@ window.switchTab = function(tab) {
     const target = document.getElementById(tab + 'View');
     if(target) target.classList.remove('hidden');
 
+    const gm = document.getElementById('gameMeta');
+    if(gm) gm.style.display = (tab === 'game') ? 'block' : 'none';
+
     if(tab === 'stats') window.renderCombinedStats();
     if(tab === 'players') window.openPlayerDB();
     if(tab === 'settings') {
@@ -909,22 +923,20 @@ window.switchTab = function(tab) {
 };
 
 window.updateMatchStatusLabel = function() {
-    const lbl = document.getElementById("matchStatusLabel"); const noGamesMsg = document.getElementById("noGamesMessage"); const selectionSec = document.querySelector('.selection-section');
+    const lbl = document.getElementById("matchStatusLabel"); const noGamesMsg = document.getElementById("noGamesMessage");
     if(!lbl) return;
 
     if (window.currentRole === 'viewer') {
         lbl.style.display = 'none'; 
         if(noGamesMsg) noGamesMsg.style.display = 'none'; 
-        if(selectionSec) selectionSec.classList.remove('viewer-empty'); 
     } else {
         lbl.style.display = 'none'; 
         if(noGamesMsg) noGamesMsg.style.display = 'none'; 
-        if(selectionSec) selectionSec.classList.remove('viewer-empty'); 
     }
 };
 
 window.updateLockUI = function() {
-    const e = document.getElementById("lockEmoji"), t = document.getElementById("lockText"), lockBtn = document.getElementById("lockBtn"), pubBtn = document.getElementById("publishHeaderBtn"), navTabs = document.getElementById("adminNavTabs");
+    const e = document.getElementById("lockEmoji"), t = document.getElementById("lockText"), lockBtn = document.getElementById("lockBtn"), pubBtn = document.getElementById("publishHeaderBtn"), navTabs = document.getElementById("mainNavTabs");
     
     if (e && t) { 
         if (window.isDemoMode) { 
@@ -943,13 +955,19 @@ window.updateLockUI = function() {
     document.getElementById('otToggle').parentElement.classList.toggle('active', window.otActive);
     document.getElementById('winnerAcceptBtn').style.display = (window.currentRole === 'admin') ? 'block' : 'none';
 
+    if(navTabs) navTabs.style.display = 'flex';
+    const tabGame = document.getElementById("tabBtn-game");
+    const tabSettings = document.getElementById("tabBtn-settings");
+
     if (window.currentRole === 'viewer') {
         document.body.classList.add('viewer-mode'); 
-        if(navTabs) navTabs.style.display = 'none';
+        if(tabGame) tabGame.style.display = 'none';
+        if(tabSettings) tabSettings.style.display = 'none';
         window.switchTab('stats');
     } else {
         document.body.classList.remove('viewer-mode'); 
-        if(navTabs) navTabs.style.display = 'flex';
+        if(tabGame) tabGame.style.display = 'block';
+        if(tabSettings) tabSettings.style.display = 'block';
         window.switchTab('game');
     }
     window.updateMatchStatusLabel();
@@ -1239,6 +1257,61 @@ window.endMatch = async function() {
     } catch (err) { console.error("Ошибка завершения матча:", err); window.showAlert("Сбой сохранения."); }
 };
 
+window.openMvpSelector = function(date) {
+    window.currentMvpDate = date; const dayMatches = window.matches.filter(m => m.date === date); let playerStats = {}; let activeTeams = []; let activeRosters = {};
+    if (window.tourRosters[date]) { activeTeams = window.tourRosters[date].teams || []; activeRosters = window.tourRosters[date].rosters || {}; } 
+    else { let playedTeams = new Set(); dayMatches.forEach(m => { playedTeams.add(m.t1); playedTeams.add(m.t2); }); if (window.customTours[date]) { Object.keys(window.customTours[date]).forEach(t => playedTeams.add(t)); } window.config.teams.forEach(t => playedTeams.add(t)); activeTeams = Array.from(playedTeams); activeRosters = window.config.rosters; }
+    
+    activeTeams.forEach(team => { if(activeRosters[team]) { activeRosters[team].forEach(p => { let pName = (p || '').toString().trim(); if(pName && pName !== '?') playerStats[pName] = { name: pName, team: team, pts: 0 }; }); } });
+    dayMatches.forEach(m => { if(m && m.events) { m.events.forEach(e => { let team = e.side === 1 ? m.t1 : m.t2; let sName = e.s ? String(e.s).trim() : null; let isOG = sName && (sName === 'Автогол' || sName.includes('(АГ)')); if(isOG) { team = e.side === 1 ? m.t2 : m.t1; sName = sName.replace(' (АГ)', '').trim(); } if (sName && sName !== 'Автогол' && sName !== '?' && !isOG) { if (!playerStats[sName]) playerStats[sName] = { name: sName, team: team, pts: 0 }; playerStats[sName].pts++; } if (e.a && e.a !== '?') { let aName = String(e.a).trim(); let aTeam = e.side === 1 ? m.t1 : m.t2; if (!playerStats[aName]) playerStats[aName] = { name: aName, team: aTeam, pts: 0 }; playerStats[aName].pts++; } }); } });
+
+    let tourMvps = window.getStore("tourMvps", {}); let rawMvp = tourMvps[date]; let currentMvps = Array.isArray(rawMvp) ? rawMvp : (rawMvp ? [rawMvp] : []);
+    let pArr = Object.values(playerStats).sort((a,b) => b.pts - a.pts); let html = '';
+    if(pArr.length === 0) { html = '<div style="color:var(--gray); font-size:12px;">Нет данных об игроках</div>'; } 
+    else { 
+        html = pArr.map(p => {
+            let isMvp = currentMvps.includes(p.name); let border = isMvp ? '2px solid var(--accent)' : '1px solid rgba(255,255,255,0.2)'; let bg = isMvp ? 'var(--accent)' : window.COLORS[p.team]; let color = isMvp ? 'var(--bg)' : ((p.team==='Белые'||p.team==='Желтые')?'#000':'#fff'); let icon = isMvp ? `<svg class="icon-inline" style="width:14px;height:14px;margin-right:4px;"><use href="#icon-star"></use></svg>` : ``;
+            return `<button class="p-btn" style="background:${bg}; color:${color}; font-size:14px; padding:12px; font-weight:800; border:${border}; transition: all 0.1s;" onclick="window.toggleMvp('${p.name}')">${icon}${p.name} <span style="opacity:0.6; font-size:12px;">(${p.pts} очков)</span></button>`;
+        }).join(''); 
+    }
+    html += `<button class="p-btn icon-btn" style="background:var(--danger); border:none; margin-top:12px; font-size:12px;" onclick="window.clearMvps()"><svg class="icon"><use href="#icon-trash"></use></svg> СБРОСИТЬ MVP</button>`;
+    document.getElementById('mvpSelGrid').innerHTML = html; document.getElementById('mvpSelTitle').innerText = `MVP ЗА ${date}`; window.openModal('mvpSelectModal');
+};
+
+window.toggleMvp = function(name) { 
+    let tourMvps = window.getStore("tourMvps", {}); let rawMvp = tourMvps[window.currentMvpDate]; let currentMvps = Array.isArray(rawMvp) ? rawMvp : (rawMvp ? [rawMvp] : []);
+    if (currentMvps.includes(name)) { currentMvps = currentMvps.filter(n => n !== name); } else { currentMvps.push(name); }
+    if (currentMvps.length === 0) { delete tourMvps[window.currentMvpDate]; } else { tourMvps[window.currentMvpDate] = currentMvps; }
+    window.setStore("tourMvps", tourMvps); window.syncToFirebase(true); window.openMvpSelector(window.currentMvpDate); window.switchTab('stats'); 
+};
+
+window.clearMvps = function() { let tourMvps = window.getStore("tourMvps", {}); delete tourMvps[window.currentMvpDate]; window.setStore("tourMvps", tourMvps); window.syncToFirebase(true); window.openMvpSelector(window.currentMvpDate); window.switchTab('stats'); };
+
+window.changeStatsPage = function(dir) { window.currentStatsPageIndex += dir; window.renderCombinedStats(); };
+
+window.deleteDay = function(date) { 
+    if (window.currentRole !== 'admin') return;
+    window.showConfirm(`Вы действительно хотите удалить турнир за ${date}?`, async () => { 
+        window.matches = window.matches.filter(m => m.date !== date); 
+        if (window.customTours[date]) delete window.customTours[date]; if (window.tourRosters[date]) delete window.tourRosters[date];
+        let mvps = window.getStore("tourMvps", {}); if (mvps[date]) { delete mvps[date]; window.setStore("tourMvps", mvps); }
+        if (window.config.finishedTours) window.config.finishedTours = window.config.finishedTours.filter(d => d !== date);
+        window.setStore("matches", window.matches); window.setStore("customTours", window.customTours); window.setStore("tourRosters", window.tourRosters); window.setStore("config", window.config);
+        window.currentStatsPageIndex = 0;
+        if (date === new Date().toLocaleDateString('ru-RU')) { window.otActive = window.config.useOT; const otBtn = document.getElementById('otToggle'); if(otBtn && otBtn.parentElement) otBtn.parentElement.classList.toggle('active', window.otActive); }
+        await window.syncToFirebase(true); window.renderCombinedStats(); 
+    }); 
+};
+
+window.startNewTournament = function(date) {
+    window.showConfirm("Завершить этот турнир? Статистика будет зафиксирована, и новые матчи начнут новый турнир с текущими настройками.", () => {
+        if (!window.config.finishedTours) window.config.finishedTours = []; if (!window.config.finishedTours.includes(date)) { window.config.finishedTours.push(date); }
+        let base = new Date().toLocaleDateString('ru-RU'); if (!window.config.tourDayCounters) window.config.tourDayCounters = {}; window.config.tourDayCounters[base] = (window.config.tourDayCounters[base] || 0) + 1;
+        let newActiveDate = window.getActiveDate(); window.snapshotTourRoster(newActiveDate);
+        window.setStore("config", window.config); window.syncToFirebase(true); window.currentStatsPageIndex = 0; window.closeModal('sysConfirmModal'); window.renderCombinedStats();
+    });
+};
+
 window.renderCombinedStats = function() {
     const cont = document.getElementById('combinedStatsContainer'); cont.innerHTML = "";
     const grouped = {}; 
@@ -1249,7 +1322,7 @@ window.renderCombinedStats = function() {
     const statsDates = Object.keys(grouped).sort((a,b) => window.parseSortDate(b).localeCompare(window.parseSortDate(a)));
     
     if (!statsDates.length) { 
-        let emptyHTML = "<p style='opacity:0.3; margin-top:30px;'>История пуста</p>";
+        let emptyHTML = "<p style='opacity:0.3; margin-top:30px; text-align:center;'>История пуста</p>";
         if (window.currentRole === 'admin') { emptyHTML += `<button class="btn-base icon-btn" style="margin-top:15px; width:100%; padding:12px;" onclick="window.addNewTournament()"><svg class="icon"><use href="#icon-plus"></use></svg> ДОБАВИТЬ ТУРНИР</button>`; }
         cont.innerHTML = emptyHTML; return; 
     }
@@ -1367,7 +1440,7 @@ window.renderCombinedStats = function() {
         h += `</div>`;
     }
     h += `</div>`;
-    cont.innerHTML = h;
+    cont.innerHTML = h; 
 };
 
 window.openTourPlayerEditor = function(date) {
@@ -1399,13 +1472,13 @@ window.renderTourPlayerEditorUI = function() {
                         <div style="display:flex; gap:6px;"><button style="background:rgba(0,0,0,0.2); border:none; color:inherit; width:24px; height:24px; border-radius:4px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:bold;" onclick="window.changeTourPlayerSize('${t}', -1)">-</button><button style="background:rgba(0,0,0,0.2); border:none; color:inherit; width:24px; height:24px; border-radius:4px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:bold;" onclick="window.changeTourPlayerSize('${t}', 1)"><svg class="icon" style="font-size: 11px;"><use href="#icon-plus"></use></svg></button></div>
                     </div>`;
         window.tempTourRosters[t].forEach((n, i) => {
-            h += `<div class="player-row"><span class="player-num">${i+1}.</span><div style="display:flex; gap:4px; flex:1;"><input type="text" class="player-input tour-player-input" readonly value="${n}" onclick="if(window.isDemoMode) { window.showAlert('Приложение тестируется. Изменение этих настроек в Demo режиме не доступно. Обратитесь к разработчику.'); return; } window.openPlayerDropdown('${t}', ${i}, 'tour')" style="margin-bottom:0; cursor:pointer; caret-color:transparent; text-transform:none;" placeholder="Выбрать игрока..."></div></div>`;
+            h += `<div class="player-row"><span class="player-num">${i+1}.</span><div style="display:flex; gap:4px; flex:1;"><input type="text" class="player-input tour-player-input" readonly value="${n}" onclick="window.openPlayerDropdown('${t}', ${i}, 'tour')" style="margin-bottom:0; cursor:pointer; caret-color:transparent; text-transform:none;" placeholder="Выбрать игрока..."></div></div>`;
         });
         c.innerHTML += h + `</div>`;
     });
 };
 
-window.changeTourPlayerSize = function(t, d) { if (window.isDemoMode) return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно."); let r = window.tempTourRosters[t]; if (d > 0 && r.length < 15) r.push(""); else if (d < 0 && r.length > 1) r.pop(); window.renderTourPlayerEditorUI(); };
+window.changeTourPlayerSize = function(t, d) { let r = window.tempTourRosters[t]; if (d > 0 && r.length < 15) r.push(""); else if (d < 0 && r.length > 1) r.pop(); window.renderTourPlayerEditorUI(); };
 
 window.saveTourPlayerEdit = function() {
     let oldRosters = {};
@@ -1429,7 +1502,7 @@ window.saveTourPlayerEdit = function() {
     if(!window.tourRosters[window.editingTourPlayerDate]) { window.tourRosters[window.editingTourPlayerDate] = { teams: Object.keys(window.tempTourRosters), rosters: {} }; }
     window.tourRosters[window.editingTourPlayerDate].rosters = window.tempTourRosters;
     window.setStore("tourRosters", window.tourRosters); window.setStore("matches", window.matches);
-    window.updateGlobalPlayersList(); window.closeModal('tourPlayerEditorModal'); window.renderCombinedStats(); window.syncToFirebase(true);
+    window.updateGlobalPlayersList(); window.closeModal('tourPlayerEditorModal'); window.switchTab('stats'); window.syncToFirebase(true);
 };
 
 window.addNewTournament = function() {
@@ -1588,10 +1661,10 @@ window.saveAdminEdit = function() {
     window.syncMatchEditorState(); const tm = window.tempEditMatch; if(!tm) return;
     if (tm.t1 === tm.t2) { return window.showAlert("Команды не могут быть одинаковыми!"); }
     if(window.editingMatchId === 'NEW') { tm.id = Date.now(); window.matches.unshift(tm); window.snapshotTourRoster(tm.date); } else { const idx = window.matches.findIndex(x => x.id === window.editingMatchId); if(idx !== -1) { window.matches[idx] = JSON.parse(JSON.stringify(tm)); } }
-    window.tempEditMatch = null; window.setStore("matches", window.matches); window.updateGlobalPlayersList(); window.syncToFirebase(true); window.closeModal('adminEditorModal'); window.renderCombinedStats();
+    window.tempEditMatch = null; window.setStore("matches", window.matches); window.updateGlobalPlayersList(); window.syncToFirebase(true); window.closeModal('adminEditorModal'); window.switchTab('stats');
 };
 
-window.deleteAdminMatch = function() { window.showConfirm("Точно удалить этот матч?", () => { window.matches = window.matches.filter(x => x.id !== window.editingMatchId); window.setStore("matches", window.matches); window.syncToFirebase(true); window.closeModal('adminEditorModal'); window.renderCombinedStats(); }); };
+window.deleteAdminMatch = function() { window.showConfirm("Точно удалить этот матч?", () => { window.matches = window.matches.filter(x => x.id !== window.editingMatchId); window.setStore("matches", window.matches); window.syncToFirebase(true); window.closeModal('adminEditorModal'); window.switchTab('stats'); }); };
 
 setInterval(() => { 
     const activeD = typeof window.getActiveDate === 'function' ? window.getActiveDate() : new Date().toLocaleDateString('ru-RU');
