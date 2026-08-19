@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#0f172a">
-    <title>Футбол на Манеже v20.28 Demo</title>
+    <title>Футбол на Манеже v20.29 Demo</title>
 
     <script>
         window.GITHUB_REPO = "antb777/FnM";
@@ -267,7 +267,7 @@
                 <button class="btn-base" style="border: 1px solid var(--danger); color: var(--danger); width: 100%;" onclick="window.logout()">ВЫЙТИ ИЗ РЕЖИМА АДМИНА</button>
             </div>
             <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
-                v20.28 Demo • <a href="https://antb777.github.io/FnM/" target="_blank" style="color: inherit; text-decoration: none;">antb777.github.io/FnM/</a>
+                v20.29 Demo • <a href="https://antb777.github.io/FnM/" target="_blank" style="color: inherit; text-decoration: none;">antb777.github.io/FnM/</a>
             </div>
         </div>
     </div>
@@ -457,7 +457,7 @@
     </div>
 
 <script>
-/* JS LOGIC v20.28 (GitHub JSON Storage) */
+/* JS LOGIC v20.29 (GitHub JSON Storage) */
 window.COLORS = { "Черные": "#000000", "Белые": "#ffffff", "Желтые": "#facc15", "Зеленые": "#22c55e", "Красные": "#ef4444", "Синие": "#3b82f6", "Разноцветные": "linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" };
 window.colorKeys = Object.keys(window.COLORS);
 window.audioCtx = null;
@@ -468,17 +468,13 @@ window.liveWinnerModal = { active: false };
 
 window.getActiveDate = function() {
     let base = new Date().toLocaleDateString('ru-RU');
-    if(window.config && window.config.tourDayCounters && window.config.tourDayCounters[base]) {
-        return `${base} (${window.config.tourDayCounters[base]})`;
-    }
+    if(window.config && window.config.tourDayCounters && window.config.tourDayCounters[base]) { return `${base} (${window.config.tourDayCounters[base]})`; }
     return base;
 };
 
 window.parseSortDate = function(dStr) {
-    let base = dStr.split(' (')[0];
-    let suf = dStr.includes('(') ? parseInt(dStr.split('(')[1]) : 0;
-    let p = base.split('.');
-    if (p.length !== 3) return dStr;
+    let base = dStr.split(' (')[0]; let suf = dStr.includes('(') ? parseInt(dStr.split('(')[1]) : 0;
+    let p = base.split('.'); if (p.length !== 3) return dStr;
     return `${p[2]}${p[1]}${p[0]}_${suf.toString().padStart(3, '0')}`;
 };
 
@@ -504,32 +500,17 @@ window.applyDataFromJSON = function(data) {
     window.config = data.config || JSON.parse(JSON.stringify(window.defaultConfig));
     if (!window.config.soundUrl && window.config.soundUrl !== "") { window.config.soundUrl = "https://zvukoviku.ru/sounds/1616654354_whistle_haaa.mp3"; }
     if (!window.config.finishedTours) window.config.finishedTours = [];
-    
-    window.matches = data.matches || []; 
-    window.customTours = data.customTours || {}; 
-    window.tourRosters = data.tourRosters || {}; 
-    window.globalPlayers = data.globalPlayers || []; 
-    window.tourMvps = data.tourMvps || {};
-    
+    window.matches = data.matches || []; window.customTours = data.customTours || {}; window.tourRosters = data.tourRosters || {}; window.globalPlayers = data.globalPlayers || []; window.tourMvps = data.tourMvps || {};
     if (window.currentRole !== 'viewer') window.ensureDefaultRosters();
     window.saveToLocalStorage();
 };
 
 window.saveToLocalStorage = function() {
-    let payload = {
-        config: window.config,
-        matches: window.matches,
-        customTours: window.customTours,
-        tourRosters: window.tourRosters,
-        globalPlayers: window.globalPlayers,
-        tourMvps: window.tourMvps
-    };
+    let payload = { config: window.config, matches: window.matches, customTours: window.customTours, tourRosters: window.tourRosters, globalPlayers: window.globalPlayers, tourMvps: window.tourMvps };
     localStorage.setItem("mSmartPro_local_data", JSON.stringify(payload));
 };
 
-window.syncToFirebase = async function(force = false) {
-    window.saveToLocalStorage();
-};
+window.syncToFirebase = async function(force = false) { window.saveToLocalStorage(); };
 
 // Функция извлечения старой базы из Firebase
 window.extractOldData = function() {
@@ -563,9 +544,7 @@ window.publishToGitHub = async function() {
     if (!window.githubToken) {
         return window.showPrompt("Введите ваш GitHub Token (ghp_...):", "", (token) => {
             let t = token.replace(/\s+/g, '').trim();
-            if (t) {
-                window.githubToken = t; localStorage.setItem("mSmartPro_ghToken", t); window.publishToGitHub();
-            }
+            if (t) { window.githubToken = t; localStorage.setItem("mSmartPro_ghToken", t); window.publishToGitHub(); }
         }, null, "АВТОРИЗАЦИЯ GITHUB");
     }
 
@@ -574,33 +553,21 @@ window.publishToGitHub = async function() {
 
    try {
         const url = `https://api.github.com/repos/${window.GITHUB_REPO}/contents/${window.GITHUB_FILE}`;
-        const apiHeaders = {
-            "Authorization": `token ${window.githubToken}`,
-            "Accept": "application/vnd.github.v3+json",
-            "Content-Type": "application/json",
-            "Cache-Control": "no-cache"
-        };
+        const apiHeaders = { "Authorization": `token ${window.githubToken}`, "Accept": "application/vnd.github.v3+json", "Content-Type": "application/json", "Cache-Control": "no-cache" };
         
-        // 1. Получаем SHA существующего файла
         let sha = "";
         try {
             const getRes = await fetch(url, { headers: apiHeaders });
-            if (getRes.ok) {
-                const fileData = await getRes.json();
-                sha = fileData.sha;
-            }
+            if (getRes.ok) { const fileData = await getRes.json(); sha = fileData.sha; }
         } catch(e) { console.warn("GET file error:", e); }
 
-        // 2. Формируем данные
         const payload = { config: window.config, matches: window.matches, customTours: window.customTours, tourRosters: window.tourRosters, globalPlayers: window.globalPlayers, tourMvps: window.tourMvps };
         const contentBase64 = btoa(unescape(encodeURIComponent(JSON.stringify(payload, null, 2))));
         
-        // 3. Отправляем PUT запрос
         const putBody = { message: `Update tournament data • ${new Date().toLocaleString('ru-RU')}`, content: contentBase64 };
         if (sha) putBody.sha = sha;
 
         const putRes = await fetch(url, { method: "PUT", headers: apiHeaders, body: JSON.stringify(putBody) });
-
         if (!putRes.ok) { const errJson = await putRes.json(); throw new Error(errJson.message || "Ошибка записи"); }
 
         window.showAlert("✅ Результаты успешно опубликованы на GitHub!");
@@ -862,6 +829,26 @@ window.addGlobalPlayer = function() {
     window.showPrompt("Имя нового игрока:", "", (name) => { let n = name.trim(); if (n && n !== '?' && n !== 'Автогол' && !window.globalPlayers.includes(n)) { window.globalPlayers.push(n); window.setStore("globalPlayers", window.globalPlayers); window.updateGlobalPlayersList(); window.openPlayerDB(); window.syncToFirebase(true); } }); 
 };
 
+window.updateWelcomeButtons = function() {
+    const adminBtn = document.getElementById('welcomeAdminBtn'); const viewerBtn = document.getElementById('welcomeViewerBtn'); const logoutContainer = document.getElementById('logoutBtnContainer'); const demoBtn = document.getElementById('demoBtn');
+    if (!adminBtn || !viewerBtn) return; 
+    
+    if (logoutContainer) { 
+        logoutContainer.style.display = (window.currentRole === 'admin' && !window.isDemoMode) ? 'block' : 'none'; 
+        const btn = logoutContainer.querySelector('button');
+        if(btn) btn.innerText = "ВЫЙТИ ИЗ РЕЖИМА АДМИНА";
+    }
+    if (demoBtn) { demoBtn.style.display = 'flex'; }
+    
+    viewerBtn.innerHTML = `<span style="display: flex; align-items: center; gap: 6px;"><svg class="icon"><use href="#icon-eye"></use></svg> ИГРОК</span><span class="btn-subtext">Вам доступен просмотр игр и статистики</span>`;
+    adminBtn.innerHTML = `<span style="display: flex; align-items: center; gap: 6px;"><svg class="icon"><use href="#icon-lock"></use></svg> АДМИН</span><span class="btn-subtext">Войти для управления турниром</span>`;
+    if (demoBtn) demoBtn.innerHTML = `<span style="display: flex; align-items: center; gap: 6px;"><svg class="icon"><use href="#icon-run"></use></svg> DEMO</span><span class="btn-subtext" style="color: #000;">Режим тестирования</span>`;
+
+    viewerBtn.style.background = 'var(--success)'; viewerBtn.style.color = '#fff'; viewerBtn.style.border = 'none'; 
+    adminBtn.style.background = 'var(--accent)'; adminBtn.style.color = 'var(--bg)'; adminBtn.style.border = 'none'; 
+    if(demoBtn) { demoBtn.style.background = 'var(--warning)'; demoBtn.style.color = '#000'; demoBtn.style.border = 'none'; }
+};
+
 window.logout = function() { 
     window.showConfirm("Выйти из панели управления?", () => { 
         window.currentRole = 'viewer'; window.isDemoMode = false;
@@ -878,11 +865,11 @@ window.backToWelcome = function(modalId) { window.closeModal(modalId); window.op
 
 window.selectWelcomeMode = function(m) {
     if (m === 'admin') { 
-        if (window.currentRole === 'admin') { document.getElementById('welcomeOverlay').style.display = 'none'; } 
-        else { window.showAdminLobby(); } 
+        window.showAdminLobby(); 
     } else if (m === 'viewer') { 
-        if (window.currentRole === 'viewer') { document.getElementById('welcomeOverlay').style.display = 'none'; } 
-        else { window.openJoinViewer(); } 
+        window.isDemoMode = false; window.currentRole = 'viewer';
+        localStorage.setItem("mSmartPro_lastRole", "viewer"); localStorage.setItem("mSmartPro_isDemo", "false");
+        window.closeModal('welcomeOverlay'); window.updateLockUI(); window.updateSelectionUI(true); window.updateUtilityBtns(); window.startApp();
     }
 };
 
@@ -891,7 +878,8 @@ window.changeViewerPass = function() { window.openPassModal('changeViewer'); };
 window.changeAdminPass = function() { window.openPassModal('change'); };
 
 window.openPassModal = function(mode) {
-    if (window.isDemoMode) return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно.");
+    if (window.isDemoMode && mode !== 'loginAdmin' && mode !== 'loginViewer') return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно.");
+    
     window.passMode = mode; document.getElementById('passError').innerText = ''; const cont = document.getElementById('passInputsContainer'); const handleEnter = (e) => { if (e.key === 'Enter') window.submitPass(); };
     
     if (mode === 'change') {
@@ -902,9 +890,6 @@ window.openPassModal = function(mode) {
         window.openModal('passModal'); setTimeout(() => { document.getElementById('passOld').focus(); ['passOld', 'passNew', 'passConfirm'].forEach(id => { document.getElementById(id).addEventListener('keyup', handleEnter); }); }, 100);
     } else if (mode === 'loginAdmin') {
         document.getElementById('passModalTitle').innerText = 'ПАРОЛЬ АДМИНА'; cont.innerHTML = `<input type="password" id="passInput" class="player-input" style="font-size:24px; text-align:center; margin-bottom:10px;">`;
-        window.openModal('passModal'); setTimeout(() => { const pI = document.getElementById('passInput'); pI.focus(); pI.addEventListener('keyup', handleEnter); }, 100);
-    } else if (mode === 'loginViewer') {
-        document.getElementById('passModalTitle').innerText = 'ПАРОЛЬ ИГРОКА'; cont.innerHTML = `<input type="password" id="passInput" class="player-input" style="font-size:24px; text-align:center; margin-bottom:10px;">`;
         window.openModal('passModal'); setTimeout(() => { const pI = document.getElementById('passInput'); pI.focus(); pI.addEventListener('keyup', handleEnter); }, 100);
     } else {
         document.getElementById('passModalTitle').innerText = 'ВВЕДИТЕ ПАРОЛЬ'; cont.innerHTML = `<input type="password" id="passInput" class="player-input" style="font-size:24px; text-align:center; margin-bottom:10px;">`;
@@ -924,14 +909,8 @@ window.submitPass = async function() {
     } else if (window.passMode === 'loginAdmin') {
         const val = document.getElementById('passInput').value;
         if (val === window.config.adminPass || val === "100500" || val === (window.config.adminPass||"123")) {
-            window.currentRole = 'admin'; localStorage.setItem("mSmartPro_lastRole", window.currentRole); window.closeModal('passModal'); 
-            document.getElementById('welcomeOverlay').style.display = 'none'; window.updateLockUI(); window.updateSelectionUI(true); window.updateUtilityBtns();
-        } else { document.getElementById('passError').innerText = 'Неверный пароль!'; }
-    } else if (window.passMode === 'loginViewer') {
-        const val = document.getElementById('passInput').value;
-        if (val === window.config.viewerPass || val === (window.config.viewerPass||"000") || val === "") {
-            window.currentRole = 'viewer'; localStorage.setItem("mSmartPro_lastRole", window.currentRole); window.closeModal('passModal'); 
-            document.getElementById('welcomeOverlay').style.display = 'none'; window.updateLockUI(); window.updateSelectionUI(true); window.updateUtilityBtns();
+            window.currentRole = 'admin'; window.isDemoMode = false; localStorage.setItem("mSmartPro_lastRole", window.currentRole); localStorage.setItem("mSmartPro_isDemo", "false"); window.closeModal('passModal'); 
+            document.getElementById('welcomeOverlay').style.display = 'none'; window.updateLockUI(); window.updateSelectionUI(true); window.updateUtilityBtns(); window.startApp();
         } else { document.getElementById('passError').innerText = 'Неверный пароль!'; }
     }
 };
@@ -1569,7 +1548,10 @@ window.renderCombinedStats = function() {
         if(m && m.events) {
             m.events.forEach(e => {
                 let team = e.side === 1 ? m.t1 : m.t2; let sName = e.s ? String(e.s).trim() : null; let isOG = false;
-                if (sName) { if (sName === 'Автогол' || sName.includes('(АГ)')) { isOG = true; team = e.side === 1 ? m.t2 : m.t1; if(sName !== 'Автогол') sName = sName.replace(' (АГ)', '').trim(); } if (sName !== 'Автогол' && sName !== '?') { if (!playerStats[sName]) playerStats[sName] = { name: sName, team: team, g: 0, a: 0, og: 0 }; if (isOG) playerStats[sName].og++; else playerStats[sName].g++; } }
+                if (sName) {
+                    if (sName === 'Автогол' || sName.includes('(АГ)')) { isOG = true; team = e.side === 1 ? m.t2 : m.t1; if(sName !== 'Автогол') sName = sName.replace(' (АГ)', '').trim(); }
+                    if (sName !== 'Автогол' && sName !== '?') { if (!playerStats[sName]) playerStats[sName] = { name: sName, team: team, g: 0, a: 0, og: 0 }; if (isOG) playerStats[sName].og++; else playerStats[sName].g++; }
+                }
                 if (e.a && e.a !== '?') { let aName = String(e.a).trim(); let aTeam = e.side === 1 ? m.t1 : m.t2; if (!playerStats[aName]) playerStats[aName] = { name: aName, team: aTeam, g: 0, a: 0, og: 0 }; playerStats[aName].a++; }
             });
         }
