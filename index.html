@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#0f172a">
-    <title>Футбол на Манеже v20.33 Demo</title>
+    <title>Футбол на Манеже v20.34 Demo</title>
 
     <script>
         window.GITHUB_REPO = "antb777/FnM";
@@ -285,18 +285,18 @@
             <h2 style="color: var(--accent); margin-bottom: 25px; text-transform: uppercase; font-size: 24px; user-select: none; cursor: pointer;">Футбол на Манеже</h2>
             <button id="welcomeViewerBtn" class="full-btn" style="margin-bottom: 15px; padding: 18px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;" onclick="window.selectWelcomeMode('viewer')">
                 <span style="display: flex; align-items: center; gap: 6px;"><svg class="icon"><use href="#icon-eye"></use></svg> ИГРОК</span>
-                <span class="btn-subtext">Вам доступен просмотр игр и статистики</span>
+                <span class="btn-subtext" style="color: #000;">Вам доступен просмотр игр и статистики</span>
             </button>
             <button id="welcomeAdminBtn" class="full-btn" style="margin-bottom: 15px; padding: 18px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;" onclick="window.selectWelcomeMode('admin')">
                 <span style="display: flex; align-items: center; gap: 6px;"><svg class="icon"><use href="#icon-lock"></use></svg> АДМИН</span>
-                <span class="btn-subtext">Войти для управления турниром</span>
+                <span class="btn-subtext" style="color: #000;">Войти для управления турниром</span>
             </button>
             <button id="demoBtn" class="full-btn" style="margin-bottom: 15px; padding: 18px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;" onclick="window.startDemo()">
                 <span style="display: flex; align-items: center; gap: 6px;"><svg class="icon"><use href="#icon-run"></use></svg> DEMO</span>
                 <span class="btn-subtext" style="color: #000;">Режим тестирования</span>
             </button>
             <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
-                v20.33 Demo • <a href="https://antb777.github.io/FnM/" target="_blank" style="color: inherit; text-decoration: none;">antb777.github.io/FnM/</a>
+                v20.34 Demo • <a href="https://antb777.github.io/FnM/" target="_blank" style="color: inherit; text-decoration: none;">antb777.github.io/FnM/</a>
             </div>
         </div>
     </div>
@@ -460,7 +460,7 @@
     </div>
 
 <script>
-/* JS LOGIC v20.33 (GitHub JSON Storage) */
+/* JS LOGIC v20.34 (GitHub JSON Storage) */
 window.COLORS = { "Черные": "#000000", "Белые": "#ffffff", "Желтые": "#facc15", "Зеленые": "#22c55e", "Красные": "#ef4444", "Синие": "#3b82f6", "Разноцветные": "linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" };
 window.colorKeys = Object.keys(window.COLORS);
 window.audioCtx = null;
@@ -531,7 +531,7 @@ window.publishToGitHub = async function() {
     document.getElementById('loadingOverlay').querySelector('span').innerText = "Публикация на GitHub...";
    try {
         const url = `https://api.github.com/repos/${window.GITHUB_REPO}/contents/${window.GITHUB_FILE}`;
-        const apiHeaders = { "Authorization": `token ${window.githubToken}`, "Accept": "application/vnd.github.v3+json", "Content-Type": "application/json", "Cache-Control": "no-cache" };
+        const apiHeaders = { "Authorization": `token ${window.githubToken}`, "Accept": "application/vnd.github.v3+json", "Content-Type": "application/json" };
         let sha = "";
         try { const getRes = await fetch(url + '?t=' + Date.now(), { headers: apiHeaders }); if (getRes.ok) { const fileData = await getRes.json(); sha = fileData.sha; } } catch(e) { console.warn("GET file error:", e); }
         const payload = { config: window.config, matches: window.matches, customTours: window.customTours, tourRosters: window.tourRosters, globalPlayers: window.globalPlayers, tourMvps: window.tourMvps };
@@ -781,6 +781,7 @@ window.deleteGlobalPlayer = function(name) {
 };
 
 window.addGlobalPlayer = function() { 
+    if (window.isDemoMode) return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно. Обратитесь к разработчику.");
     window.showPrompt("Имя нового игрока:", "", (name) => { let n = name.trim(); if (n && n !== '?' && n !== 'Автогол' && !window.globalPlayers.includes(n)) { window.globalPlayers.push(n); window.setStore("globalPlayers", window.globalPlayers); window.updateGlobalPlayersList(); window.openPlayerDB(); window.syncToFirebase(true); } }); 
 };
 
@@ -846,8 +847,9 @@ window.selectWelcomeMode = function(m) {
         if (window.currentRole === 'viewer' && !window.isDemoMode) { 
             document.getElementById('welcomeOverlay').style.display = 'none'; 
         } else { 
+            window.isDemoMode = false; window.currentRole = 'viewer';
             localStorage.setItem("mSmartPro_lastRole", "viewer"); localStorage.setItem("mSmartPro_isDemo", "false");
-            window.closeModal('welcomeOverlay'); window.initApp();
+            window.closeModal('welcomeOverlay'); window.updateLockUI(); window.updateSelectionUI(true); window.updateUtilityBtns(); window.startApp();
         } 
     }
 };
@@ -1257,6 +1259,167 @@ window.endMatch = async function() {
     } catch (err) { console.error("Ошибка завершения матча:", err); window.showAlert("Сбой сохранения."); }
 };
 
+window.renderSettingsList = function(targetId = window.currentSettingsTarget) {
+    window.currentSettingsTarget = targetId; const c = document.getElementById(targetId); if(!c) return;
+    let goalLimitDisplay = window.tempConfig.goalLimit === 0 ? "∞" : window.tempConfig.goalLimit;
+    
+    let h = '';
+    if (window.currentRole === 'admin' && window.interval) {
+        h += `<div style="text-align:center; color:var(--warning); font-size:12px; margin-bottom:15px; border:1px solid var(--warning); padding:8px; border-radius:8px;">⚠️ Изменение правил во время активного матча может привести к сбоям таймера</div>`;
+    }
+
+    if (targetId === 'createSettingsContainer' || window.currentRole === 'admin') {
+        let currentMins = Math.floor(window.tempConfig.time / 60); let currentSecs = window.tempConfig.time % 60;
+        h += window.createStepRow("Время (мин)", "timeMin", currentMins) + window.createStepRow("Время (сек)", "timeSec", currentSecs) + window.createStepRow("Лимит голов", "goalLimit", goalLimitDisplay) + window.createCheckRow("Выбор команд после игры", "autoReset", window.tempConfig.autoReset) + `<div class="settings-divider"></div>` + window.createStepRow("Всего команд", "teamsCount", window.tempConfig.teams.length);
+        window.tempConfig.teams.forEach((t, i) => h += window.createColorRow(`Команда ${i+1}`, i, t));
+        h += `<div class="settings-divider"></div>` + window.createCheckRow("Игроки и составы", "usePlayers", window.tempConfig.usePlayers);
+        if(window.tempConfig.usePlayers) h += `<button class="full-btn icon-btn" style="margin:10px 0; font-size:12px;" onclick="window.openRosterEditor()"><svg class="icon"><use href="#icon-run"></use></svg> СОСТАВЫ КОМАНД</button>`;
+        h += `<div class="settings-divider"></div>` + window.createCheckRow("Овертайм", "useOT", window.tempConfig.useOT) + window.createStepRow("Лимит овертайма (мин)", "otLimit", window.tempConfig.otLimit || "∞") + window.createCheckRow("Золотой гол", "goldenGoal", window.tempConfig.goldenGoal);
+    }
+
+    h += `<div class="settings-divider"></div><div style="background:rgba(255,255,255,0.03); padding:12px; border-radius:12px; margin-top:10px;">
+          <div style="font-weight:bold; color:var(--accent); font-size:12px; text-align:left; margin-bottom:10px; text-transform:uppercase;">Звук и Вибрация</div>
+          ${window.createLocalCheckRow("Звук", "sound", window.localSettings.sound)}
+          ${window.createLocalCheckRow("Вибрация", "vibration", window.localSettings.vibration)}`;
+          
+    if (targetId === 'createSettingsContainer' || window.currentRole === 'admin') {
+        h += `<div style="margin-top:12px;"><div style="font-size:11px;color:var(--gray);margin-bottom:6px; text-align:left;">ЗВУК ОКОНЧАНИЯ МАТЧА (URL):</div><input type="text" class="player-input" style="width:100%;" value="${window.tempConfig.soundUrl}" onchange="window.tempConfig.soundUrl=this.value"></div>`;
+    }
+    h += `</div>`;
+
+    if (window.currentRole === 'admin' && targetId !== 'createSettingsContainer' && !window.isDemoMode) { 
+        h += `<div class="settings-divider"></div>`;
+        h += `<div class="settings-checkbox-row" onclick="window.changeViewerPass()"><div class="setting-label">ПАРОЛЬ ИГРОКА</div><div style="color:var(--gray); font-size:12px; font-weight:900; text-transform:uppercase;">ИЗМЕНИТЬ</div></div>`;
+        h += `<div class="settings-checkbox-row" onclick="window.changeAdminPass()"><div class="setting-label">ПАРОЛЬ АДМИНА</div><div style="color:var(--gray); font-size:12px; font-weight:900; text-transform:uppercase;">ИЗМЕНИТЬ</div></div>`; 
+    } else if (window.isDemoMode && targetId !== 'createSettingsContainer') {
+        h += `<div class="settings-divider"></div><div class="settings-checkbox-row" onclick="window.showAlert('Приложение тестируется. Изменение этих настроек в Demo режиме не доступно. Обратитесь к разработчику.');"><div class="setting-label">ПАРОЛЬ ИГРОКА</div><div style="color:var(--gray); font-size:12px; font-weight:900; text-transform:uppercase;">ИЗМЕНИТЬ</div></div><div class="settings-checkbox-row" onclick="window.showAlert('Приложение тестируется. Изменение этих настроек в Demo режиме не доступно. Обратитесь к разработчику.');"><div class="setting-label">ПАРОЛЬ АДМИНА</div><div style="color:var(--gray); font-size:12px; font-weight:900; text-transform:uppercase;">ИЗМЕНИТЬ</div></div>`;
+    }
+    c.innerHTML = h;
+};
+
+window.createStepRow = function(l, k, v) { return `<div class="settings-row"><div class="setting-label">${l}</div><button class="step-btn" onclick="window.stepS('${k}',-1)">-</button><div class="step-value">${v}</div><button class="step-btn" onclick="window.stepS('${k}',1)"><svg class="icon" style="font-size: 12px;"><use href="#icon-plus"></use></svg></button></div>`; };
+window.createCheckRow = function(l, k, c) { return `<div class="settings-checkbox-row ${c?'checked':''}" onclick="window.toggleS('${k}')"><div class="setting-label">${l}</div><div class="custom-checkbox"></div></div>`; };
+window.createColorRow = function(l, i, v) { return `<div class="settings-row"><div class="setting-label">${l}</div><button class="step-btn" onclick="window.stepColor(${i},-1)">←</button><div class="step-value" style="background:${window.COLORS[v]}; color:${(v==='Белые'||v==='Желтые')?'#000':'#fff'}">${v}</div><button class="step-btn" onclick="window.stepColor(${i},1)">→</button></div>`; };
+window.createLocalCheckRow = function(l, k, c) { return `<div class="settings-checkbox-row ${c?'checked':''}" onclick="window.toggleLocalS('${k}')" style="margin-bottom:6px;"><div class="setting-label">${l}</div><div class="custom-checkbox"></div></div>`; };
+
+window.toggleLocalS = function(k) { window.localSettings[k] = !window.localSettings[k]; localStorage.setItem('mSmartPro_localSettings', JSON.stringify(window.localSettings)); window.renderSettingsList(window.currentSettingsTarget); };
+
+window.stepS = function(k, d) { 
+    if(k==='timeMin') window.tempConfig.time = Math.max(15, window.tempConfig.time + d*60); 
+    if(k==='timeSec') window.tempConfig.time = Math.max(15, window.tempConfig.time + d*5); 
+    if(k==='goalLimit') window.tempConfig.goalLimit = Math.max(0, window.tempConfig.goalLimit + d); 
+    if(k==='teamsCount') { if(d>0 && window.tempConfig.teams.length<7) window.tempConfig.teams.push(window.colorKeys.find(c=>!window.tempConfig.teams.includes(c))); else if(d<0 && window.tempConfig.teams.length>2) window.tempConfig.teams.pop(); }
+    if(k==='otLimit') window.tempConfig.otLimit = Math.max(0, (window.tempConfig.otLimit||0) + d);
+    window.renderSettingsList(window.currentSettingsTarget); 
+};
+window.toggleS = function(k) { window.tempConfig[k] = !window.tempConfig[k]; window.renderSettingsList(window.currentSettingsTarget); };
+window.stepColor = function(i, d) { let c=window.colorKeys.indexOf(window.tempConfig.teams[i]), n=(c+d+window.colorKeys.length)%window.colorKeys.length; while(window.tempConfig.teams.includes(window.colorKeys[n])) n=(n+d+window.colorKeys.length)%window.colorKeys.length; window.tempConfig.teams[i]=window.colorKeys[n]; window.renderSettingsList(window.currentSettingsTarget); };
+
+window.saveSettings = async function() { 
+    if (window.currentRole === 'viewer') { window.switchTab('stats'); return; }
+    window.config = JSON.parse(JSON.stringify(window.tempConfig)); 
+    window.setStore("matches", window.matches); window.updateGlobalPlayersList(); 
+    if (typeof window.syncToFirebase === 'function') await window.syncToFirebase(true); 
+    
+    window.switchTab('game'); window.ensureDefaultRosters(); window.updateSelectionUI(true); window.updateTimerDisplay();
+    
+    window.otActive = window.config.useOT;
+    const otBtn = document.getElementById('otToggle');
+    if(otBtn && otBtn.parentElement) otBtn.parentElement.classList.toggle('active', window.otActive);
+};
+
+window.shuffleRostersByRank = function() {
+    let teams = window.tempConfig.teams; let rosters = window.tempConfig.rosters; let maxLen = 0;
+    teams.forEach(t => { if (rosters[t] && rosters[t].length > maxLen) maxLen = rosters[t].length; });
+
+    for (let i = 0; i < maxLen; i++) {
+        let validTeams = teams.filter(t => rosters[t] && rosters[t][i] && rosters[t][i].trim() !== '' && !rosters[t][i].includes(' игрок '));
+        if (validTeams.length > 1) {
+            let playersAtI = validTeams.map(t => rosters[t][i]);
+            for (let j = playersAtI.length - 1; j > 0; j--) { const k = Math.floor(Math.random() * (j + 1)); [playersAtI[j], playersAtI[k]] = [playersAtI[k], playersAtI[j]]; }
+            validTeams.forEach((t, idx) => { rosters[t][i] = playersAtI[idx]; });
+        }
+    }
+    if (navigator.vibrate && window.localSettings.vibration) navigator.vibrate(30);
+    window.renderRosterEditorUI(); 
+};
+
+window.changeRosterSize = function(t, d) { let r = window.tempConfig.rosters[t]; if (d > 0 && r.length < 15) r.push(""); else if (d < 0 && r.length > 1) r.pop(); window.renderRosterEditorUI(); };
+window.renderRosterEditorUI = function() {
+    window.updateGlobalPlayersList();
+    const c = document.getElementById('rosterContainer'); c.innerHTML = "";
+    window.tempConfig.teams.forEach(t => {
+        let h = `<div style="margin-bottom:15px; background:rgba(0,0,0,0.1); border-radius:12px; overflow:hidden;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; background:${window.COLORS[t]}; color:${(t==='Белые'||t==='Желтые')?'#000':'#fff'}; padding:10px; font-weight:800; font-size:12px;">
+                        <span>${t}</span>
+                        <div style="display:flex; gap:6px;">
+                            <button style="background:rgba(0,0,0,0.2); border:none; color:inherit; width:24px; height:24px; border-radius:4px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:bold;" onclick="window.changeRosterSize('${t}', -1)">-</button>
+                            <button style="background:rgba(0,0,0,0.2); border:none; color:inherit; width:24px; height:24px; border-radius:4px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:bold;" onclick="window.changeRosterSize('${t}', 1)"><svg class="icon" style="font-size: 11px;"><use href="#icon-plus"></use></svg></button>
+                        </div>
+                    </div>`;
+        if(!window.tempConfig.rosters[t]) window.tempConfig.rosters[t] = Array(5).fill("");
+        window.tempConfig.rosters[t].forEach((n, i) => {
+            h += `<div class="player-row"><span class="player-num">${i+1}.</span>
+                    <div style="display:flex; gap:4px; flex:1;">
+                        <input type="text" class="player-input" value="${n}" readonly onclick="window.openPlayerDropdown('${t}', ${i}, 'config')" style="margin-bottom:0; cursor:pointer; caret-color:transparent; text-transform:none;" placeholder="Выбрать игрока...">
+                    </div></div>`;
+        });
+        c.innerHTML += h + `</div>`;
+    });
+    c.innerHTML += `<button class="admin-edit-btn icon-btn" style="width:fit-content; margin:10px auto 25px auto; padding:10px 20px; font-size:11px; font-weight:bold; background:var(--card); border:1px dashed var(--warning); border-radius:10px; color:var(--warning);" onclick="window.showConfirm('Вы хотите сформировать составы команд случайно?', window.shuffleRostersByRank)"><svg class="icon" style="width:14px;height:14px;"><use href="#icon-shuffle"></use></svg> СМЕШАТЬ РАНДОМНО</button>`;
+    window.openModal('rosterModal');
+};
+
+window.openRosterEditor = function() { window.renderRosterEditorUI(); window.openModal('rosterModal'); };
+window.handleReset = function() { window.openModal('confirmReset'); };
+
+window.confirmReset = async function(manual = true, skipSync = false) { 
+    if(window.interval){clearInterval(window.interval); window.interval=null;} 
+    window.currentMatch=null; window.isOT=false; window.time=window.config.time; window.isFinishing=false;
+    document.getElementById('score').innerText="0 : 0"; document.getElementById('startBtn').innerText="СТАРТ МАТЧА"; document.getElementById('otTimerPlate').style.display='none'; 
+    if(manual) { window.selL=null; window.selR=null; }
+    window.closeModal('confirmReset'); window.updateSelectionUI(true); window.updateTimerDisplay(); window.updateUtilityBtns(); window.updateLastGoalDisplay();
+    if(!skipSync && typeof window.syncToFirebase === 'function') await window.syncToFirebase(true);
+};
+
+window.openUndoModal = function() { window.openModal('confirmUndo'); };
+
+window.confirmUndo = async function() { 
+    if(window.currentMatch && window.currentMatch.events && window.currentMatch.events.length) { 
+        const e = window.currentMatch.events.pop(); if(e.side===1) window.currentMatch.s1--; else window.currentMatch.s2--; 
+        document.getElementById('score').innerText = window.currentMatch.s1 + " : " + window.currentMatch.s2; window.animateScore();
+        if (typeof window.syncToFirebase === 'function') await window.syncToFirebase(true);
+    } 
+    window.closeModal('confirmUndo'); window.updateUtilityBtns(); window.updateLastGoalDisplay();
+};
+
+window.openFinish = function() { window.openModal('confirmFinish'); };
+window.confirmFinish = function() { window.terminateMatch(); window.closeModal('confirmFinish'); };
+
+window.closeWinner = async function() { 
+    if (window.currentRole !== 'admin') return; 
+    window.liveWinnerModal = { active: false }; 
+    if(window.config.autoReset){ window.selL=null; window.selR=null; } 
+    window.otActive = window.config.useOT; document.getElementById('otToggle').parentElement.classList.toggle('active', window.otActive);
+    await window.confirmReset(false, true); window.closeModal('winnerModal'); 
+    if (typeof window.syncToFirebase === 'function') await window.syncToFirebase(true); 
+};
+
+window.toggleOTManual = function() { 
+    if (window.currentRole === 'viewer') return; window.otActive = !window.otActive; window.config.useOT = window.otActive;
+    document.getElementById('otToggle').parentElement.classList.toggle('active', window.otActive); 
+    if (typeof window.syncToFirebase === 'function') window.syncToFirebase(true);
+};
+
+window.updateUtilityBtns = function() {
+    const r = document.getElementById('resetBtn'), u = document.getElementById('undoBtn'), f = document.getElementById('finishBtn'), g1 = document.getElementById('goal1'), g2 = document.getElementById('goal2');
+    if (r) r.disabled = (window.currentRole === 'viewer') || !(window.selL || window.selR || window.currentMatch);
+    if (u) u.disabled = (window.currentRole === 'viewer') || !window.currentMatch || !window.currentMatch.events.length;
+    if (f) f.disabled = (window.currentRole === 'viewer') || !window.currentMatch;
+    if (g1) g1.disabled = (window.currentRole === 'viewer') || !window.interval; 
+    if (g2) g2.disabled = (window.currentRole === 'viewer') || !window.interval;
+};
+
 window.openMvpSelector = function(date) {
     window.currentMvpDate = date; const dayMatches = window.matches.filter(m => m.date === date); let playerStats = {}; let activeTeams = []; let activeRosters = {};
     if (window.tourRosters[date]) { activeTeams = window.tourRosters[date].teams || []; activeRosters = window.tourRosters[date].rosters || {}; } 
@@ -1282,11 +1445,10 @@ window.toggleMvp = function(name) {
     let tourMvps = window.getStore("tourMvps", {}); let rawMvp = tourMvps[window.currentMvpDate]; let currentMvps = Array.isArray(rawMvp) ? rawMvp : (rawMvp ? [rawMvp] : []);
     if (currentMvps.includes(name)) { currentMvps = currentMvps.filter(n => n !== name); } else { currentMvps.push(name); }
     if (currentMvps.length === 0) { delete tourMvps[window.currentMvpDate]; } else { tourMvps[window.currentMvpDate] = currentMvps; }
-    window.setStore("tourMvps", tourMvps); window.syncToFirebase(true); window.openMvpSelector(window.currentMvpDate); window.switchTab('stats'); 
+    window.setStore("tourMvps", tourMvps); window.syncToFirebase(true); window.openMvpSelector(window.currentMvpDate); window.renderCombinedStats(); 
 };
 
-window.clearMvps = function() { let tourMvps = window.getStore("tourMvps", {}); delete tourMvps[window.currentMvpDate]; window.setStore("tourMvps", tourMvps); window.syncToFirebase(true); window.openMvpSelector(window.currentMvpDate); window.switchTab('stats'); };
-
+window.clearMvps = function() { let tourMvps = window.getStore("tourMvps", {}); delete tourMvps[window.currentMvpDate]; window.setStore("tourMvps", tourMvps); window.syncToFirebase(true); window.openMvpSelector(window.currentMvpDate); window.renderCombinedStats(); };
 window.changeStatsPage = function(dir) { window.currentStatsPageIndex += dir; window.renderCombinedStats(); };
 
 window.deleteDay = function(date) { 
