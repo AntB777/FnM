@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#0f172a">
-    <title>Футбол на Манеже v20.46</title>
+    <title>Футбол на Манеже v20.47</title>
 
     <script>
         window.GITHUB_REPO = "antb777/FnM";
@@ -346,7 +346,7 @@
                 <span class="btn-subtext" style="color: #000;">Режим тестирования</span>
             </button>
             <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
-                v20.46 Demo • <a href="https://antb777.github.io/FnM/" target="_blank" style="color: inherit; text-decoration: none;">antb777.github.io/FnM/</a>
+                v20.47 Demo • <a href="https://antb777.github.io/FnM/" target="_blank" style="color: inherit; text-decoration: none;">antb777.github.io/FnM/</a>
             </div>
         </div>
     </div>
@@ -518,7 +518,7 @@
     </div>
 
 <script>
-/* JS LOGIC v20.46 (OVR Ratings + Seasons + OVR Formula Fix) */
+/* JS LOGIC v20.47 (OVR Ratings + Seasons + OVR Formula Fix) */
 window.COLORS = { "Черные": "#000000", "Белые": "#ffffff", "Желтые": "#facc15", "Зеленые": "#22c55e", "Красные": "#ef4444", "Синие": "#3b82f6", "Разноцветные": "linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" };
 window.colorKeys = Object.keys(window.COLORS);
 window.audioCtx = null;
@@ -1967,7 +1967,7 @@ window.deleteDay = function(date) {
 };
 
 window.startNewTournament = function(date) {
-    window.showConfirm("Завершить этот турнир? Статистика будет зафиксирована, и новые матчи начнут новый турнир с текущими настройками.", () => {
+    window.showConfirm("Завершить этот тур? Статистика будет зафиксирована, и новые матчи начнут новый тур с текущими настройками.", () => {
         if (!window.config.finishedTours) window.config.finishedTours = []; if (!window.config.finishedTours.includes(date)) { window.config.finishedTours.push(date); }
         let base = new Date().toLocaleDateString('ru-RU'); if (!window.config.tourDayCounters) window.config.tourDayCounters = {}; window.config.tourDayCounters[base] = (window.config.tourDayCounters[base] || 0) + 1;
         let newActiveDate = window.getActiveDate(); window.snapshotTourRoster(newActiveDate);
@@ -1978,6 +1978,7 @@ window.startNewTournament = function(date) {
 window.renderCombinedStats = function() {
     const cont = document.getElementById('combinedStatsContainer'); cont.innerHTML = "";
     let sData = window.getSeasonData();
+    let seasonName = window.viewingSeasonIndex === -1 ? (window.config.currentSeason || "Текущий сезон") : (sData.seasonName || "Архивный сезон");
     const grouped = {}; 
     sData.matches.forEach(m => { if (!grouped[m.date]) grouped[m.date] = []; grouped[m.date].push(m); });
     if (sData.customTours) { Object.keys(sData.customTours).forEach(dt => { if (!grouped[dt]) grouped[dt] = []; }); }
@@ -1987,8 +1988,9 @@ window.renderCombinedStats = function() {
     const isAdminAndCurrent = (window.currentRole === 'admin' && window.viewingSeasonIndex === -1 && !window.isDemoMode);
     
     if (!statsDates.length) { 
-        let emptyHTML = "<p style='opacity:0.3; margin-top:30px; text-align:center;'>История пуста</p>";
-        if (isAdminAndCurrent) { emptyHTML += `<button class="btn-base icon-btn" style="margin-top:15px; width:100%; padding:12px;" onclick="window.addNewTournament()"><svg class="icon"><use href="#icon-plus"></use></svg> ДОБАВИТЬ ТУРНИР</button>`; }
+        let emptyHTML = `<div style="text-align:center; font-size:11px; color:var(--warning); font-weight:900; text-transform:uppercase; letter-spacing:2px; margin-bottom:8px;">${seasonName}</div>`;
+        emptyHTML += "<p style='opacity:0.3; margin-top:30px; text-align:center;'>История пуста</p>";
+        if (isAdminAndCurrent) { emptyHTML += `<button class="btn-base icon-btn" style="margin-top:15px; width:100%; padding:12px;" onclick="window.addNewTournament()"><svg class="icon"><use href="#icon-plus"></use></svg> ДОБАВИТЬ ТУР</button>`; }
         cont.innerHTML = emptyHTML; return; 
     }
     
@@ -2041,16 +2043,17 @@ window.renderCombinedStats = function() {
     });
 
     let h = `<div>`;
+    h += `<div style="text-align:center; font-size:11px; color:var(--warning); font-weight:900; text-transform:uppercase; letter-spacing:2px; margin-bottom:8px;">${seasonName}</div>`;
     h += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
             <button class="stats-page-btn" ${window.currentStatsPageIndex === statsDates.length - 1 ? 'disabled' : ''} onclick="window.changeStatsPage(1)">◀</button>
-            <div style="font-size:16px; font-weight:900; text-transform:uppercase; color:var(--text); display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:6px;"><svg class="icon-inline" style="width:20px;height:20px;"><use href="#icon-calendar"></use></svg> ТУРНИР #${tourNumber} <span style="color:var(--accent); font-size:14px; margin-left:4px;">${date.split(' (')[0]}</span>${statusBadge}</div>
+            <div style="font-size:16px; font-weight:900; text-transform:uppercase; color:var(--text); display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:6px;"><svg class="icon-inline" style="width:20px;height:20px;"><use href="#icon-calendar"></use></svg> ТУР #${tourNumber} <span style="color:var(--accent); font-size:14px; margin-left:4px;">${date.split(' (')[0]}</span>${statusBadge}</div>
             <button class="stats-page-btn" ${window.currentStatsPageIndex === 0 ? 'disabled' : ''} onclick="window.changeStatsPage(-1)">▶</button>
           </div>`;
 
     if (isAdminAndCurrent || (window.currentRole === 'admin' && window.viewingSeasonIndex === -1 && window.isDemoMode)) {
         h += `<div style="display:flex; gap:5px; margin-bottom:15px; justify-content:center; flex-wrap:wrap;">`;
-        h += `  <button class="admin-edit-btn icon-btn" style="width:auto; padding:8px 14px; font-size:11px; background:var(--card); border:1px solid #a855f7; border-radius:8px; color:#a855f7;" onclick="window.addNewTournament()"><svg class="icon"><use href="#icon-plus"></use></svg> ПРОШЛЫЙ ТУРНИР</button>`;
-        if (!isFinished && date === activeD) { h += `<button class="admin-edit-btn icon-btn" style="width:auto; padding:8px 14px; font-size:11px; background:var(--card); border:1px solid var(--success); border-radius:8px; color:var(--success);" onclick="window.startNewTournament('${date}')"><svg class="icon"><use href="#icon-stop"></use></svg> ЗАВЕРШИТЬ ТЕКУЩИЙ</button>`; }
+        h += `  <button class="admin-edit-btn icon-btn" style="width:auto; padding:8px 14px; font-size:11px; background:var(--card); border:1px solid #a855f7; border-radius:8px; color:#a855f7;" onclick="window.addNewTournament()"><svg class="icon"><use href="#icon-plus"></use></svg> ПРОШЛЫЙ ТУР</button>`;
+        if (!isFinished && date === activeD) { h += `<button class="admin-edit-btn icon-btn" style="width:auto; padding:8px 14px; font-size:11px; background:var(--card); border:1px solid var(--success); border-radius:8px; color:var(--success);" onclick="window.startNewTournament('${date}')"><svg class="icon"><use href="#icon-stop"></use></svg> ЗАВЕРШИТЬ ТУР</button>`; }
         h += `  <button class="admin-edit-btn icon-btn" style="width:auto; padding:8px 14px; font-size:11px; background:var(--card); border:1px solid var(--accent); border-radius:8px; color:var(--accent);" onclick="window.openShareModal('${date}')"><svg class="icon"><use href="#icon-share"></use></svg> ПОДЕЛИТЬСЯ</button>
                 <button class="admin-edit-btn icon-btn" style="width:auto; padding:8px 14px; font-size:13px; background:var(--card); border:1px solid var(--danger); border-radius:8px; color:var(--danger);" onclick="window.deleteDay('${date}')"><svg class="icon"><use href="#icon-trash"></use></svg></button>`;
         h += `</div>`;
@@ -2058,7 +2061,7 @@ window.renderCombinedStats = function() {
 
     if (Object.keys(stats).length > 0) {
         h += `<div style="border: 1px dashed rgba(255,255,255,0.15); border-radius: 12px; padding: 12px; margin-bottom: 15px; background: rgba(255,255,255,0.02);">`;
-        h += `<div style="font-weight:800; color:var(--accent); font-size:12px; text-align:left; margin-bottom:10px; text-transform:uppercase;">Таблица турнира</div>`;
+        h += `<div style="font-weight:800; color:var(--accent); font-size:12px; text-align:left; margin-bottom:10px; text-transform:uppercase;">Таблица тура</div>`;
         h += `<table class="stats-table" style="margin-bottom:0;"><thead><tr><th style="text-align:left">КОМАНДА</th><th>И</th><th>В</th><th>Н</th><th>П</th><th>ГЗ</th><th>ГП</th><th>+/-</th><th>О</th></tr></thead>
         <tbody>${Object.values(stats).sort((a,b)=>b.o-a.o || (b.gz-b.gp)-(a.gz-a.gp)).map(t => `<tr><td style="text-align:left"><div class="team-dot" style="background:${window.COLORS[t.n]||'var(--gray)'}"></div><b>${t.n}</b></td><td>${t.i}</td><td>${t.v}</td><td>${t.nch}</td><td>${t.p}</td><td>${t.gz}</td><td>${t.gp}</td><td>${t.gz-t.gp}</td><td style="color:var(--accent); font-weight:900; font-size: 14px;">${t.o}</td></tr>`).join('')}</tbody></table>`;
         h += `</div>`;
@@ -2086,7 +2089,7 @@ window.renderCombinedStats = function() {
                 <div style="font-weight:800; color:var(--accent); font-size:12px; text-transform:uppercase;">Статистика игроков`;
         if (isAdminAndCurrent) h += `&nbsp;&nbsp;&nbsp;<button class="admin-edit-btn icon-btn" style="background:var(--card); border:1px solid var(--accent); border-radius:8px; padding:4px 10px; color:var(--accent); display:inline-flex; vertical-align:middle; cursor:pointer;" onclick="window.openTourPlayerEditor('${date}')"><svg class="icon" style="width:14px; height:14px;"><use href="#icon-edit"></use></svg></button>`;
         h += `</div>`;
-        if (isAdminAndCurrent && activeTeams.length > 0) h += `<button class="admin-edit-btn icon-btn" style="padding:5px 10px; font-size:10px; background:var(--card); border:1px solid #facc15; border-radius:8px; color:#facc15;" onclick="window.openMvpSelector('${date}')"><svg class="icon"><use href="#icon-star"></use></svg> MVP ТУРНИРА</button>`;
+        if (isAdminAndCurrent && activeTeams.length > 0) h += `<button class="admin-edit-btn icon-btn" style="padding:5px 10px; font-size:10px; background:var(--card); border:1px solid #facc15; border-radius:8px; color:#facc15;" onclick="window.openMvpSelector('${date}')"><svg class="icon"><use href="#icon-star"></use></svg> MVP ТУРА</button>`;
         h += `</div>`;
         
         let teamsWithPlayers = [...new Set(Object.values(playerStats).map(p => p.team))];
@@ -2172,13 +2175,13 @@ window.saveTourPlayerEdit = function() {
 
 window.addNewTournament = function() {
     if (window.currentRole !== 'admin') return;
-    window.showPrompt("Введите дату турнира (например: 01.01.2026):", new Date().toLocaleDateString('ru-RU'), (d) => {
+    window.showPrompt("Введите дату тура (например: 01.01.2026):", new Date().toLocaleDateString('ru-RU'), (d) => {
         if (!d) return;
         if (!window.customTours[d] && !window.matches.some(m=>m.date===d)) { window.customTours[d] = {}; window.setStore("customTours", window.customTours); window.snapshotTourRoster(d); window.syncToFirebase(true); }
         const grouped = {}; window.matches.forEach(m => { if (!grouped[m.date]) grouped[m.date] = []; }); Object.keys(window.customTours).forEach(dt => { if (!grouped[dt]) grouped[dt] = []; });
         const tempDates = Object.keys(grouped).sort((a,b) => window.parseSortDate(b).localeCompare(window.parseSortDate(a)));
         window.currentStatsPageIndex = tempDates.indexOf(d); window.renderCombinedStats(); 
-    }, null, "ДОБАВИТЬ ПРОШЕДШИЙ ТУРНИР В СТАТИСТИКУ");
+    }, null, "ДОБАВИТЬ ПРОШЕДШИЙ ТУР В СТАТИСТИКУ");
 };
 
 window.openShareModal = function(date) { window.currentShareDate = date; window.openModal('shareModal'); if (window.currentRole === 'admin') { window.publishToGitHub(); } };
@@ -2188,7 +2191,7 @@ function getPlural(n, forms) { let n10 = Math.abs(n) % 100; let n1 = n10 % 10; i
 window.executeShare = function() {
     if(!window.currentShareDate) return; const date = window.currentShareDate;
     const incTable = document.getElementById('cbShareTable').classList.contains('checked'); const incMatches = document.getElementById('cbShareMatches').classList.contains('checked'); const incPlayers = document.getElementById('cbSharePlayers').classList.contains('checked');
-    let t = `🏆 ТУРНИР ${date.split(' (')[0]}\n`;
+    let t = `🏆 ТУР ${date.split(' (')[0]}\n`;
     let sData = window.getSeasonData();
     const dayMatches = sData.matches.filter(m => m.date === date); let tourMvps = sData.tourMvps || {}; let rawMvp = tourMvps[date]; let currentMvps = Array.isArray(rawMvp) ? rawMvp : (rawMvp ? [rawMvp] : []);
     
@@ -2225,7 +2228,7 @@ window.executeShare = function() {
         
         let pFound = Object.values(playerStats);
         if(pFound.length > 0) {
-            t += `\n👟 СТАТИСТИКА ИГРОКОВ:\n`; if(currentMvps.length > 0) t += `⭐ MVP ТУРНИРА: ${currentMvps.join(', ')}\n\n`;
+            t += `\n👟 СТАТИСТИКА ИГРОКОВ:\n`; if(currentMvps.length > 0) t += `⭐ MVP ТУРА: ${currentMvps.join(', ')}\n\n`;
             let teamsWithPlayers = [...new Set(pFound.map(p => p.team))];
             teamsWithPlayers.forEach(teamColor => {
                 let teamPlayers = pFound.filter(p => p.team === teamColor).sort((a,b) => (b.g + b.a) - (a.g + a.a) || b.g - a.g);
