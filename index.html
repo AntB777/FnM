@@ -1009,7 +1009,8 @@ window.openPlayerCard = function(playerName) {
             cardColor = '#000'; 
             brdColor = '#fbbf24'; 
             glowShadow = 'inset 0 0 25px rgba(255,255,255,0.7), 0 0 35px rgba(253,224,71,0.7)';
-            topLabel = `<div style="position:absolute; top:-12px; left:50%; transform:translateX(-50%); font-size:11px; font-weight:900; background:#000; color:#fef08a; padding:4px 14px; border-radius:14px; letter-spacing:2px; z-index:10; border: 2px solid #fbbf24; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">🔥 ELITE 90+</div>`;
+            // Изменили top: -12px на top: -4px, чтобы плашка опустилась ниже на рамку и не обрезалась
+            topLabel = `<div style="position:absolute; top:-4px; left:50%; transform:translateX(-50%); font-size:11px; font-weight:900; background:#000; color:#fef08a; padding:4px 14px; border-radius:14px; letter-spacing:2px; z-index:10; border: 2px solid #fbbf24; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">🔥 ELITE 90+</div>`;
         }
         else if (p.ovr >= 80) { 
             bgGrad = 'linear-gradient(135deg, #fef08a, #fcd34d)'; 
@@ -2367,11 +2368,11 @@ window.renderTopTab = function() {
           
         { id: 'top-def', title: 'Железная стена', btnLbl: 'Защита', desc: 'Топ по плюсовой разнице голов команды (DEF).', icon: '🛡', 
           sortFn: (a,b) => b.def - a.def || b.w - a.w, valFn: p => p.def, dispFn: v => v > 0 ? '+'+v : v, lblFn: v => 'DEF',
-          centerLbl: p => { let v = (p.matches>0 ? (p.def/p.matches) : 0); return `За матч: ${v>0?'+':''}${v.toFixed(1)}`; } },
+          centerLbl: p => { let v = (p.days>0 ? (p.def/p.days) : 0); return `За тур: ${v>0?'+':''}${v.toFixed(1)}`; } },
           
-        { id: 'top-cups', title: 'Короли кубков', btnLbl: 'Трофеи', desc: 'Топ по выигранным турнирам (золотые кубки).', icon: '🏆', 
+        { id: 'top-cups', title: 'Короли кубков', btnLbl: 'Трофеи', desc: 'Топ по выигранным турам (золотые кубки).', icon: '🏆', 
           sortFn: (a,b) => b.titles - a.titles || (b.days>0?b.titles/b.days:0) - (a.days>0?a.titles/a.days:0), valFn: p => p.titles, dispFn: v => `🏆 ${v}`, lblFn: v => plural(v, ['КУБОК', 'КУБКА', 'КУБКОВ']),
-          centerLbl: p => `% турниров: ${p.days>0 ? Math.round((p.titles/p.days)*100) : 0}%` },
+          centerLbl: p => `Из ${p.days} туров выиграно ${p.days>0 ? Math.round((p.titles/p.days)*100) : 0}%` },
           
         { id: 'top-mvp', title: 'Лучший игрок матча', btnLbl: 'MVP', desc: 'Топ по количеству наград ⭐ MVP тура.', icon: '⭐', 
           sortFn: (a,b) => b.mvp - a.mvp || b.ovr - a.ovr, valFn: p => p.mvp, dispFn: v=>v, lblFn: v => 'MVP',
@@ -2461,6 +2462,41 @@ window.renderTopTab = function() {
     });
     
     container.innerHTML = html;
+
+    // SCROLL SPY LOGIC: Подсветка кнопок при скролле пальцем
+    setTimeout(() => {
+        const scrollContainer = document.querySelector('#topView .page-constrained');
+        if (!scrollContainer) return;
+
+        // Если наблюдатель уже был, отключаем его, чтобы не дублировать
+        if (window.topObserver) window.topObserver.disconnect();
+        
+        // Отслеживаем пересечение секций с верхней частью экрана
+        window.topObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                // Если секция попала в зону видимости (чуть ниже закрепленного меню)
+                if (entry.isIntersecting) {
+                    // Сбрасываем синий цвет (активный класс) у всех кнопок
+                    document.querySelectorAll('#topSubnavMenu button').forEach(b => b.classList.remove('active'));
+                    
+                    // Зажигаем синим кнопку текущей секции
+                    const activeBtn = document.getElementById('btn-' + entry.target.id);
+                    if (activeBtn) {
+                        activeBtn.classList.add('active');
+                        // Слегка прокручиваем само меню-карусель по горизонтали, чтобы активная кнопка всегда была в кадре
+                        activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                    }
+                }
+            });
+        }, { 
+            root: scrollContainer, 
+            rootMargin: '-135px 0px -50% 0px', // Зона срабатывания отмеряется сразу под плавающим меню
+            threshold: 0 
+        });
+
+        // Вешаем наблюдателя на все разделы-номинации
+        document.querySelectorAll('.top-section').forEach(sec => window.topObserver.observe(sec));
+    }, 100);
 };
 window.initApp();
 </script>
