@@ -65,7 +65,8 @@
     "goldenGoal": false,
     "time": 420,
     "useOT": false,
-    "goalLimit": 2
+    "goalLimit": 2,
+    "currentSeason": "Сезон 2026/2027"
   },
   "matches": [
     {
@@ -5843,5 +5844,6 @@
       "Костя А.",
       "Миха"
     ]
-  }
+  },
+  "archiveData": []
 }
