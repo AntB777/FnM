@@ -841,31 +841,31 @@ window.openPlayerDB = function() {
         if (p.matches > 0) {
             let avgPts = p.days > 0 ? (p.pts / p.days) : 0;
             
-            // 1. Атакующий импакт (Темп за день)
-            let rate_impact = Math.min(26.0, avgPts * 2.8);
+            // 1. Атака: мягкая прогрессия (4 очка/день = +10.5, 6.7 очков = +14.2, 8.3 очка = +15.5)
+            let rate_impact = Math.min(16.0, Math.sqrt(avgPts) * 5.5);
             
-            // 2. Оборона DEF
+            // 2. Оборона DEF (от -2.0 до +4.0 баллов)
             let defPerMatch = p.def / p.matches;
-            let def_bonus = defPerMatch >= 0 ? Math.min(4.0, defPerMatch * 15.0) : Math.max(-2.0, defPerMatch * 10.0);
+            let def_bonus = defPerMatch >= 0 ? Math.min(4.0, defPerMatch * 16.0) : Math.max(-2.0, defPerMatch * 10.0);
             
             // 3. Командный успех (Винрейт и Титулы)
-            let win_bonus = winRate * 9.0;
+            let win_bonus = winRate * 6.0;
             let cupRate = p.days > 0 ? (p.titles / p.days) : 0;
-            let cup_bonus = Math.min(6.0, cupRate * 6.0);
+            let cup_bonus = Math.min(4.5, cupRate * 5.0);
             
-            // 4. Стабильность и Опыт
+            // 4. Опыт и дистанция (до +4.5 за 15 дней — вытягивает ветеранов наверх)
             let exp_bonus = Math.min(4.5, p.days * 0.3);
 
-            let base_ovr = 61.0;
+            let base_ovr = 68.0; // Высокая база подтягивает основу к 79-82
             p.ovrRaw = base_ovr + rate_impact + def_bonus + win_bonus + cup_bonus + exp_bonus;
 
             // === ФИФА ПАРАМЕТРЫ ДЛЯ КАРТОЧКИ (0-99) ===
-            p.dispATT = Math.round(Math.min(99, 45 + (avgPts * 9.5)));
-            p.dispWIN = Math.round(Math.min(99, 40 + (winRate * 100)));
-            p.dispDEF = Math.round(Math.max(30, Math.min(99, 70 + (defPerMatch * 30))));
-            p.dispEXP = Math.round(Math.min(99, Math.max(40, 40 + (p.days * 3.5))));
+            p.dispATT = Math.round(Math.min(99, Math.max(50, 50 + (avgPts * 7.2))));
+            p.dispWIN = Math.round(Math.min(99, Math.max(50, 50 + (winRate * 100))));
+            p.dispDEF = Math.round(Math.max(45, Math.min(99, 75 + (defPerMatch * 30))));
+            p.dispEXP = Math.round(Math.min(99, Math.max(50, 50 + (p.days * 3.3))));
         } else { 
-            p.ovrRaw = 50.0; 
+            p.ovrRaw = 60.0; 
             p.dispATT = 50; p.dispWIN = 50; p.dispDEF = 50; p.dispEXP = 50;
         } 
         
