@@ -170,6 +170,30 @@
         .ovr-bronze { background: linear-gradient(135deg, #d97706, #92400e); color: #fff; }
         .ovr-calib { background: #334155; color: #fff; }
         .legend-box { font-size: 9px; color: var(--gray); text-align: left; margin-top: 15px; padding: 10px; background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); line-height: 1.4; }
+
+        /* --- СТИЛИ ДЛЯ СТРАНИЦЫ "ТОП" --- */
+        .top-subnav { display: flex; gap: 10px; overflow-x: auto; padding: 12px 10px; background: var(--bg); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(255,255,255,0.05); scrollbar-width: none; }
+        .top-subnav::-webkit-scrollbar { display: none; }
+        .top-subnav button { background: #ffffff; color: #000000; border: none; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 900; white-space: nowrap; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: transform 0.2s; }
+        .top-subnav button:active { transform: scale(0.95); }
+        .top-section { margin: 25px 10px 40px; }
+        .top-section-header { margin-bottom: 15px; }
+        .top-title { font-size: 20px; font-weight: 900; text-transform: uppercase; color: #fff; }
+        .top-desc { font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.5); margin-top: 4px; line-height: 1.3; }
+        .top-podium { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+        .top-minicard { background: rgba(255,255,255,0.05); border: 2px solid; border-radius: 12px; padding: 15px 5px 10px; text-align: center; position: relative; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .minicard-rank { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); width: 24px; height: 24px; border-radius: 50%; font-weight: 900; font-size: 13px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(0,0,0,0.5); }
+        .minicard-avatar { width: 60px; height: 60px; margin: 0 auto 8px; border-radius: 10px; overflow: hidden; background: rgba(0,0,0,0.2); }
+        .minicard-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .minicard-name { font-size: 12px; font-weight: 900; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; }
+        .minicard-stat { font-size: 15px; font-weight: 900; margin-top: 4px; }
+        .top-list { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+        .top-list-item { display: flex; align-items: center; background: rgba(255,255,255,0.03); padding: 10px 12px; border-radius: 8px; cursor: pointer; }
+        .list-rank { width: 22px; font-size: 13px; font-weight: 900; color: rgba(255,255,255,0.4); }
+        .list-name { width: 90px; font-size: 12px; font-weight: 800; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; }
+        .list-bar-wrap { flex-grow: 1; margin: 0 12px; height: 6px; background: rgba(0,0,0,0.4); border-radius: 3px; overflow: hidden; }
+        .list-bar { height: 100%; background: #fbbf24; border-radius: 3px; }
+        .list-stat { width: 45px; text-align: right; font-size: 13px; font-weight: 900; color: #fff; }
     </style>
 </head>
 <body class="viewer-mode">
@@ -217,6 +241,7 @@
         <div class="nav-tab active" id="tabBtn-game" onclick="window.switchTab('game')">ИГРА</div>
         <div class="nav-tab" id="tabBtn-stats" onclick="window.switchTab('stats')">СТАТИСТИКА</div>
         <div class="nav-tab" id="tabBtn-players" onclick="window.switchTab('players')">ИГРОКИ</div>
+        <div class="nav-tab" id="tabBtn-top" onclick="window.switchTab('top')">ТОП</div>
         <div class="nav-tab" id="tabBtn-settings" onclick="window.switchTab('settings')">НАСТРОЙКИ</div>
     </div>
 
@@ -289,7 +314,14 @@
         </div>
     </div>
 
-    <!-- 4. СТРАНИЦА: НАСТРОЙКИ -->
+    <!-- 4. СТРАНИЦА: ТОП -->
+    <div id="topView" class="page-view hidden">
+        <div class="page-constrained" style="overflow-y: auto; scrollbar-width: none;">
+            <div id="topRenderArea" style="padding-bottom: 20px;"></div>
+        </div>
+    </div>
+
+    <!-- 5. СТРАНИЦА: НАСТРОЙКИ -->
     <div id="settingsView" class="page-view hidden">
         <div class="page-constrained">
             <div class="scrollable" id="settingsContainer"></div>
@@ -1356,7 +1388,7 @@ window.switchTab = function(tab) {
     const btn = document.getElementById('tabBtn-' + tab);
     if(btn) btn.classList.add('active');
 
-    ['gameView', 'statsView', 'playersView', 'settingsView'].forEach(id => {
+    ['gameView', 'statsView', 'playersView', 'topView', 'settingsView'].forEach(id => {
         const el = document.getElementById(id);
         if(el) el.classList.add('hidden');
     });
@@ -1372,6 +1404,7 @@ window.switchTab = function(tab) {
 
     if(tab === 'stats') window.renderCombinedStats();
     if(tab === 'players') window.openPlayerDB();
+    if(tab === 'top') { window.openPlayerDB(); window.renderTopTab(); }
     if(tab === 'settings') {
         window.tempConfig = JSON.parse(JSON.stringify(window.config)); 
         window.currentSettingsTarget = 'settingsContainer'; 
@@ -2301,6 +2334,115 @@ setInterval(() => {
     const meta = document.getElementById("gameMeta");
     if(meta) meta.innerHTML = `Матч #${todayCount} • ${activeD.split(' (')[0]} • ${new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'})}`; 
 }, 1000);
+
+window.renderTopTab = function() {
+    let container = document.getElementById('topRenderArea');
+    if (!container) return;
+    
+    // Берем только тех, кто прошел калибровку (сыграл 3+ дней)
+    let validPlayers = (window.playerDbStats || []).filter(p => p.days >= 3 && !p.isCalibrating);
+    
+    // Описание номинаций и правил сортировки
+    let categories = [
+        { id: 'top-goals', title: 'Бомбардиры', desc: 'Топ по голам (Г). В доп. статах: голов за день.', icon: '⚽', 
+          sortFn: (a,b) => b.g - a.g || b.pts - a.pts, valFn: p => p.g, subValFn: p => (p.g/p.days).toFixed(1) + ' в день', lbl: 'Г', barColor: '#16a34a' },
+          
+        { id: 'top-assists', title: 'Лучший плеймейкер', desc: 'Топ по голевым передачам (П).', icon: '🎯', 
+          sortFn: (a,b) => b.a - a.a || b.pts - a.pts, valFn: p => p.a, lbl: 'П', barColor: '#2563eb' },
+          
+        { id: 'top-pts', title: 'Самый результативный', desc: 'Топ по сумме очков (Г+П).', icon: '🔥', 
+          sortFn: (a,b) => b.pts - a.pts || b.g - a.g, valFn: p => p.pts, lbl: 'ОЧК', barColor: '#d97706' },
+          
+        { id: 'top-def', title: 'Железная стена', desc: 'Топ по плюсовой разнице голов команды (DEF).', icon: '🛡', 
+          sortFn: (a,b) => b.def - a.def || b.w - a.w, valFn: p => p.def > 0 ? '+'+p.def : p.def, rawFn: p => p.def, lbl: 'DEF', barColor: '#0ea5e9' },
+          
+        { id: 'top-cups', title: 'Короли кубков', desc: 'Топ по золотым 🥇 и серебряным 🥈 медалям.', icon: '🏆', 
+          sortFn: (a,b) => (b.titles*2 + b.silvers) - (a.titles*2 + a.silvers), valFn: p => `🥇${p.titles} 🥈${p.silvers}`, rawFn: p => p.titles*2 + p.silvers, lbl: '', barColor: '#fbbf24' },
+          
+        { id: 'top-mvp', title: 'Лучший игрок матча', desc: 'Топ по количеству наград ⭐ MVP тура.', icon: '⭐', 
+          sortFn: (a,b) => b.mvp - a.mvp || b.ovr - a.ovr, valFn: p => p.mvp, lbl: 'MVP', barColor: '#fcd34d' },
+          
+        { id: 'top-win', title: 'Победители', desc: 'Процент победных матчей при дистанции от 3+ дней.', icon: '📈', 
+          sortFn: (a,b) => (b.matches>0?b.w/b.matches:0) - (a.matches>0?a.w/a.matches:0) || b.w - a.w, valFn: p => p.winRateStr, rawFn: p => (p.matches>0?p.w/p.matches:0), lbl: '', barColor: '#10b981' }
+    ];
+
+    let html = `<div class="top-subnav">`;
+    categories.forEach(c => {
+        html += `<button onclick="document.getElementById('${c.id}').scrollIntoView({behavior: 'smooth', block: 'start'})">${c.icon} ${c.title}</button>`;
+    });
+    html += `</div>`;
+
+    let defaultAvatar = "data:image/svg+xml;utf8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23ffffff%22 opacity=%220.4%22%3E%3Cpath d=%22M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z%22/%3E%3C/svg%3E";
+
+    categories.forEach(c => {
+        let sorted = [...validPlayers].sort(c.sortFn);
+        if(sorted.length === 0) return;
+        
+        let maxRawVal = c.rawFn ? c.rawFn(sorted[0]) : c.valFn(sorted[0]);
+        if (maxRawVal <= 0 && c.id !== 'top-def') maxRawVal = 1;
+        if (c.id === 'top-def') maxRawVal = Math.max(1, maxRawVal);
+
+        html += `<div id="${c.id}" class="top-section">
+            <div class="top-section-header">
+                <div class="top-title">${c.icon} ${c.title}</div>
+                <div class="top-desc">${c.desc}</div>
+            </div>
+            <div class="top-podium">`;
+        
+        // ТОП-3 (Слева направо: 1, 2, 3)
+        for(let i=0; i<Math.min(3, sorted.length); i++) {
+            let p = sorted[i];
+            let val = c.valFn(p);
+            let subVal = c.subValFn ? `<div style="font-size:9px; opacity:0.6; margin-top:2px;">${c.subValFn(p)}</div>` : '';
+            
+            let savedPath = (window.config.avatars && window.config.avatars[p.name]) ? window.config.avatars[p.name] : "";
+            let avatarSrc = savedPath ? (savedPath.startsWith('http') || savedPath.startsWith('data:') ? savedPath : `https://antb777.github.io/FnM/${savedPath}`) : defaultAvatar;
+            
+            // Цвета: 1 - Золото, 2 - Серебро, 3 - Бронза
+            let rankColor = i===0 ? '#fbbf24' : (i===1 ? '#94a3b8' : '#b45309');
+            let textColor = i===0 ? '#000' : '#fff';
+            
+            html += `
+            <div class="top-minicard" onclick="window.openPlayerCard('${p.name}')" style="border-color: ${rankColor};">
+                <div class="minicard-rank" style="background: ${rankColor}; color: ${textColor};">${i+1}</div>
+                <div class="minicard-avatar">
+                    <img src="${avatarSrc}" onerror="this.onerror=null; this.src='${defaultAvatar}';">
+                </div>
+                <div class="minicard-name">${p.name}</div>
+                <div class="minicard-stat" style="color: ${rankColor};">${val} ${c.lbl}</div>
+                ${subVal}
+            </div>`;
+        }
+        html += `</div>`;
+        
+        // ТОП-4 ... ТОП-10 (С прогресс-барами)
+        if(sorted.length > 3) {
+            html += `<div class="top-list">`;
+            for(let i=3; i<Math.min(10, sorted.length); i++) {
+                let p = sorted[i];
+                let val = c.valFn(p);
+                let rawVal = c.rawFn ? c.rawFn(p) : val;
+                
+                let pct = Math.max(0, Math.min(100, (rawVal / maxRawVal) * 100));
+                if (c.id === 'top-def' && rawVal < 0) pct = 0; // Для отрицательного DEF полоса пустая
+
+                html += `
+                <div class="top-list-item" onclick="window.openPlayerCard('${p.name}')">
+                    <div class="list-rank">${i+1}</div>
+                    <div class="list-name">${p.name}</div>
+                    <div class="list-bar-wrap">
+                        <div class="list-bar" style="width: ${pct}%; background: ${c.barColor};"></div>
+                    </div>
+                    <div class="list-stat">${val} ${c.lbl}</div>
+                </div>`;
+            }
+            html += `</div>`;
+        }
+        html += `</div>`;
+    });
+    
+    container.innerHTML = html;
+};
 
 window.initApp();
 </script>
