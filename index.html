@@ -164,7 +164,7 @@
         /* Стили для таблицы игроков (максимальная компактность для смартфонов) */
         #playerDBContainer table th { padding: 6px 1px; font-size: 8px; letter-spacing: -0.3px; }
         #playerDBContainer table td { padding: 8px 1px; font-size: 11px; letter-spacing: -0.2px; }
-        .ovr-badge { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 4px; font-weight: 900; color: #000; font-size: 10px; }
+        .ovr-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 20px; padding: 0 3px; border-radius: 4px; font-weight: 900; color: #000; font-size: 10px; }
         .ovr-gold { background: linear-gradient(135deg, #fde047, #f59e0b); }
         .ovr-silver { background: linear-gradient(135deg, #e2e8f0, #94a3b8); }
         .ovr-bronze { background: linear-gradient(135deg, #d97706, #92400e); color: #fff; }
@@ -839,32 +839,30 @@ window.openPlayerDB = function() {
         p.winRateStr = p.matches > 0 ? Math.round(winRate * 100) + '%' : '0%';
 
         if (p.matches > 0) {
-            // 1. Импакт (средний за матч) + Объем (награждаем тех, кто много забил за сезон)
-            let rate_impact = ((p.g + (p.a * 0.7)) / p.matches) * 20;
-            let vol_impact = (p.g * 0.2) + (p.a * 0.1); 
+            let rate_impact = (p.pts / p.days) * 2.0; // Средние очки за игровой день
+            let vol_impact = p.pts * 0.15;            // Объем всех очков за сезон
+            let win_bonus = winRate * 10.0;           // Винрейт
+            let def_bonus = Math.max(-2.0, Math.min(3.0, (p.def / p.matches) * 10.0));
             
-            // 2. Командный успех: Винрейт + Процент выигранных кубков от числа визитов
-            let cupRate = p.days > 0 ? (p.titles / p.days) : 0;
-            let team_success = (winRate * 10) + (cupRate * 10);
+            // Жесткие лимиты на награды (1 MVP = +1.0, 2 и более = +2.0)
+            let mvp_bonus = Math.min(2.0, p.mvp * 1.0);
+            let title_bonus = Math.min(2.0, p.titles * 0.3);
+            let days_bonus = Math.min(3.0, p.days * 0.2); // Маленький бонус за верность лиге
             
-            // 3. Оборона: сглаженный плюс-минус (максимум +5, просадка не больше -2)
-            let def_bonus = Math.max(-2, Math.min(5, (p.def / p.matches) * 15));
-            
-            // 4. Прямые бонусы за индивидуальные награды и трофеи
-            let awards = (p.mvp * 1.5) + (p.titles * 0.5);
-            
-            p.ovrRaw = Math.round(60 + rate_impact + vol_impact + team_success + def_bonus + awards);
+            let base_ovr = 58.0;
+            p.ovrRaw = base_ovr + rate_impact + vol_impact + win_bonus + mvp_bonus + title_bonus + def_bonus + days_bonus;
         } else { 
-            p.ovrRaw = 60; 
+            p.ovrRaw = 50.0; 
         } 
         
-        p.isCalibrating = p.days < 5; 
+        p.isCalibrating = p.days < 3; // КАЛИБРОВКА ТЕПЕРЬ 3 ДНЯ
         if (p.isCalibrating && p.matches > 0) {
-            p.ovrRaw = Math.round(50 + (p.ovrRaw - 50) * (p.days / 5));
+            p.ovrRaw = 50.0 + (p.ovrRaw - 50.0) * (p.days / 3.0);
         }
         
-        p.ovrRaw = Math.max(45, Math.min(99, p.ovrRaw));
-        p.ovr = p.isCalibrating ? Math.min(p.ovrRaw, 69) : p.ovrRaw;
+        // Лимиты: минимум 1.0, максимум 99.9
+        p.ovrRaw = Math.max(1.0, Math.min(99.9, p.ovrRaw));
+        p.ovr = p.isCalibrating ? Math.min(p.ovrRaw, 69.9) : p.ovrRaw;
     });
 
     window.playerDbStats = Object.values(pStats); 
@@ -914,7 +912,7 @@ window.renderPlayerDBTable = function() {
             else if (p.ovr >= 70) badgeClass = 'ovr-silver';
             else badgeClass = 'ovr-bronze';
         }
-        let ovrText = `<div class="ovr-badge ${badgeClass}">${p.ovr}${p.isCalibrating?'<span style="font-size:10px">*</span>':''}</div>`;
+        let ovrText = `<div class="ovr-badge ${badgeClass}">${p.ovr.toFixed(1)}${p.isCalibrating?'<span style="font-size:10px">*</span>':''}</div>`;
 
         h += `<tr style="background: ${bgRow};">
             <td style="text-align: center; color: var(--gray); border-radius: 6px 0 0 6px;">${idx + 1}</td>
@@ -934,12 +932,11 @@ window.renderPlayerDBTable = function() {
     h += `</tbody></table>`; 
     h += `<div class="legend-box">
             <b>Как считается рейтинг (РТГ / OVR):</b><br><br>
-            <i>РТГ = База (60) + Импакт + Объем + Успех + DEF + Награды</i><br><br>
-            • <b>ИМПАКТ И ОБЪЕМ</b>: Очки в среднем за матч + прибавка за общее количество голов. Игроки, забившие много банок за сезон (например, 40+), получают огромный плюс.<br>
-            • <b>УСПЕХ КОМАНДЫ</b>: Винрейт (% побед) + Процент выигранных турниров от числа ваших визитов.<br>
-            • <b>DEF (±)</b>: Мягко корректирует рейтинг (от -2 до +5) за надежную игру в обороне.<br>
-            • <b>⭐ MVP / 🏆 ТИТУЛЫ</b>: Прямая надбавка за каждую награду и кубок.<br>
-            • <b>* Калибровка</b>: Первые 5 игровых дней демпфер плавно подтягивает рейтинг к вашему реальному уровню.
+            <i>РТГ = База (58) + Ср.Очки + Объем Очков + Винрейт + DEF + Награды + Опыт</i><br><br>
+            • <b>СР.ОЧКИ И ОБЪЕМ</b>: Очки за игровой день + прибавка за общее количество (Г+П). Вознаграждает и стабильность, и дистанцию.<br>
+            • <b>УСПЕХ И DEF</b>: Винрейт (% побед) и мягкая корректировка (от -2 до +3) за разницу мячей команды.<br>
+            • <b>⭐ MVP / 🏆 ТИТУЛЫ</b>: Максимум +2.0 балла за MVP и +2.0 за кубки (за весь сезон).<br>
+            • <b>* Калибровка</b>: Первые 3 игровых дня демпфер плавно подтягивает рейтинг к вашему уровню (макс 69.9).
           </div>`;
     c.innerHTML = h;
 };
@@ -957,7 +954,7 @@ window.openPlayerCard = function(playerName) {
 
     let html = `
         <div style="background: ${bgGrad}; color: ${cardColor}; padding: 25px 15px 15px; position:relative; border: 2px solid ${brdColor}; border-radius: 13px;">
-            <div style="position:absolute; top:15px; left:20px; font-size:42px; font-weight:900; line-height:1;">${p.ovr}</div>
+            <div style="position:absolute; top:15px; left:20px; font-size:42px; font-weight:900; line-height:1;">${p.ovr.toFixed(1)}</div>
             <div style="font-size: 26px; font-weight: 900; text-transform: uppercase; margin-top: 40px; border-bottom: 2px solid rgba(0,0,0,0.1); padding-bottom: 5px;">${p.name}</div>
             
             <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px 6px; margin-top: 20px; font-size: 16px; font-weight: bold; text-align: center;">
