@@ -839,24 +839,21 @@ window.openPlayerDB = function() {
         p.winRateStr = p.matches > 0 ? Math.round(winRate * 100) + '%' : '0%';
 
         if (p.matches > 0) {
-            // Атака считается в среднем за игровой день (6.5 очков/день дает 99 рейтинга)
-            let att_score = Math.min(99, Math.max(50, 50 + (p.pts / p.days) / 6.5 * 49));
-            let win_score = Math.min(99, Math.max(50, 50 + winRate / 0.48 * 45));
+            // 1. Импакт (средний за матч) + Объем (награждаем тех, кто много забил за сезон)
+            let rate_impact = ((p.g + (p.a * 0.7)) / p.matches) * 20;
+            let vol_impact = (p.g * 0.2) + (p.a * 0.1); 
             
-            let defPerMatch = p.def / p.matches;
-            let def_score = 78;
-            if (defPerMatch > 0) def_score = Math.min(99, 78 + (defPerMatch / 0.15) * 16);
-            else def_score = Math.max(45, 78 + (defPerMatch / 0.20) * 28);
+            // 2. Командный успех: Винрейт + Процент выигранных кубков от числа визитов
+            let cupRate = p.days > 0 ? (p.titles / p.days) : 0;
+            let team_success = (winRate * 10) + (cupRate * 10);
             
-            let exp_score = Math.min(99, Math.max(50, 50 + (p.days / 35) * 45));
+            // 3. Оборона: сглаженный плюс-минус (максимум +5, просадка не больше -2)
+            let def_bonus = Math.max(-2, Math.min(5, (p.def / p.matches) * 15));
             
-            let base_ovr = (att_score * 0.35) + (win_score * 0.25) + (def_score * 0.20) + (exp_score * 0.15);
+            // 4. Прямые бонусы за индивидуальные награды и трофеи
+            let awards = (p.mvp * 1.5) + (p.titles * 0.5);
             
-            // Динамический потолок бонусов (увеличивается с опытом)
-            let raw_bonuses = (p.titles * 1.0) + (p.silvers * 0.5) + (p.mvp * 1.5);
-            let final_bonus = Math.min(6.0 + (p.days * 0.5), raw_bonuses);
-            
-            p.ovrRaw = Math.round(base_ovr + final_bonus);
+            p.ovrRaw = Math.round(60 + rate_impact + vol_impact + team_success + def_bonus + awards);
         } else { 
             p.ovrRaw = 60; 
         } 
@@ -935,15 +932,14 @@ window.renderPlayerDBTable = function() {
     });
     
     h += `</tbody></table>`; 
-    h += `<div class="legend-box" style="font-size:11px;">
+    h += `<div class="legend-box">
             <b>Как считается рейтинг (РТГ / OVR):</b><br><br>
-            <i>РТГ = Очки Атаки (35%) + Винрейт (25%) + Защита (20%) + Опыт (15%) + Бонусы</i><br><br>
-            • <b>ОПЫТ</b>: Максимальный балл за опыт достигается за 35 игровых дней.<br>
-            • <b>Г / П / О</b>: Голы / Передачи / Очки (Г+П). Дают прямой вклад в атаку.<br>
-            • <b>DEF (±)</b>: Разница забитых и пропущенных мячей команды, пока вы на поле. Вытягивает рейтинг защитникам.<br>
-            • <b>ПОБЕДЫ</b>: Винрейт (% побед) и статистика (В-Н-П).<br>
-            • <b>🏆 ТИТУЛЫ / ⭐ MVP</b>: Накопительные бонусы за 1-е места и MVP (но не более +8 баллов в сумме к рейтингу).<br>
-            • <b>* Калибровка</b>: Первые 5 игровых дней демпфер плавно выводит рейтинг на ваш уровень (макс 69).
+            <i>РТГ = База (60) + Импакт + Объем + Успех + DEF + Награды</i><br><br>
+            • <b>ИМПАКТ И ОБЪЕМ</b>: Очки в среднем за матч + прибавка за общее количество голов. Игроки, забившие много банок за сезон (например, 40+), получают огромный плюс.<br>
+            • <b>УСПЕХ КОМАНДЫ</b>: Винрейт (% побед) + Процент выигранных турниров от числа ваших визитов.<br>
+            • <b>DEF (±)</b>: Мягко корректирует рейтинг (от -2 до +5) за надежную игру в обороне.<br>
+            • <b>⭐ MVP / 🏆 ТИТУЛЫ</b>: Прямая надбавка за каждую награду и кубок.<br>
+            • <b>* Калибровка</b>: Первые 5 игровых дней демпфер плавно подтягивает рейтинг к вашему реальному уровню.
           </div>`;
     c.innerHTML = h;
 };
@@ -962,16 +958,16 @@ window.openPlayerCard = function(playerName) {
     let html = `
         <div style="background: ${bgGrad}; color: ${cardColor}; padding: 25px 15px 15px; position:relative; border: 2px solid ${brdColor}; border-radius: 13px;">
             <div style="position:absolute; top:15px; left:20px; font-size:42px; font-weight:900; line-height:1;">${p.ovr}</div>
-            <div style="font-size: 26px; font-weight: 900; text-transform: uppercase; margin-top: 50px; border-bottom: 2px solid rgba(0,0,0,0.1); padding-bottom: 5px;">${p.name}</div>
+            <div style="font-size: 26px; font-weight: 900; text-transform: uppercase; margin-top: 40px; border-bottom: 2px solid rgba(0,0,0,0.1); padding-bottom: 5px;">${p.name}</div>
             
             <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px 6px; margin-top: 20px; font-size: 16px; font-weight: bold; text-align: center;">
                 <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2;">${p.days} <span style="font-weight:normal; font-size:10px; opacity:0.7">ДНИ</span></div>
                 <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2;">${p.matches} <span style="font-weight:normal; font-size:10px; opacity:0.7">МАТЧИ</span></div>
-                <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2;">${p.def > 0 ? '+'+p.def : p.def} <span style="font-weight:normal; font-size:10px; opacity:0.7; color:${cardColor}">DEF</span></div>
+                <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2;">${p.def > 0 ? '+'+p.def : p.def} <span style="font-weight:normal; font-size:10px; opacity:0.7;">DEF</span></div>
                 
-                <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2;">${p.g} <span style="font-weight:normal; font-size:10px; opacity:0.7; color:${cardColor}">ГОЛЫ</span></div>
-                <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2;">${p.a} <span style="font-weight:normal; font-size:10px; opacity:0.7; color:${cardColor}">ПАСЫ</span></div>
-                <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2;">${p.pts} <span style="font-weight:normal; font-size:10px; opacity:0.7">ОЧКИ</span></div>
+                <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2;">${p.g} <span style="font-weight:normal; font-size:10px; opacity:0.7;">ГОЛЫ</span></div>
+                <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2;">${p.a} <span style="font-weight:normal; font-size:10px; opacity:0.7;">ПАСЫ</span></div>
+                <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2;">${p.pts} <span style="font-weight:normal; font-size:10px; opacity:0.7;">ОЧКИ</span></div>
                 
                 <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2;">${p.winRateStr} <span style="font-weight:normal; font-size:10px; opacity:0.7">% ПОБЕД</span></div>
                 <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2; font-size:11px; justify-content:center;">${p.w}-${p.d}-${p.l} <span style="font-weight:normal; font-size:10px; opacity:0.7">В-Н-П</span></div>
