@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#0f172a">
-    <title>Футбол на Манеже v20.41+</title>
+    <title>Футбол на Манеже v20.42</title>
 
     <script>
         window.GITHUB_REPO = "antb777/FnM";
@@ -314,7 +314,7 @@
                 <span class="btn-subtext" style="color: #000;">Режим тестирования</span>
             </button>
             <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
-                v20.41+ Demo • <a href="https://antb777.github.io/FnM/" target="_blank" style="color: inherit; text-decoration: none;">antb777.github.io/FnM/</a>
+                v20.42 Demo • <a href="https://antb777.github.io/FnM/" target="_blank" style="color: inherit; text-decoration: none;">antb777.github.io/FnM/</a>
             </div>
         </div>
     </div>
@@ -486,7 +486,7 @@
     </div>
 
 <script>
-/* JS LOGIC v20.41+ (OVR Ratings + Seasons + OVR Formula Fix) */
+/* JS LOGIC v20.42 (OVR Ratings + Seasons + OVR Formula Fix) */
 window.COLORS = { "Черные": "#000000", "Белые": "#ffffff", "Желтые": "#facc15", "Зеленые": "#22c55e", "Красные": "#ef4444", "Синие": "#3b82f6", "Разноцветные": "linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" };
 window.colorKeys = Object.keys(window.COLORS);
 window.audioCtx = null;
@@ -965,7 +965,8 @@ window.openPlayerCard = function(playerName) {
 
     if (!p.isCalibrating) {
         if (p.ovr >= 90) { 
-            bgGrad = 'linear-gradient(135deg, #fbbf24, #d97706)'; cardColor = '#000'; brdColor = '#b45309'; 
+            // 90+ теперь использует бледный золотой градиент, как и 80+, но с приставкой TOP
+            bgGrad = 'linear-gradient(135deg, #fef08a, #fcd34d)'; cardColor = '#000'; brdColor = '#fbbf24'; 
             topLabel = `<div style="position:absolute; top:-12px; left:50%; transform:translateX(-50%); font-size:11px; font-weight:900; background:#000; color:#fbbf24; padding:3px 12px; border-radius:12px; letter-spacing:2px; z-index:10; border: 2px solid #fbbf24; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">TOP</div>`;
         }
         else if (p.ovr >= 80) { 
@@ -981,36 +982,56 @@ window.openPlayerCard = function(playerName) {
 
     let avatarSrc = (window.config.avatars && window.config.avatars[p.name]) ? window.config.avatars[p.name] : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23ffffff" opacity="0.4"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>';
     
-    let avatarHtml = `<div style="position:absolute; top:15px; right:15px; width:75px; height:75px; border-radius:50%; border:3px solid ${brdColor}; background:rgba(0,0,0,0.15); overflow:hidden; display:flex; align-items:center; justify-content:center; box-shadow: 0 5px 15px rgba(0,0,0,0.3);">
+    // Большое фото, стилизованное под вырез
+    let avatarHtml = `<div style="width:130px; height:130px; border-radius:10px; overflow:hidden; display:flex; align-items:flex-end; justify-content:center;">
         <img src="${avatarSrc}" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 24 24\\' fill=\\'%23ffffff\\' opacity=\\'0.4\\'><path d=\\'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z\\'/></svg>'">
     </div>`;
 
     let html = `
-        <div style="background: ${bgGrad}; color: ${cardColor}; padding: 25px 15px 15px; position:relative; border: 2px solid ${brdColor}; border-radius: 13px;">
+        <div style="background: ${bgGrad}; color: ${cardColor}; padding: 20px 15px; position:relative; border: 2px solid ${brdColor}; border-radius: 13px; box-shadow: inset 0 0 20px rgba(255,255,255,0.2);">
             ${topLabel}
-            <div style="position:absolute; top:15px; left:20px; font-size:42px; font-weight:900; line-height:1;">${p.ovr.toFixed(1)}</div>
-            ${avatarHtml}
-            <div style="font-size: 26px; font-weight: 900; text-transform: uppercase; margin-top: 55px; border-bottom: 2px solid rgba(0,0,0,0.1); padding-bottom: 5px; text-align:left;">${p.name}</div>
             
-            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:12px 4px; margin-top: 20px; font-size: 16px; font-weight: bold; text-align: center;">
+            <!-- ВЕРХНЯЯ ЧАСТЬ: РЕЙТИНГ И ФОТО -->
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; padding-bottom: 10px;">
+                <div style="display:flex; flex-direction:column; align-items:center; justify-content:flex-start; margin-top: 15px; margin-left: 10px;">
+                    <div style="font-size:46px; font-weight:900; line-height:0.9;">${p.ovr.toFixed(1)}</div>
+                    <div style="font-size:14px; font-weight:800; opacity:0.8; margin-top:5px;">OVR</div>
+                </div>
+                ${avatarHtml}
+            </div>
+            
+            <!-- ИМЯ -->
+            <div style="font-size: 28px; font-weight: 900; text-transform: uppercase; border-bottom: 2px solid rgba(0,0,0,0.1); padding-bottom: 5px; text-align:center;">${p.name}</div>
+            
+            <!-- ФИФА СТАТИСТИКА (ДВЕ КОЛОНКИ) -->
+            <div style="display:flex; justify-content:center; gap: 30px; margin-top:12px; font-size:18px; font-weight:900; border-bottom: 2px solid rgba(0,0,0,0.1); padding-bottom: 15px;">
+                <div style="display:flex; flex-direction:column; gap:4px; align-items:flex-start;">
+                    <div style="display:flex; gap:8px;"><span>${p.dispATT}</span><span style="opacity:0.7; font-weight:bold;">ATT</span></div>
+                    <div style="display:flex; gap:8px;"><span>${p.dispWIN}</span><span style="opacity:0.7; font-weight:bold;">WIN</span></div>
+                </div>
+                <div style="width:2px; background:rgba(0,0,0,0.1);"></div>
+                <div style="display:flex; flex-direction:column; gap:4px; align-items:flex-start;">
+                    <div style="display:flex; gap:8px;"><span>${p.dispDEF}</span><span style="opacity:0.7; font-weight:bold;">DEF</span></div>
+                    <div style="display:flex; gap:8px;"><span>${p.dispEXP}</span><span style="opacity:0.7; font-weight:bold;">EXP</span></div>
+                </div>
+            </div>
+            
+            <!-- ПОДРОБНАЯ СТАТИСТИКА -->
+            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:12px 4px; margin-top: 15px; font-size: 16px; font-weight: bold; text-align: center;">
+                <!-- Строка 1 -->
                 <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2;">${p.days} <span style="font-weight:normal; font-size:9px; opacity:0.7">ДНИ</span></div>
                 <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2;">${p.matches} <span style="font-weight:normal; font-size:9px; opacity:0.7">МАТЧИ</span></div>
                 <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2; color:${cardColor === '#000' ? '#16a34a' : 'var(--success)'}">${p.g} <span style="font-weight:normal; font-size:9px; opacity:0.7; color:${cardColor}">ГОЛЫ</span></div>
                 <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2; color:${cardColor === '#000' ? '#2563eb' : 'var(--accent)'}">${p.a} <span style="font-weight:normal; font-size:9px; opacity:0.7; color:${cardColor}">ПАСЫ</span></div>
                 
+                <!-- Строка 2 -->
                 <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2;">${p.pts} <span style="font-weight:normal; font-size:9px; opacity:0.7; color:${cardColor}">ОЧКИ</span></div>
                 <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2; font-size:11px; justify-content:center;">${p.w}-${p.d}-${p.l} <span style="font-weight:normal; font-size:9px; opacity:0.7">В-Н-П</span></div>
                 <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2;">${p.winRateStr} <span style="font-weight:normal; font-size:9px; opacity:0.7">% ПОБЕД</span></div>
                 <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2; color:${p.def > 0 ? (cardColor === '#000' ? '#16a34a' : 'var(--success)') : (p.def < 0 ? 'var(--danger)' : 'inherit')}">${p.def > 0 ? '+'+p.def : p.def} <span style="font-weight:normal; font-size:9px; opacity:0.7; color:${cardColor}">DEF</span></div>
                 
-                <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2; grid-column: span 4; margin-top:5px; font-size:14px;">ТРОФЕИ: 🥇${p.titles} &nbsp; 🥈${p.silvers} &nbsp; ⭐${p.mvp}</div>
-            </div>
-            
-            <div style="display:flex; justify-content:space-around; align-items:center; background:rgba(0,0,0,0.15); margin-top:15px; padding:12px; border-radius:10px; font-size:16px; font-weight:900; border: 1px solid rgba(255,255,255,0.1);">
-                <div style="display:flex; flex-direction:column; gap:4px; align-items:center;"><span style="font-size:10px; opacity:0.6; font-weight:normal;">ATT</span><span style="color:${p.dispATT >= 85 ? (cardColor === '#000' ? '#16a34a' : 'var(--success)') : 'inherit'};">${p.dispATT}</span></div>
-                <div style="display:flex; flex-direction:column; gap:4px; align-items:center;"><span style="font-size:10px; opacity:0.6; font-weight:normal;">WIN</span><span style="color:${p.dispWIN >= 85 ? (cardColor === '#000' ? '#16a34a' : 'var(--success)') : 'inherit'};">${p.dispWIN}</span></div>
-                <div style="display:flex; flex-direction:column; gap:4px; align-items:center;"><span style="font-size:10px; opacity:0.6; font-weight:normal;">DEF</span><span style="color:${p.dispDEF >= 85 ? (cardColor === '#000' ? '#16a34a' : 'var(--success)') : 'inherit'};">${p.dispDEF}</span></div>
-                <div style="display:flex; flex-direction:column; gap:4px; align-items:center;"><span style="font-size:10px; opacity:0.6; font-weight:normal;">EXP</span><span style="color:${p.dispEXP >= 85 ? (cardColor === '#000' ? '#16a34a' : 'var(--success)') : 'inherit'};">${p.dispEXP}</span></div>
+                <!-- Трофеи -->
+                <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2; grid-column: span 4; margin-top:5px; font-size:14px; background:rgba(0,0,0,0.05); padding:8px; border-radius:8px;">ТРОФЕИ: 🥇${p.titles} &nbsp; 🥈${p.silvers} &nbsp; ⭐${p.mvp}</div>
             </div>
         </div>
         ${p.isCalibrating ? `<div style="font-size:10px; color:#ef4444; padding: 10px; background:#fff; font-weight:bold; margin-top: -2px; border-radius: 0 0 13px 13px;">* ПРОХОДИТ КАЛИБРОВКУ (СЫГРАНО ${p.days}/3 ДНЕЙ)</div>` : ''}
