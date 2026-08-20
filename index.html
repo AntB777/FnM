@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#0f172a">
-    <title>Футбол на Манеже v20.43</title>
+    <title>Футбол на Манеже v20.44</title>
 
     <script>
         window.GITHUB_REPO = "antb777/FnM";
@@ -314,7 +314,7 @@
                 <span class="btn-subtext" style="color: #000;">Режим тестирования</span>
             </button>
             <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
-                v20.43 Demo • <a href="https://antb777.github.io/FnM/" target="_blank" style="color: inherit; text-decoration: none;">antb777.github.io/FnM/</a>
+                v20.44 Demo • <a href="https://antb777.github.io/FnM/" target="_blank" style="color: inherit; text-decoration: none;">antb777.github.io/FnM/</a>
             </div>
         </div>
     </div>
@@ -486,7 +486,7 @@
     </div>
 
 <script>
-/* JS LOGIC v20.43 (OVR Ratings + Seasons + OVR Formula Fix) */
+/* JS LOGIC v20.44 (OVR Ratings + Seasons + OVR Formula Fix) */
 window.COLORS = { "Черные": "#000000", "Белые": "#ffffff", "Желтые": "#facc15", "Зеленые": "#22c55e", "Красные": "#ef4444", "Синие": "#3b82f6", "Разноцветные": "linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" };
 window.colorKeys = Object.keys(window.COLORS);
 window.audioCtx = null;
@@ -1135,7 +1135,8 @@ window.renameGlobalPlayer = function(oldName) {
                 });
                 
                 const ext = 'jpg'; // Всегда сохраняем как jpg
-                const safeName = (newName || oldName).replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+                // Добавили а-яА-ЯёЁ, чтобы русские имена не превращались в подчеркивания
+                const safeName = (newName || oldName).replace(/[^a-zA-Z0-9а-яА-ЯёЁ]/g, '_').toLowerCase();
                 const fileName = `photos/${safeName}_${Date.now()}.${ext}`;
                 
                 const url = `https://api.github.com/repos/${window.GITHUB_REPO}/contents/${fileName}`;
