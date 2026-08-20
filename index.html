@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#0f172a">
-    <title>Футбол на Манеже v20.44</title>
+    <title>Футбол на Манеже v20.45</title>
 
     <script>
         window.GITHUB_REPO = "antb777/FnM";
@@ -172,28 +172,28 @@
         .legend-box { font-size: 9px; color: var(--gray); text-align: left; margin-top: 15px; padding: 10px; background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); line-height: 1.4; }
 
         /* --- СТИЛИ ДЛЯ СТРАНИЦЫ "ТОП" --- */
-        .top-subnav { display: flex; gap: 10px; overflow-x: auto; padding: 12px 10px; background: var(--bg); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(255,255,255,0.05); scrollbar-width: none; }
-        .top-subnav::-webkit-scrollbar { display: none; }
-        .top-subnav button { background: #ffffff; color: #000000; border: none; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 900; white-space: nowrap; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: transform 0.2s; }
+        .top-subnav { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; padding: 15px 5px 25px; background: var(--bg); position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .top-subnav button { background: rgba(255,255,255,0.9); color: #000; border: none; padding: 6px 12px; border-radius: 15px; font-size: 11px; font-weight: 800; white-space: nowrap; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: transform 0.2s; }
         .top-subnav button:active { transform: scale(0.95); }
         .top-section { margin: 25px 10px 40px; }
         .top-section-header { margin-bottom: 15px; }
         .top-title { font-size: 20px; font-weight: 900; text-transform: uppercase; color: #fff; }
         .top-desc { font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.5); margin-top: 4px; line-height: 1.3; }
         .top-podium { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
-        .top-minicard { background: rgba(255,255,255,0.05); border: 2px solid; border-radius: 12px; padding: 15px 5px 10px; text-align: center; position: relative; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .top-minicard { border-radius: 12px; padding: 15px 4px 8px; text-align: center; position: relative; cursor: pointer; box-shadow: inset 0 0 10px rgba(255,255,255,0.3), 0 5px 15px rgba(0,0,0,0.4); display: flex; flex-direction: column; align-items: center; border: 2px solid; }
         .minicard-rank { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); width: 24px; height: 24px; border-radius: 50%; font-weight: 900; font-size: 13px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(0,0,0,0.5); }
-        .minicard-avatar { width: 60px; height: 60px; margin: 0 auto 8px; border-radius: 10px; overflow: hidden; background: rgba(0,0,0,0.2); }
-        .minicard-avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .minicard-name { font-size: 12px; font-weight: 900; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; }
-        .minicard-stat { font-size: 15px; font-weight: 900; margin-top: 4px; }
+        .minicard-avatar { width: 65px; height: 65px; margin: 0 auto 6px; border-radius: 8px; overflow: hidden; background: rgba(0,0,0,0.1); position: relative; }
+        .minicard-avatar::before { content: ''; position: absolute; inset:0; background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent); pointer-events: none; z-index:1; }
+        .minicard-avatar img { width: 100%; height: 100%; object-fit: cover; position: relative; z-index:0; }
+        .minicard-name { font-size: 12px; font-weight: 900; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; padding: 0 2px; line-height: 1.1; }
+        .minicard-stat { font-size: 13px; font-weight: 900; margin-top: 4px; line-height: 1; }
         .top-list { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
-        .top-list-item { display: flex; align-items: center; background: rgba(255,255,255,0.03); padding: 10px 12px; border-radius: 8px; cursor: pointer; }
-        .list-rank { width: 22px; font-size: 13px; font-weight: 900; color: rgba(255,255,255,0.4); }
-        .list-name { width: 90px; font-size: 12px; font-weight: 800; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; }
+        .top-list-item { display: flex; align-items: center; background: rgba(255,255,255,0.03); padding: 6px 10px; border-radius: 8px; cursor: pointer; }
+        .list-rank { width: 20px; font-size: 12px; font-weight: 900; color: rgba(255,255,255,0.4); }
+        .list-name { width: 85px; font-size: 11px; font-weight: 800; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; }
         .list-bar-wrap { flex-grow: 1; margin: 0 12px; height: 6px; background: rgba(0,0,0,0.4); border-radius: 3px; overflow: hidden; }
         .list-bar { height: 100%; background: #fbbf24; border-radius: 3px; }
-        .list-stat { width: 45px; text-align: right; font-size: 13px; font-weight: 900; color: #fff; }
+        .list-stat { width: auto; min-width: 45px; text-align: right; font-size: 13px; font-weight: 900; color: #fff; }
     </style>
 </head>
 <body class="viewer-mode">
@@ -346,7 +346,7 @@
                 <span class="btn-subtext" style="color: #000;">Режим тестирования</span>
             </button>
             <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
-                v20.44 Demo • <a href="https://antb777.github.io/FnM/" target="_blank" style="color: inherit; text-decoration: none;">antb777.github.io/FnM/</a>
+                v20.45 Demo • <a href="https://antb777.github.io/FnM/" target="_blank" style="color: inherit; text-decoration: none;">antb777.github.io/FnM/</a>
             </div>
         </div>
     </div>
@@ -518,7 +518,7 @@
     </div>
 
 <script>
-/* JS LOGIC v20.44 (OVR Ratings + Seasons + OVR Formula Fix) */
+/* JS LOGIC v20.45 (OVR Ratings + Seasons + OVR Formula Fix) */
 window.COLORS = { "Черные": "#000000", "Белые": "#ffffff", "Желтые": "#facc15", "Зеленые": "#22c55e", "Красные": "#ef4444", "Синие": "#3b82f6", "Разноцветные": "linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" };
 window.colorKeys = Object.keys(window.COLORS);
 window.audioCtx = null;
@@ -2346,33 +2346,35 @@ window.renderTopTab = function() {
     // Берем только тех, кто прошел калибровку (сыграл 3+ дней)
     let validPlayers = (window.playerDbStats || []).filter(p => p.days >= 3 && !p.isCalibrating);
     
+    const plural = (n, forms) => { let n10 = Math.abs(n) % 100; let n1 = n10 % 10; if (n10 > 10 && n10 < 20) return forms[2]; if (n1 > 1 && n1 < 5) return forms[1]; if (n1 === 1) return forms[0]; return forms[2]; };
+    
     // Описание номинаций и правил сортировки
     let categories = [
-        { id: 'top-goals', title: 'Бомбардиры', desc: 'Топ по голам (Г). В доп. статах: голов за день.', icon: '⚽', 
-          sortFn: (a,b) => b.g - a.g || b.pts - a.pts, valFn: p => p.g, subValFn: p => (p.g/p.days).toFixed(1) + ' в день', lbl: 'Г', barColor: '#16a34a' },
+        { id: 'top-goals', title: 'Бомбардиры', btnLbl: 'Бомбардиры', desc: 'Топ по голам (Г).', icon: '⚽', 
+          sortFn: (a,b) => b.g - a.g || b.pts - a.pts, valFn: p => p.g, dispFn: v=>v, lblFn: v => plural(v, ['ГОЛ', 'ГОЛА', 'ГОЛОВ']), barColor: '#16a34a' },
           
-        { id: 'top-assists', title: 'Лучший плеймейкер', desc: 'Топ по голевым передачам (П).', icon: '🎯', 
-          sortFn: (a,b) => b.a - a.a || b.pts - a.pts, valFn: p => p.a, lbl: 'П', barColor: '#2563eb' },
+        { id: 'top-assists', title: 'Лучший ассистент', btnLbl: 'Ассистенты', desc: 'Топ по голевым передачам (П).', icon: '🎯', 
+          sortFn: (a,b) => b.a - a.a || b.pts - a.pts, valFn: p => p.a, dispFn: v=>v, lblFn: v => plural(v, ['ПАС', 'ПАСА', 'ПАСОВ']), barColor: '#2563eb' },
           
-        { id: 'top-pts', title: 'Самый результативный', desc: 'Топ по сумме очков (Г+П).', icon: '🔥', 
-          sortFn: (a,b) => b.pts - a.pts || b.g - a.g, valFn: p => p.pts, lbl: 'ОЧК', barColor: '#d97706' },
+        { id: 'top-pts', title: 'Самый результативный', btnLbl: 'Гол+Пас', desc: 'Топ по сумме очков (Г+П).', icon: '🔥', 
+          sortFn: (a,b) => b.pts - a.pts || b.g - a.g, valFn: p => p.pts, dispFn: v=>v, lblFn: v => plural(v, ['ОЧКО', 'ОЧКА', 'ОЧКОВ']), barColor: '#d97706' },
           
-        { id: 'top-def', title: 'Железная стена', desc: 'Топ по плюсовой разнице голов команды (DEF).', icon: '🛡', 
-          sortFn: (a,b) => b.def - a.def || b.w - a.w, valFn: p => p.def > 0 ? '+'+p.def : p.def, rawFn: p => p.def, lbl: 'DEF', barColor: '#0ea5e9' },
+        { id: 'top-def', title: 'Железная стена', btnLbl: 'Защита', desc: 'Топ по плюсовой разнице голов команды (DEF).', icon: '🛡', 
+          sortFn: (a,b) => b.def - a.def || b.w - a.w, valFn: p => p.def, dispFn: v => v > 0 ? '+'+v : v, lblFn: v => 'DEF', barColor: '#0ea5e9' },
           
-        { id: 'top-cups', title: 'Короли кубков', desc: 'Топ по золотым 🥇 и серебряным 🥈 медалям.', icon: '🏆', 
-          sortFn: (a,b) => (b.titles*2 + b.silvers) - (a.titles*2 + a.silvers), valFn: p => `🥇${p.titles} 🥈${p.silvers}`, rawFn: p => p.titles*2 + p.silvers, lbl: '', barColor: '#fbbf24' },
+        { id: 'top-cups', title: 'Короли кубков', btnLbl: 'Трофеи', desc: 'Топ по выигранным турнирам (золотые кубки).', icon: '🏆', 
+          sortFn: (a,b) => b.titles - a.titles || (b.days>0?b.titles/b.days:0) - (a.days>0?a.titles/a.days:0), valFn: p => p.titles, dispFn: v => `🏆 ${v}`, lblFn: v => plural(v, ['КУБОК', 'КУБКА', 'КУБКОВ']), subValFn: p => `${p.days} дн. (${p.days>0?Math.round((p.titles/p.days)*100):0}%)`, barColor: '#fbbf24' },
           
-        { id: 'top-mvp', title: 'Лучший игрок матча', desc: 'Топ по количеству наград ⭐ MVP тура.', icon: '⭐', 
-          sortFn: (a,b) => b.mvp - a.mvp || b.ovr - a.ovr, valFn: p => p.mvp, lbl: 'MVP', barColor: '#fcd34d' },
+        { id: 'top-mvp', title: 'Лучший игрок матча', btnLbl: 'MVP', desc: 'Топ по количеству наград ⭐ MVP тура.', icon: '⭐', 
+          sortFn: (a,b) => b.mvp - a.mvp || b.ovr - a.ovr, valFn: p => p.mvp, dispFn: v=>v, lblFn: v => 'MVP', barColor: '#fcd34d' },
           
-        { id: 'top-win', title: 'Победители', desc: 'Процент победных матчей при дистанции от 3+ дней.', icon: '📈', 
-          sortFn: (a,b) => (b.matches>0?b.w/b.matches:0) - (a.matches>0?a.w/a.matches:0) || b.w - a.w, valFn: p => p.winRateStr, rawFn: p => (p.matches>0?p.w/p.matches:0), lbl: '', barColor: '#10b981' }
+        { id: 'top-win', title: 'Победители', btnLbl: '% Побед', desc: 'Процент победных матчей при дистанции от 3+ дней.', icon: '📈', 
+          sortFn: (a,b) => (b.matches>0?b.w/b.matches:0) - (a.matches>0?a.w/a.matches:0) || b.w - a.w, valFn: p => p.matches>0?Math.round((p.w/p.matches)*100):0, dispFn: v => v + '%', rawFn: p => (p.matches>0?p.w/p.matches:0), lblFn: v => 'ПОБЕД', subValFn: p => `${p.matches} игр (${p.w}-${p.d}-${p.l})`, barColor: '#10b981' }
     ];
 
     let html = `<div class="top-subnav">`;
     categories.forEach(c => {
-        html += `<button onclick="document.getElementById('${c.id}').scrollIntoView({behavior: 'smooth', block: 'start'})">${c.icon} ${c.title}</button>`;
+        html += `<button onclick="document.getElementById('${c.id}').scrollIntoView({behavior: 'smooth', block: 'start'})">${c.btnLbl}</button>`;
     });
     html += `</div>`;
 
@@ -2393,39 +2395,40 @@ window.renderTopTab = function() {
             </div>
             <div class="top-podium">`;
         
-        // ТОП-3 (Слева направо: 1, 2, 3)
+        // ТОП-3 (Слева направо: 1, 2, 3) - Карточки в стиле Elite/Silver/Bronze
         for(let i=0; i<Math.min(3, sorted.length); i++) {
             let p = sorted[i];
-            let val = c.valFn(p);
-            let subVal = c.subValFn ? `<div style="font-size:9px; opacity:0.6; margin-top:2px;">${c.subValFn(p)}</div>` : '';
+            let dispVal = c.dispFn(c.valFn(p));
+            let lbl = c.lblFn(c.valFn(p));
             
             let savedPath = (window.config.avatars && window.config.avatars[p.name]) ? window.config.avatars[p.name] : "";
             let avatarSrc = savedPath ? (savedPath.startsWith('http') || savedPath.startsWith('data:') ? savedPath : `https://antb777.github.io/FnM/${savedPath}`) : defaultAvatar;
             
-            // Цвета: 1 - Золото, 2 - Серебро, 3 - Бронза
-            let rankColor = i===0 ? '#fbbf24' : (i===1 ? '#94a3b8' : '#b45309');
-            let textColor = i===0 ? '#000' : '#fff';
+            // Цвета и градиенты под стиль карточек
+            let bgGrad = i===0 ? 'linear-gradient(135deg, #fef08a, #d97706)' : (i===1 ? 'linear-gradient(135deg, #f8fafc, #94a3b8)' : 'linear-gradient(135deg, #f59e0b, #78350f)');
+            let brdColor = i===0 ? '#fbbf24' : (i===1 ? '#cbd5e1' : '#b45309');
+            let textColor = i===2 ? '#fff' : '#000';
             
             html += `
-            <div class="top-minicard" onclick="window.openPlayerCard('${p.name}')" style="border-color: ${rankColor};">
-                <div class="minicard-rank" style="background: ${rankColor}; color: ${textColor};">${i+1}</div>
+            <div class="top-minicard" onclick="window.openPlayerCard('${p.name}')" style="background: ${bgGrad}; border-color: ${brdColor};">
+                <div class="minicard-rank" style="background: ${brdColor}; color: ${i===0?'#000':'#fff'};">${i+1}</div>
                 <div class="minicard-avatar">
                     <img src="${avatarSrc}" onerror="this.onerror=null; this.src='${defaultAvatar}';">
                 </div>
-                <div class="minicard-name">${p.name}</div>
-                <div class="minicard-stat" style="color: ${rankColor};">${val} ${c.lbl}</div>
-                ${subVal}
+                <div class="minicard-name" style="color: ${textColor};">${p.name}</div>
+                <div class="minicard-stat" style="color: ${textColor};">${dispVal} ${lbl}</div>
             </div>`;
         }
         html += `</div>`;
         
-        // ТОП-4 ... ТОП-10 (С прогресс-барами)
-        if(sorted.length > 3) {
+        // ТОП-1 ... ТОП-10 (Полный список с прогресс-барами)
+        if(sorted.length > 0) {
             html += `<div class="top-list">`;
-            for(let i=3; i<Math.min(10, sorted.length); i++) {
+            for(let i=0; i<Math.min(10, sorted.length); i++) {
                 let p = sorted[i];
-                let val = c.valFn(p);
-                let rawVal = c.rawFn ? c.rawFn(p) : val;
+                let rawVal = c.rawFn ? c.rawFn(p) : c.valFn(p);
+                let dispVal = c.dispFn(c.valFn(p));
+                let subVal = c.subValFn ? c.subValFn(p) : '';
                 
                 let pct = Math.max(0, Math.min(100, (rawVal / maxRawVal) * 100));
                 if (c.id === 'top-def' && rawVal < 0) pct = 0; // Для отрицательного DEF полоса пустая
@@ -2437,7 +2440,10 @@ window.renderTopTab = function() {
                     <div class="list-bar-wrap">
                         <div class="list-bar" style="width: ${pct}%; background: ${c.barColor};"></div>
                     </div>
-                    <div class="list-stat">${val} ${c.lbl}</div>
+                    <div class="list-stat">
+                        <div>${dispVal}</div>
+                        ${subVal ? `<div style="font-size:9px; color:rgba(255,255,255,0.6); font-weight:bold; margin-top:3px; white-space:nowrap;">${subVal}</div>` : ''}
+                    </div>
                 </div>`;
             }
             html += `</div>`;
@@ -2447,7 +2453,6 @@ window.renderTopTab = function() {
     
     container.innerHTML = html;
 };
-
 window.initApp();
 </script>
 </body>
