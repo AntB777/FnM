@@ -961,46 +961,63 @@ window.openPlayerCard = function(playerName) {
     if(!p) return;
 
     let bgGrad = 'linear-gradient(135deg, #334155, #0f172a)'; let cardColor = '#fff'; let brdColor = '#475569';
+    let topLabel = '';
+
     if (!p.isCalibrating) {
-        if (p.ovr >= 80) { bgGrad = 'linear-gradient(135deg, #fde047, #d97706)'; cardColor = '#000'; brdColor = '#f59e0b'; }
-        else if (p.ovr >= 70) { bgGrad = 'linear-gradient(135deg, #e2e8f0, #64748b)'; cardColor = '#000'; brdColor = '#94a3b8'; }
-        else { bgGrad = 'linear-gradient(135deg, #d97706, #78350f)'; brdColor = '#b45309'; }
+        if (p.ovr >= 90) { 
+            bgGrad = 'linear-gradient(135deg, #fbbf24, #d97706)'; cardColor = '#000'; brdColor = '#b45309'; 
+            topLabel = `<div style="position:absolute; top:-12px; left:50%; transform:translateX(-50%); font-size:11px; font-weight:900; background:#000; color:#fbbf24; padding:3px 12px; border-radius:12px; letter-spacing:2px; z-index:10; border: 2px solid #fbbf24; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">TOP</div>`;
+        }
+        else if (p.ovr >= 80) { 
+            bgGrad = 'linear-gradient(135deg, #fef08a, #fcd34d)'; cardColor = '#000'; brdColor = '#fbbf24'; 
+        }
+        else if (p.ovr >= 70) { 
+            bgGrad = 'linear-gradient(135deg, #e2e8f0, #94a3b8)'; cardColor = '#000'; brdColor = '#64748b'; 
+        }
+        else { 
+            bgGrad = 'linear-gradient(135deg, #d97706, #78350f)'; brdColor = '#b45309'; 
+        }
     }
+
+    let avatarSrc = (window.config.avatars && window.config.avatars[p.name]) ? window.config.avatars[p.name] : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23ffffff" opacity="0.4"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>';
+    
+    let avatarHtml = `<div style="position:absolute; top:15px; right:15px; width:75px; height:75px; border-radius:50%; border:3px solid ${brdColor}; background:rgba(0,0,0,0.15); overflow:hidden; display:flex; align-items:center; justify-content:center; box-shadow: 0 5px 15px rgba(0,0,0,0.3);">
+        <img src="${avatarSrc}" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 24 24\\' fill=\\'%23ffffff\\' opacity=\\'0.4\\'><path d=\\'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z\\'/></svg>'">
+    </div>`;
 
     let html = `
         <div style="background: ${bgGrad}; color: ${cardColor}; padding: 25px 15px 15px; position:relative; border: 2px solid ${brdColor}; border-radius: 13px;">
+            ${topLabel}
             <div style="position:absolute; top:15px; left:20px; font-size:42px; font-weight:900; line-height:1;">${p.ovr.toFixed(1)}</div>
-            <div style="font-size: 26px; font-weight: 900; text-transform: uppercase; margin-top: 40px; border-bottom: 2px solid rgba(0,0,0,0.1); padding-bottom: 5px;">${p.name}</div>
+            ${avatarHtml}
+            <div style="font-size: 26px; font-weight: 900; text-transform: uppercase; margin-top: 55px; border-bottom: 2px solid rgba(0,0,0,0.1); padding-bottom: 5px; text-align:left;">${p.name}</div>
             
-            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px 6px; margin-top: 20px; font-size: 16px; font-weight: bold; text-align: center;">
-                <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2;">${p.days} <span style="font-weight:normal; font-size:10px; opacity:0.7">ДНИ</span></div>
-                <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2;">${p.matches} <span style="font-weight:normal; font-size:10px; opacity:0.7">МАТЧИ</span></div>
-                <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2;">${p.def > 0 ? '+'+p.def : p.def} <span style="font-weight:normal; font-size:10px; opacity:0.7;">DEF</span></div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:12px 4px; margin-top: 20px; font-size: 16px; font-weight: bold; text-align: center;">
+                <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2;">${p.days} <span style="font-weight:normal; font-size:9px; opacity:0.7">ДНИ</span></div>
+                <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2;">${p.matches} <span style="font-weight:normal; font-size:9px; opacity:0.7">МАТЧИ</span></div>
+                <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2; color:${cardColor === '#000' ? '#16a34a' : 'var(--success)'}">${p.g} <span style="font-weight:normal; font-size:9px; opacity:0.7; color:${cardColor}">ГОЛЫ</span></div>
+                <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2; color:${cardColor === '#000' ? '#2563eb' : 'var(--accent)'}">${p.a} <span style="font-weight:normal; font-size:9px; opacity:0.7; color:${cardColor}">ПАСЫ</span></div>
                 
-                <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2;">${p.g} <span style="font-weight:normal; font-size:10px; opacity:0.7;">ГОЛЫ</span></div>
-                <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2;">${p.a} <span style="font-weight:normal; font-size:10px; opacity:0.7;">ПАСЫ</span></div>
-                <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2;">${p.pts} <span style="font-weight:normal; font-size:10px; opacity:0.7;">ОЧКИ</span></div>
+                <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2;">${p.pts} <span style="font-weight:normal; font-size:9px; opacity:0.7; color:${cardColor}">ОЧКИ</span></div>
+                <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2; font-size:11px; justify-content:center;">${p.w}-${p.d}-${p.l} <span style="font-weight:normal; font-size:9px; opacity:0.7">В-Н-П</span></div>
+                <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2;">${p.winRateStr} <span style="font-weight:normal; font-size:9px; opacity:0.7">% ПОБЕД</span></div>
+                <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2; color:${p.def > 0 ? (cardColor === '#000' ? '#16a34a' : 'var(--success)') : (p.def < 0 ? 'var(--danger)' : 'inherit')}">${p.def > 0 ? '+'+p.def : p.def} <span style="font-weight:normal; font-size:9px; opacity:0.7; color:${cardColor}">DEF</span></div>
                 
-                <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2;">${p.winRateStr} <span style="font-weight:normal; font-size:10px; opacity:0.7">% ПОБЕД</span></div>
-                <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2; font-size:11px; justify-content:center;">${p.w}-${p.d}-${p.l} <span style="font-weight:normal; font-size:10px; opacity:0.7">В-Н-П</span></div>
-                <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2;">${p.mvp} <span style="font-weight:normal; font-size:10px; opacity:0.7">MVP ⭐</span></div>
-                
-                <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2; grid-column: span 3;">ТРОФЕИ: 🥇${p.titles} &nbsp;&nbsp; 🥈${p.silvers}</div>
+                <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2; grid-column: span 4; margin-top:5px; font-size:14px;">ТРОФЕИ: 🥇${p.titles} &nbsp; 🥈${p.silvers} &nbsp; ⭐${p.mvp}</div>
             </div>
-
-            <!-- БЛОК: СТАТИСТИКА FIFA -->
+            
             <div style="display:flex; justify-content:space-around; align-items:center; background:rgba(0,0,0,0.15); margin-top:15px; padding:12px; border-radius:10px; font-size:16px; font-weight:900; border: 1px solid rgba(255,255,255,0.1);">
-                <div style="display:flex; flex-direction:column; gap:4px; align-items:center;"><span style="font-size:10px; opacity:0.6; font-weight:normal;">ATT</span><span style="color:${p.dispATT >= 85 ? 'var(--success)' : 'inherit'};">${p.dispATT}</span></div>
-                <div style="display:flex; flex-direction:column; gap:4px; align-items:center;"><span style="font-size:10px; opacity:0.6; font-weight:normal;">WIN</span><span style="color:${p.dispWIN >= 85 ? 'var(--success)' : 'inherit'};">${p.dispWIN}</span></div>
-                <div style="display:flex; flex-direction:column; gap:4px; align-items:center;"><span style="font-size:10px; opacity:0.6; font-weight:normal;">DEF</span><span style="color:${p.dispDEF >= 85 ? 'var(--success)' : 'inherit'};">${p.dispDEF}</span></div>
-                <div style="display:flex; flex-direction:column; gap:4px; align-items:center;"><span style="font-size:10px; opacity:0.6; font-weight:normal;">EXP</span><span style="color:${p.dispEXP >= 85 ? 'var(--success)' : 'inherit'};">${p.dispEXP}</span></div>
+                <div style="display:flex; flex-direction:column; gap:4px; align-items:center;"><span style="font-size:10px; opacity:0.6; font-weight:normal;">ATT</span><span style="color:${p.dispATT >= 85 ? (cardColor === '#000' ? '#16a34a' : 'var(--success)') : 'inherit'};">${p.dispATT}</span></div>
+                <div style="display:flex; flex-direction:column; gap:4px; align-items:center;"><span style="font-size:10px; opacity:0.6; font-weight:normal;">WIN</span><span style="color:${p.dispWIN >= 85 ? (cardColor === '#000' ? '#16a34a' : 'var(--success)') : 'inherit'};">${p.dispWIN}</span></div>
+                <div style="display:flex; flex-direction:column; gap:4px; align-items:center;"><span style="font-size:10px; opacity:0.6; font-weight:normal;">DEF</span><span style="color:${p.dispDEF >= 85 ? (cardColor === '#000' ? '#16a34a' : 'var(--success)') : 'inherit'};">${p.dispDEF}</span></div>
+                <div style="display:flex; flex-direction:column; gap:4px; align-items:center;"><span style="font-size:10px; opacity:0.6; font-weight:normal;">EXP</span><span style="color:${p.dispEXP >= 85 ? (cardColor === '#000' ? '#16a34a' : 'var(--success)') : 'inherit'};">${p.dispEXP}</span></div>
             </div>
         </div>
-        ${p.isCalibrating ? `<div style="font-size:10px; color:#ef4444; padding: 10px; background:#fff; font-weight:bold; margin-top: -2px; border-radius: 0 0 13px 13px;">* ПРОХОДИТ КАЛИБРОВКУ (СЫГРАНО ${p.days}/5 ДНЕЙ)</div>` : ''}
+        ${p.isCalibrating ? `<div style="font-size:10px; color:#ef4444; padding: 10px; background:#fff; font-weight:bold; margin-top: -2px; border-radius: 0 0 13px 13px;">* ПРОХОДИТ КАЛИБРОВКУ (СЫГРАНО ${p.days}/3 ДНЕЙ)</div>` : ''}
         
         ${window.currentRole === 'admin' && !window.isDemoMode && window.viewingSeasonIndex === -1 ? `
         <div style="padding: 10px; background: rgba(0,0,0,0.2); border-radius: 13px; margin-top:10px;">
-            <button class="admin-edit-btn" style="width:100%; border:none; padding:8px; color:var(--text);" onclick="window.closeModal('playerCardModal'); window.renameGlobalPlayer('${p.name}')">✏️ ИЗМЕНИТЬ ИМЯ ИГРОКА</button>
+            <button class="admin-edit-btn" style="width:100%; border:none; padding:8px; color:var(--text);" onclick="window.closeModal('playerCardModal'); window.renameGlobalPlayer('${p.name}')">✏️ ИЗМЕНИТЬ ПРОФИЛЬ (ИМЯ И ФОТО)</button>
         </div>
         ` : ''}
     `;
@@ -1008,17 +1025,115 @@ window.openPlayerCard = function(playerName) {
     document.getElementById('cardRenderArea').innerHTML = html;
     window.openModal('playerCardModal');
 };
-
 window.renameGlobalPlayer = function(oldName) {
     if (window.isDemoMode) return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно. Обратитесь к разработчику.");
-    window.showPrompt(`Новое имя для "${oldName}":`, oldName, (newName) => {
-        let nName = newName.trim(); if(!nName || nName === oldName || nName === '?' || nName === 'Автогол') return;
-        window.replacePlayerNameGlobally(oldName, nName);
+    
+    // Создаем специальное окно в рамках существующего модала
+    document.getElementById('sysPromptTitle').innerText = "ПРОФИЛЬ ИГРОКА";
+    const inputEl = document.getElementById('sysPromptInput');
+    inputEl.style.display = 'none'; // Прячем стандартное поле ввода
+    
+    let av = (window.config.avatars && window.config.avatars[oldName]) ? window.config.avatars[oldName] : '';
+    
+    let html = `
+        <div style="text-align:left; margin-bottom:15px;">
+            <div style="font-size:11px; color:var(--gray); margin-bottom:5px; font-weight:bold;">ИМЯ ИГРОКА:</div>
+            <input type="text" id="profEditName" class="player-input" value="${oldName}" style="width:100%; box-sizing:border-box; text-align:center; font-weight:bold; font-size:16px;">
+        </div>
+        <div style="text-align:left; margin-bottom:15px;">
+            <div style="font-size:11px; color:var(--gray); margin-bottom:5px; font-weight:bold;">ФОТО В КАРТОЧКУ (JPG/PNG):</div>
+            <input type="file" id="profEditFile" accept="image/*" class="player-input" style="width:100%; box-sizing:border-box; font-size:12px; padding:6px; background:rgba(0,0,0,0.2);">
+            <div style="font-size:9px; color:var(--warning); margin-top:6px;">*Файл навсегда сохранится на GitHub. Для загрузки убедитесь, что вы авторизованы (указан токен).</div>
+        </div>
+    `;
+    document.getElementById('sysPromptMsg').innerHTML = html;
+    
+    const resetPromptUI = () => {
+        document.getElementById('sysPromptInput').style.display = 'block';
+        document.getElementById('sysPromptInput').value = '';
+        document.getElementById('sysPromptMsg').innerHTML = '';
+    };
+    
+    // Переопределяем кнопку "ДА"
+    window._promptCallback = async () => {
+        const newName = document.getElementById('profEditName').value.trim();
+        const fileInput = document.getElementById('profEditFile');
+        let newAvatarUrl = av;
+        
+        if (fileInput.files && fileInput.files[0]) {
+            if (!window.githubToken) { 
+                window.showAlert("Для загрузки фото необходимо указать GitHub Token! (Нажмите кнопку облака 'Опубликовать' вверху экрана)"); 
+                resetPromptUI();
+                return; 
+            }
+            
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            document.getElementById('loadingOverlay').querySelector('span').innerText = "Загрузка фото...";
+            
+            try {
+                const file = fileInput.files[0];
+                const base64Data = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result.split(',')[1]);
+                    reader.readAsDataURL(file);
+                });
+                
+                const ext = file.name.split('.').pop();
+                const safeName = (newName || oldName).replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+                const fileName = `photos/${safeName}_${Date.now()}.${ext}`;
+                
+                const url = `https://api.github.com/repos/${window.GITHUB_REPO}/contents/${fileName}`;
+                const putRes = await fetch(url, {
+                    method: "PUT",
+                    headers: { "Authorization": `token ${window.githubToken}`, "Content-Type": "application/json" },
+                    body: JSON.stringify({ message: `Upload avatar for ${newName || oldName}`, content: base64Data })
+                });
+                
+                if (!putRes.ok) throw new Error("Ошибка загрузки");
+                
+                newAvatarUrl = fileName; 
+            } catch (e) {
+                console.error(e);
+                window.showAlert("Не удалось загрузить фото. Проверьте токен авторизации.");
+            }
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+
+        if (!newName || newName === '?' || newName === 'Автогол') {
+            resetPromptUI(); return;
+        }
+
+        if (!window.config.avatars) window.config.avatars = {};
+        
+        if (newName !== oldName) {
+            window.replacePlayerNameGlobally(oldName, newName);
+            if (window.config.avatars[oldName]) {
+                if (!newAvatarUrl) newAvatarUrl = window.config.avatars[oldName];
+                delete window.config.avatars[oldName];
+            }
+        }
+        
+        if (newAvatarUrl) { window.config.avatars[newName] = newAvatarUrl; }
+        
         window.setStore("config", window.config); window.setStore("tourRosters", window.tourRosters); window.setStore("matches", window.matches);
         window.updateGlobalPlayersList(); window.openPlayerDB(); window.syncToFirebase(true);
+        
         if (!document.getElementById('tourPlayerEditorModal').classList.contains('hidden')) { window.openTourPlayerEditor(window.editingTourPlayerDate); }
         if (!document.getElementById('rosterModal').classList.contains('hidden')) { window.openRosterEditor(); }
-    }, () => { window.deleteGlobalPlayer(oldName); });
+
+        resetPromptUI();
+    };
+    
+    // Переопределяем кнопку "Удалить"
+    window._promptDeleteCallback = () => {
+        resetPromptUI();
+        window.deleteGlobalPlayer(oldName);
+    };
+    
+    const delBtn = document.getElementById('sysPromptDeleteBtn');
+    delBtn.style.display = 'block';
+    
+    window.openModal('sysPromptModal');
 };
 
 window.deleteGlobalPlayer = function(name) { 
