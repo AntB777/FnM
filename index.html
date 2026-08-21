@@ -112,6 +112,11 @@
         .modal-content { position: relative; background: var(--card); border-radius: 25px; padding: 25px; text-align: center; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); width: 95%; max-width: 500px; max-height: 94vh; display: flex; flex-direction: column; overflow: hidden; }
         .scrollable { flex: 1; overflow-y: auto; overflow-x: hidden; margin-top: 10px; padding-right: 5px; scrollbar-width: none; }
 
+        @keyframes cardEnter { 0% { transform: scale(0.7) translateY(40px); opacity: 0; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
+        @keyframes cardExit { 0% { transform: scale(1) translateY(0); opacity: 1; } 100% { transform: scale(0.8) translateY(30px); opacity: 0; } }
+        .card-entering { animation: cardEnter 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .card-exiting { animation: cardExit 0.25s ease-in forwards; }
+
         .stats-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 20px; } 
         .stats-table th { color: var(--gray); font-size: 9px; padding: 10px 2px; border-bottom: 1px solid #334155; text-transform: uppercase; } 
         .stats-table td { padding: 10px 2px; border-bottom: 1px solid rgba(255,255,255,0.05); text-align: center; } 
@@ -371,10 +376,9 @@
         </div>
     </div>
 
-    <div id="playerCardModal" class="overlay hidden" style="z-index: 30000;">
-        <div class="modal-content" style="background: transparent; border: none; box-shadow: none; align-items: center;">
-            <div id="cardRenderArea" style="width: 260px; border-radius: 15px; overflow: hidden; background: transparent; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; padding-bottom: 20px;"></div>
-            <button class="btn-base" style="margin-top: 20px; width: 100%; max-width: 260px; background: rgba(0,0,0,0.5);" onclick="window.closeModal('playerCardModal')">ЗАКРЫТЬ</button>
+    <div id="playerCardModal" class="overlay hidden" style="z-index: 30000; cursor: pointer;" onclick="if(event.target === this || event.target.closest('.modal-content') === event.target) window.closePlayerCard()">
+        <div class="modal-content" style="background: transparent; border: none; box-shadow: none; align-items: center; padding: 0;">
+            <div id="cardRenderArea" style="width: 260px; border-radius: 18px; overflow: visible; background: transparent; border: none; text-align: center;"></div>
         </div>
     </div>
 
@@ -999,6 +1003,15 @@ window.renderPlayerDBTable = function() {
     c.innerHTML = h;
 };
 
+window.closePlayerCard = function() {
+    const area = document.getElementById('cardRenderArea');
+    area.classList.remove('card-entering');
+    area.classList.add('card-exiting');
+    setTimeout(() => {
+        window.closeModal('playerCardModal');
+    }, 250);
+};
+
 window.openPlayerCard = function(playerName) {
     let p = window.playerDbStats.find(x => x.name === playerName);
     if(!p) return;
@@ -1011,12 +1024,10 @@ window.openPlayerCard = function(playerName) {
 
     if (!p.isCalibrating) {
         if (p.ovr >= 90) { 
-            // 90+ Luminous Gold TOTS СТИЛЬ
             bgGrad = 'linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.0) 100%), radial-gradient(circle at 65% 20%, #fef08a 0%, #fde047 35%, #facc15 70%, #d97706 100%)'; 
             cardColor = '#000'; 
             brdColor = '#fbbf24'; 
             glowShadow = 'inset 0 0 25px rgba(255,255,255,0.7), 0 0 35px rgba(253,224,71,0.7)';
-            // Изменили top: -12px на top: -4px, чтобы плашка опустилась ниже на рамку и не обрезалась
             topLabel = `<div style="position:absolute; top:-4px; left:50%; transform:translateX(-50%); font-size:11px; font-weight:900; background:#000; color:#fef08a; padding:4px 14px; border-radius:14px; letter-spacing:2px; z-index:10; border: 2px solid #fbbf24; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">🔥 ELITE 90+</div>`;
         }
         else if (p.ovr >= 80) { 
@@ -1049,7 +1060,6 @@ window.openPlayerCard = function(playerName) {
         }
     }
     
-    // Фото с наложением эффекта глянца/стекла
     let avatarHtml = `<div style="width:130px; height:130px; border-radius:12px; overflow:hidden; display:flex; align-items:flex-end; justify-content:center; position:relative; background:rgba(0,0,0,0.05);">
         <img src="${avatarSrc}" style="width:100%; height:100%; object-fit:cover; position:relative; z-index:0;" onerror="this.onerror=null; this.src='${defaultAvatar}';">
         <div style="position:absolute; top:0; left:0; width:100%; height:100%; background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent 100%), radial-gradient(circle at 65% 20%, transparent 0%, rgba(253,224,71,0.15) 70%, rgba(217,119,6,0.2) 100%); z-index:1; pointer-events:none;"></div>
@@ -1059,7 +1069,7 @@ window.openPlayerCard = function(playerName) {
     let ovrParts = ovrStr.split('.');
 
     let html = `
-        <div style="background: ${bgGrad}; color: ${cardColor}; padding: 22px 16px 16px; position:relative; border: 3px solid ${brdColor}; border-radius: 18px; box-shadow: ${glowShadow}; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center;">
+        <div onclick="window.closePlayerCard()" style="background: ${bgGrad}; color: ${cardColor}; padding: 22px 16px 16px; position:relative; border: 3px solid ${brdColor}; border-radius: 18px; box-shadow: ${glowShadow}; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; cursor: pointer; transition: transform 0.15s ease;" onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform='scale(1)'" ontouchstart="this.style.transform='scale(0.97)'" ontouchend="this.style.transform='scale(1)'">
             ${topLabel}
             
             <!-- ВЕРХНЯЯ ЧАСТЬ: РЕЙТИНГ И ФОТО -->
@@ -1089,34 +1099,35 @@ window.openPlayerCard = function(playerName) {
             
             <!-- ПОДРОБНАЯ СТАТИСТИКА -->
             <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:12px 4px; margin-top: 15px; font-size: 16px; font-weight: bold;">
-                <!-- Строка 1 -->
                 <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2;">${p.days} <span style="font-weight:normal; font-size:9px; opacity:0.7; margin-top:2px;">ДНИ</span></div>
                 <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2;">${p.matches} <span style="font-weight:normal; font-size:9px; opacity:0.7; margin-top:2px;">МАТЧИ</span></div>
                 <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2; color:${cardColor === '#000' ? '#16a34a' : 'var(--success)'}">${p.g} <span style="font-weight:normal; font-size:9px; opacity:0.7; color:${cardColor}; margin-top:2px;">ГОЛЫ</span></div>
                 <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2; color:${cardColor === '#000' ? '#2563eb' : 'var(--accent)'}">${p.a} <span style="font-weight:normal; font-size:9px; opacity:0.7; color:${cardColor}; margin-top:2px;">ПАСЫ</span></div>
                 
-                <!-- Строка 2 -->
                 <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2;">${p.pts} <span style="font-weight:normal; font-size:9px; opacity:0.7; color:${cardColor}; margin-top:2px;">ОЧКИ</span></div>
                 <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2; font-size:11px; justify-content:center;">${p.w}-${p.d}-${p.l} <span style="font-weight:normal; font-size:9px; opacity:0.7; margin-top:2px;">В-Н-П</span></div>
                 <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2;">${p.winRateStr} <span style="font-weight:normal; font-size:9px; opacity:0.7; margin-top:2px;">% ПОБЕД</span></div>
                 <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2; color:${p.def > 0 ? (cardColor === '#000' ? '#16a34a' : 'var(--success)') : (p.def < 0 ? 'var(--danger)' : 'inherit')}">${p.def > 0 ? '+'+p.def : p.def} <span style="font-weight:normal; font-size:9px; opacity:0.7; color:${cardColor}; margin-top:2px;">DEF</span></div>
                 
-                <!-- Трофеи -->
                 <div style="display:flex; flex-direction:column; align-items:center; line-height:1.2; grid-column: span 4; margin-top:5px; font-size:14px; background:rgba(0,0,0,0.05); padding:8px; border-radius:8px;">ТРОФЕИ: 🥇${p.titles} &nbsp; 🥈${p.silvers} &nbsp; ⭐${p.mvp}</div>
             </div>
         </div>
-        ${p.isCalibrating ? `<div style="font-size:10px; color:#ef4444; padding: 10px; background:#fff; font-weight:bold; margin-top: -2px; border-radius: 0 0 13px 13px;">* ПРОХОДИТ КАЛИБРОВКУ (СЫГРАНО ${p.days}/3 ДНЕЙ)</div>` : ''}
+        ${p.isCalibrating ? `<div style="font-size:10px; color:#ef4444; padding: 10px; background:#fff; font-weight:bold; margin-top: -2px; border-radius: 0 0 13px 13px; position:relative; z-index:-1;">* ПРОХОДИТ КАЛИБРОВКУ (СЫГРАНО ${p.days}/3 ДНЕЙ)</div>` : ''}
         
         ${window.currentRole === 'admin' && !window.isDemoMode && window.viewingSeasonIndex === -1 ? `
         <div style="padding: 10px; background: rgba(0,0,0,0.2); border-radius: 13px; margin-top:10px;">
-            <button class="admin-edit-btn" style="width:100%; border:none; padding:8px; color:var(--text);" onclick="window.closeModal('playerCardModal'); window.renameGlobalPlayer('${p.name}')">✏️ ИЗМЕНИТЬ ПРОФИЛЬ (ИМЯ И ФОТО)</button>
+            <button class="admin-edit-btn" style="width:100%; border:none; padding:8px; color:var(--text);" onclick="window.closePlayerCard(); setTimeout(() => window.renameGlobalPlayer('${p.name}'), 250);">✏️ ИЗМЕНИТЬ ПРОФИЛЬ (ИМЯ И ФОТО)</button>
         </div>
         ` : ''}
     `;
 
-    document.getElementById('cardRenderArea').innerHTML = html;
+    const area = document.getElementById('cardRenderArea');
+    area.innerHTML = html;
+    area.classList.remove('card-exiting');
+    area.classList.add('card-entering');
     window.openModal('playerCardModal');
-};window.renameGlobalPlayer = function(oldName) {
+};
+    window.renameGlobalPlayer = function(oldName) {
     if (window.isDemoMode) return window.showAlert("Приложение тестируется. Изменение этих настроек в Demo режиме не доступно. Обратитесь к разработчику.");
     
     // Создаем специальное окно в рамках существующего модала
