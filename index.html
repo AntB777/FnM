@@ -151,15 +151,17 @@
         .p-btn { background: #2d3748; border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 15px 5px; border-radius: 12px; font-size: 14px; font-weight: bold; cursor: pointer; transition: all 0.2s; text-transform: uppercase;} 
         .p-btn:active { transform: scale(0.95); }
 
-        #loadingOverlay { position: fixed; inset: 0; background: var(--bg); z-index: 20000; display: flex; align-items: center; justify-content: center; flex-direction: column; color: var(--accent); font-weight: 900; font-size: 20px; text-transform: uppercase; letter-spacing: 2px; }
-        .spinner { width: 40px; height: 40px; border: 4px solid rgba(56, 189, 248, 0.2); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
+        #loadingOverlay { position: fixed; inset: 0; background: var(--bg); z-index: 20000; display: flex; align-items: center; justify-content: center; flex-direction: column; color: #fff; font-weight: 900; font-size: 16px; text-transform: uppercase; letter-spacing: 2px; }
+        .loader-pulse { width: 70px; height: 70px; background: var(--accent); border-radius: 50%; animation: ping 1.5s ease-in-out infinite; box-shadow: 0 0 20px var(--accent); position: absolute; inset: 0; opacity: 0.5; }
+        @keyframes ping { 0% { transform: scale(0.8); opacity: 0.8; } 100% { transform: scale(1.5); opacity: 0; } }
+        .loader-text { animation: pulseText 1.5s infinite; margin-top: 30px; color: var(--accent); }
+        @keyframes pulseText { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         
         .nav-tabs { display: flex; padding: 0 5px; gap: 4px; margin-top: 15px; margin-bottom: 15px; flex-shrink: 0; }
         .nav-tab { flex: 1; padding: 10px 0; background: var(--card); border: 1px solid rgba(255,255,255,0.05); color: var(--gray); border-radius: 10px; font-size: 11px; font-weight: 900; text-transform: uppercase; cursor: pointer; text-align: center; transition: all 0.2s; }
         .nav-tab.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
         .page-view { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
-        .page-constrained { max-width: 800px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+        .page-constrained { max-width: 800px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; flex: 1; overflow: hidden; position: relative; }
         
         /* Стили для таблицы игроков (максимальная компактность для смартфонов) */
         #playerDBContainer table th { padding: 6px 1px; font-size: 8px; letter-spacing: -0.3px; }
@@ -176,7 +178,7 @@
         .top-subnav button { background: rgba(255,255,255,0.9); color: #000; border: none; padding: 6px 12px; border-radius: 15px; font-size: 11px; font-weight: 800; white-space: nowrap; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: all 0.2s; }
         .top-subnav button:active { transform: scale(0.95); }
         .top-subnav button.active { background: var(--accent); color: var(--bg); box-shadow: 0 0 10px rgba(56, 189, 248, 0.6); }
-        .top-section { margin: 25px 10px 40px; scroll-margin-top: 130px; }
+        .top-section { margin: 25px 10px 40px; }
         .top-section-header { margin-bottom: 15px; }
         .top-title { font-size: 20px; font-weight: 900; text-transform: uppercase; color: #fff; }
         .top-desc { font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.5); margin-top: 4px; line-height: 1.3; }
@@ -198,7 +200,13 @@
 </head>
 <body class="viewer-mode">
 
-    <div id="loadingOverlay"><div class="spinner"></div><span>Синхронизация...</span></div>
+    <div id="loadingOverlay">
+        <div style="position:relative; width:70px; height:70px; display:flex; align-items:center; justify-content:center;">
+            <div class="loader-pulse"></div>
+            <svg class="icon" style="width:35px; height:35px; color:#fff; position:relative; z-index:2;"><use href="#icon-ball"></use></svg>
+        </div>
+        <span class="loader-text">ОБНОВЛЕНИЕ...</span>
+    </div>
 
     <svg style="display: none;">
         <symbol id="icon-eye" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></symbol>
@@ -603,7 +611,7 @@ window.publishToGitHub = async function() {
         localStorage.removeItem("mSmartPro_ghToken"); window.githubToken = "";
         window.showAlert("СИСТЕМНАЯ ОШИБКА:\n" + err.message + "\n\n1. Если вы открыли файл с диска (file://), загрузите его на GitHub. Запросы с ПК блокируются.\n2. Токен сброшен, введите заново.");
     } finally {
-        document.getElementById('loadingOverlay').style.display = 'none'; document.getElementById('loadingOverlay').querySelector('span').innerText = "Синхронизация...";
+        document.getElementById('loadingOverlay').style.display = 'none'; document.getElementById('loadingOverlay').querySelector('span').innerText = "ОБНОВЛЕНИЕ...";
     }
 };
 
@@ -960,10 +968,10 @@ window.renderPlayerDBTable = function() {
         }
         let ovrText = `<div class="ovr-badge ${badgeClass}">${p.ovr.toFixed(1)}${p.isCalibrating?'<span style="font-size:10px">*</span>':''}</div>`;
 
-        h += `<tr style="background: ${bgRow};">
+        h += `<tr style="background: ${bgRow}; cursor: pointer; transition: background 0.2s;" onclick="window.openPlayerCard('${p.name}')" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='${bgRow}'">
             <td style="text-align: center; color: var(--gray); border-radius: 6px 0 0 6px;">${idx + 1}</td>
             <td style="text-align: left; position: relative;">
-                <div style="cursor:pointer; color:var(--accent); font-weight:900; white-space:nowrap; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 4px;" onclick="window.openPlayerCard('${p.name}')">${p.name}</div>
+                <div style="color:#fff; font-weight:900; text-transform:uppercase; white-space:nowrap;">${p.name}</div>
             </td>
             <td style="text-align: center;">${daysMatches}</td>
             <td style="text-align: center; white-space:nowrap;">${gpo}</td>
@@ -2071,7 +2079,8 @@ window.renderCombinedStats = function() {
     // НОВЫЙ БЛОК: Вывод MVP тура
     if (currentMvps.length > 0) {
         h += `<div style="border: 1px dashed rgba(255,255,255,0.15); border-radius: 12px; padding: 12px; margin-bottom: 15px; background: rgba(255,255,255,0.02);">`;
-        h += `<div style="font-weight:900; color:#facc15; font-size:13px; text-align:left; margin-bottom:12px; text-transform:uppercase; display:flex; align-items:center; gap:6px;"><svg class="icon-inline" style="width:16px;height:16px;"><use href="#icon-star"></use></svg> MVP ТУРА</div>`;
+        h += `<div style="font-weight:900; color:#facc15; font-size:13px; text-align:left; text-transform:uppercase; display:flex; align-items:center; gap:6px;"><svg class="icon-inline" style="width:16px;height:16px;"><use href="#icon-star"></use></svg> MVP ТУРА</div>`;
+        h += `<div style="font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.5); margin-top: 4px; margin-bottom: 12px; line-height: 1.3; text-align: left;">Топ по сумме очков (Г+П).</div>`;
         h += `<div class="top-podium" style="display: flex; justify-content: center; gap: 8px;">`;
         
         let defaultAvatar = "data:image/svg+xml;utf8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23ffffff%22 opacity=%220.4%22%3E%3Cpath d=%22M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z%22/%3E%3C/svg%3E";
@@ -2087,14 +2096,20 @@ window.renderCombinedStats = function() {
             let bgGrad = 'linear-gradient(135deg, #fef08a, #d97706)';
             let brdColor = '#fbbf24';
             
-            h += `<div class="top-minicard" onclick="window.openPlayerCard('${pName}')" style="flex: 1; max-width: 110px; background: ${bgGrad}; border-color: ${brdColor};">
+            let goalsText = `${pStats.g || 0} ${getPlural(pStats.g || 0, ['гол', 'гола', 'голов'])}`;
+            let assistsText = `${pStats.a || 0} ${getPlural(pStats.a || 0, ['пас', 'паса', 'пасов'])}`;
+            let ptsText = `${pts} ${getPlural(pts, ['очко', 'очка', 'очков'])}`;
+            
+            h += `<div class="top-minicard" onclick="window.openPlayerCard('${pName}')" style="flex: 1; max-width: 140px; background: ${bgGrad}; border-color: ${brdColor};">
                 <div class="minicard-rank" style="background: ${brdColor}; color: #000;"><svg class="icon" style="width:12px;height:12px;"><use href="#icon-star"></use></svg></div>
                 <div class="minicard-avatar">
                     <img src="${avatarSrc}" onerror="this.onerror=null; this.src='${defaultAvatar}';">
                 </div>
-                <div class="minicard-name" style="color: #000;">${pName}</div>
-                <div class="minicard-stat" style="color: #000; font-size:13px;">${pts} ОЧК</div>
-                <div style="font-size:9px; opacity:0.8; margin-top:3px; color: #000; font-weight:800;">${pStats.g || 0}Г / ${pStats.a || 0}П</div>
+                <div class="minicard-name" style="color: #000; font-size:14px; margin-bottom:5px;">${pName}</div>
+                <div class="minicard-stat" style="color: #000; font-size:11px; font-weight:800; line-height:1.4; opacity:0.9;">
+                    ${goalsText}<br>${assistsText}
+                    <div style="font-size:13px; font-weight:900; margin-top:3px; opacity:1;">${ptsText}</div>
+                </div>
             </div>`;
         }
         h += `</div></div>`;
@@ -2419,8 +2434,21 @@ window.renderTopTab = function() {
         document.querySelectorAll('#topSubnavMenu button').forEach(b => b.classList.remove('active'));
         const btn = document.getElementById(btnId);
         if(btn) btn.classList.add('active');
+        
         const el = document.getElementById(sectionId);
-        if(el) el.scrollIntoView({behavior: 'smooth', block: 'start'});
+        const scrollContainer = document.querySelector('#topView .page-constrained');
+        const navMenu = document.getElementById('topSubnavMenu');
+        
+        if (el && scrollContainer && navMenu) {
+            // Точный расчет: высота элемента минус высота прилепленного меню минус 15px запаса
+            const headerHeight = navMenu.offsetHeight;
+            const scrollPos = el.offsetTop - headerHeight - 15; 
+            
+            scrollContainer.scrollTo({
+                top: scrollPos,
+                behavior: 'smooth'
+            });
+        }
     };
 
     let html = `<div class="top-subnav" id="topSubnavMenu">`;
