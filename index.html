@@ -2100,15 +2100,16 @@ window.renderCombinedStats = function() {
             let assistsText = `${pStats.a || 0} ${getPlural(pStats.a || 0, ['пас', 'паса', 'пасов'])}`;
             let ptsText = `${pts} ${getPlural(pts, ['очко', 'очка', 'очков'])}`;
             
-            h += `<div class="top-minicard" onclick="window.openPlayerCard('${pName}')" style="flex: 1; max-width: 140px; background: ${bgGrad}; border-color: ${brdColor};">
+            // Используем data-атрибут для надежности клика и задаем позиционирование
+            h += `<div class="top-minicard" data-player="${pName}" onclick="window.openPlayerCard(this.getAttribute('data-player'))" style="flex: 1; max-width: 145px; background: ${bgGrad}; border-color: ${brdColor}; cursor: pointer; position: relative; z-index: 5;">
                 <div class="minicard-rank" style="background: ${brdColor}; color: #000;"><svg class="icon" style="width:12px;height:12px;"><use href="#icon-star"></use></svg></div>
                 <div class="minicard-avatar">
                     <img src="${avatarSrc}" onerror="this.onerror=null; this.src='${defaultAvatar}';">
                 </div>
                 <div class="minicard-name" style="color: #000; font-size:14px; margin-bottom:5px;">${pName}</div>
-                <div class="minicard-stat" style="color: #000; font-size:11px; font-weight:800; line-height:1.4; opacity:0.9;">
-                    ${goalsText}<br>${assistsText}
-                    <div style="font-size:13px; font-weight:900; margin-top:3px; opacity:1;">${ptsText}</div>
+                <div class="minicard-stat" style="color: #000; font-size:10px; font-weight:800; line-height:1.2; opacity:0.9;">
+                    ${goalsText}, ${assistsText}
+                    <div style="font-size:14px; font-weight:900; margin-top:4px; opacity:1;">${ptsText}</div>
                 </div>
             </div>`;
         }
@@ -2440,12 +2441,13 @@ window.renderTopTab = function() {
         const navMenu = document.getElementById('topSubnavMenu');
         
         if (el && scrollContainer && navMenu) {
-            // Точный расчет: высота элемента минус высота прилепленного меню минус 15px запаса
-            const headerHeight = navMenu.offsetHeight;
-            const scrollPos = el.offsetTop - headerHeight - 15; 
+            // Железобетонный расчет: берем точные координаты на экране
+            // Разница между верхом блока и низом закрепленного меню
+            const yOffset = el.getBoundingClientRect().top - navMenu.getBoundingClientRect().bottom - 10;
             
-            scrollContainer.scrollTo({
-                top: scrollPos,
+            // Скроллим контейнер ровно на эту разницу
+            scrollContainer.scrollBy({
+                top: yOffset,
                 behavior: 'smooth'
             });
         }
