@@ -1034,17 +1034,18 @@ window.openPlayerCard = function(playerName) {
             bgGrad = 'linear-gradient(135deg, #fef08a, #fcd34d)'; 
             cardColor = '#000'; 
             brdColor = '#fbbf24'; 
-            glowShadow = 'inset 0 0 20px rgba(255,255,255,0.4), 0 5px 15px rgba(0,0,0,0.4)';
+            glowShadow = 'inset 0 0 20px rgba(255,255,255,0.4), 0 0 25px rgba(251,191,36,0.5)';
         }
         else if (p.ovr >= 70) { 
             bgGrad = 'linear-gradient(135deg, #e2e8f0, #94a3b8)'; 
             cardColor = '#000'; 
             brdColor = '#64748b'; 
-            glowShadow = 'inset 0 0 20px rgba(255,255,255,0.4), 0 5px 15px rgba(0,0,0,0.4)';
+            glowShadow = 'inset 0 0 20px rgba(255,255,255,0.4), 0 0 25px rgba(148,163,184,0.4)';
         }
         else { 
             bgGrad = 'linear-gradient(135deg, #d97706, #78350f)'; 
             brdColor = '#b45309'; 
+            glowShadow = 'inset 0 0 20px rgba(0,0,0,0.3), 0 0 25px rgba(180,83,9,0.5)';
         }
     }
 
@@ -2110,8 +2111,7 @@ window.renderCombinedStats = function() {
             let assistsText = `${pStats.a || 0} ${getPlural(pStats.a || 0, ['пас', 'паса', 'пасов'])}`;
             let ptsText = `${pts} ${getPlural(pts, ['очко', 'очка', 'очков'])}`;
             
-            // Используем data-атрибут для надежности клика и задаем позиционирование
-            h += `<div class="top-minicard" data-player="${pName}" onclick="window.openPlayerCard(this.getAttribute('data-player'))" style="flex: 1; max-width: 145px; background: ${bgGrad}; border-color: ${brdColor}; cursor: pointer; position: relative; z-index: 5;">
+            h += `<div class="top-minicard" onclick="window.openPlayerCard('${pName}')" style="flex: 1; max-width: 145px; background: ${bgGrad}; border-color: ${brdColor}; cursor: pointer; position: relative; z-index: 5; transition: transform 0.15s ease;" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'" ontouchstart="this.style.transform='scale(0.95)'" ontouchend="this.style.transform='scale(1)'">
                 <div class="minicard-rank" style="background: ${brdColor}; color: #000;"><svg class="icon" style="width:12px;height:12px;"><use href="#icon-star"></use></svg></div>
                 <div class="minicard-avatar">
                     <img src="${avatarSrc}" onerror="this.onerror=null; this.src='${defaultAvatar}';">
@@ -2430,7 +2430,7 @@ window.renderTopTab = function() {
           
         { id: 'top-cups', title: 'Короли кубков', btnLbl: 'Трофеи', desc: 'Топ по выигранным турам (золотые кубки).', icon: '🏆', 
           sortFn: (a,b) => b.titles - a.titles || (b.days>0?b.titles/b.days:0) - (a.days>0?a.titles/a.days:0), valFn: p => p.titles, dispFn: v => `🏆 ${v}`, lblFn: v => plural(v, ['КУБОК', 'КУБКА', 'КУБКОВ']),
-          centerLbl: p => `Из ${p.days} туров выиграно ${p.days>0 ? Math.round((p.titles/p.days)*100) : 0}%` },
+          centerLbl: p => `За ${p.days} ${plural(p.days, ['тур', 'тура', 'туров'])} ${p.days>0 ? Math.round((p.titles/p.days)*100) : 0}% побед` },
           
         { id: 'top-mvp', title: 'Лучший игрок матча', btnLbl: 'MVP', desc: 'Топ по количеству наград ⭐ MVP тура.', icon: '⭐', 
           sortFn: (a,b) => b.mvp - a.mvp || b.ovr - a.ovr, valFn: p => p.mvp, dispFn: v=>v, lblFn: v => 'MVP',
