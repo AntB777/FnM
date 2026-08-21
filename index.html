@@ -1269,7 +1269,7 @@ window.updateWelcomeButtons = function() {
         const btn = logoutContainer.querySelector('button');
         if(btn) btn.innerText = "ВЫЙТИ ИЗ РЕЖИМА АДМИНА";
     }
-    if (demoBtn) { demoBtn.style.display = 'flex'; }
+    if (demoBtn) { demoBtn.style.display = 'none'; } // Кнопка DEMO скрыта
     
     viewerBtn.innerHTML = `<span style="display: flex; align-items: center; gap: 6px;"><svg class="icon"><use href="#icon-eye"></use></svg> ИГРОК</span><span class="btn-subtext" style="color: #000;">Вам доступен просмотр игр и статистики</span>`;
     adminBtn.innerHTML = `<span style="display: flex; align-items: center; gap: 6px;"><svg class="icon"><use href="#icon-lock"></use></svg> АДМИН</span><span class="btn-subtext" style="color: #000;">Войти для управления турниром</span>`;
@@ -2067,6 +2067,38 @@ window.renderCombinedStats = function() {
         <tbody>${Object.values(stats).sort((a,b)=>b.o-a.o || (b.gz-b.gp)-(a.gz-a.gp)).map(t => `<tr><td style="text-align:left"><div class="team-dot" style="background:${window.COLORS[t.n]||'var(--gray)'}"></div><b>${t.n}</b></td><td>${t.i}</td><td>${t.v}</td><td>${t.nch}</td><td>${t.p}</td><td>${t.gz}</td><td>${t.gp}</td><td>${t.gz-t.gp}</td><td style="color:var(--accent); font-weight:900; font-size: 14px;">${t.o}</td></tr>`).join('')}</tbody></table>`;
         h += `</div>`;
     } else { h += `<div style="text-align:center; font-size:11px; color:var(--gray); margin-bottom:20px;">Нет данных таблицы</div>`; }
+
+    // НОВЫЙ БЛОК: Вывод MVP тура
+    if (currentMvps.length > 0) {
+        h += `<div style="border: 1px dashed rgba(255,255,255,0.15); border-radius: 12px; padding: 12px; margin-bottom: 15px; background: rgba(255,255,255,0.02);">`;
+        h += `<div style="font-weight:900; color:#facc15; font-size:13px; text-align:left; margin-bottom:12px; text-transform:uppercase; display:flex; align-items:center; gap:6px;"><svg class="icon-inline" style="width:16px;height:16px;"><use href="#icon-star"></use></svg> MVP ТУРА</div>`;
+        h += `<div class="top-podium" style="display: flex; justify-content: center; gap: 8px;">`;
+        
+        let defaultAvatar = "data:image/svg+xml;utf8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23ffffff%22 opacity=%220.4%22%3E%3Cpath d=%22M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z%22/%3E%3C/svg%3E";
+        
+        for(let i=0; i<Math.min(3, currentMvps.length); i++) {
+            let pName = currentMvps[i];
+            let pStats = playerStats[pName] || {g:0, a:0};
+            let pts = (pStats.g || 0) + (pStats.a || 0);
+            
+            let savedPath = (window.config.avatars && window.config.avatars[pName]) ? window.config.avatars[pName] : "";
+            let avatarSrc = savedPath ? (savedPath.startsWith('http') || savedPath.startsWith('data:') ? savedPath : `https://antb777.github.io/FnM/${savedPath}`) : defaultAvatar;
+            
+            let bgGrad = 'linear-gradient(135deg, #fef08a, #d97706)';
+            let brdColor = '#fbbf24';
+            
+            h += `<div class="top-minicard" onclick="window.openPlayerCard('${pName}')" style="flex: 1; max-width: 110px; background: ${bgGrad}; border-color: ${brdColor};">
+                <div class="minicard-rank" style="background: ${brdColor}; color: #000;"><svg class="icon" style="width:12px;height:12px;"><use href="#icon-star"></use></svg></div>
+                <div class="minicard-avatar">
+                    <img src="${avatarSrc}" onerror="this.onerror=null; this.src='${defaultAvatar}';">
+                </div>
+                <div class="minicard-name" style="color: #000;">${pName}</div>
+                <div class="minicard-stat" style="color: #000; font-size:13px;">${pts} ОЧК</div>
+                <div style="font-size:9px; opacity:0.8; margin-top:3px; color: #000; font-weight:800;">${pStats.g || 0}Г / ${pStats.a || 0}П</div>
+            </div>`;
+        }
+        h += `</div></div>`;
+    }
 
     if (dayMatches.length > 0) {
         h += `<div style="border: 1px dashed rgba(255,255,255,0.15); border-radius: 12px; padding: 12px; margin-bottom: 15px; background: rgba(255,255,255,0.02);">`;
