@@ -105,8 +105,8 @@
         .btn-subtext { display: block; font-size: 11px; font-weight: normal; opacity: 0.6; text-transform: none; margin-top: 4px; line-height: 1.2; letter-spacing: 0; color: inherit; } 
 
         .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.98); z-index: 1000; padding: 10px; display: flex; align-items: center; justify-content: center; }
-        .lobby-bg { background: radial-gradient(circle at 50% 0%, #1e3a8a 0%, var(--bg) 80%); }
-        .lobby-bg::before { content: ''; position: absolute; inset: 0; opacity: 0.03; pointer-events: none; background-image: linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px); background-size: 20px 20px; }
+        .lobby-bg { background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #020617 100%); }
+        .lobby-bg::before { display: none; }
         
         .hidden { display: none !important; }
         .modal-content { position: relative; background: var(--card); border-radius: 25px; padding: 25px; text-align: center; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); width: 95%; max-width: 500px; max-height: 94vh; display: flex; flex-direction: column; overflow: hidden; }
@@ -337,14 +337,13 @@
         </div>
     </div>
 
-    <!-- Стартовое окно (Welcome) -->
+   <!-- Стартовое окно (Welcome) -->
     <div id="welcomeOverlay" class="overlay lobby-bg" style="z-index: 9999;">
         <div class="modal-content">
-            <h2 style="color: var(--accent); margin-bottom: 25px; text-transform: uppercase; font-size: 24px; user-select: none; cursor: pointer;">Футбол на Манеже</h2>
+            <div style="width: 100%; max-width: 220px; margin: 0 auto 25px auto; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5));">
+                <img src="FnM_logo1.png" alt="Логотип" style="width: 100%; height: auto; display: block;">
+            </div>
             <button id="welcomeViewerBtn" class="full-btn" style="margin-bottom: 15px; padding: 18px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;" onclick="window.selectWelcomeMode('viewer')">
-                <span style="display: flex; align-items: center; gap: 6px;"><svg class="icon"><use href="#icon-eye"></use></svg> ИГРОК</span>
-                <span class="btn-subtext" style="color: #000;">Вам доступен просмотр игр и статистики</span>
-            </button>
             <button id="welcomeAdminBtn" class="full-btn" style="margin-bottom: 15px; padding: 18px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;" onclick="window.selectWelcomeMode('admin')">
                 <span style="display: flex; align-items: center; gap: 6px;"><svg class="icon"><use href="#icon-lock"></use></svg> АДМИН</span>
                 <span class="btn-subtext" style="color: #000;">Войти для управления турниром</span>
@@ -2441,13 +2440,15 @@ window.renderTopTab = function() {
         const navMenu = document.getElementById('topSubnavMenu');
         
         if (el && scrollContainer && navMenu) {
-            // Железобетонный расчет: берем точные координаты на экране
-            // Разница между верхом блока и низом закрепленного меню
-            const yOffset = el.getBoundingClientRect().top - navMenu.getBoundingClientRect().bottom - 10;
+            // Универсальный расчет: текущая прокрутка + разница координат контейнера и элемента
+            const containerRect = scrollContainer.getBoundingClientRect();
+            const elRect = el.getBoundingClientRect();
+            const navHeight = navMenu.offsetHeight;
             
-            // Скроллим контейнер ровно на эту разницу
-            scrollContainer.scrollBy({
-                top: yOffset,
+            const scrollPos = scrollContainer.scrollTop + (elRect.top - containerRect.top) - navHeight - 15;
+            
+            scrollContainer.scrollTo({
+                top: scrollPos,
                 behavior: 'smooth'
             });
         }
