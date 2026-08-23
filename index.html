@@ -2008,7 +2008,7 @@ window.renderCombinedStats = function() {
     const isAdminAndCurrent = (window.currentRole === 'admin' && window.viewingSeasonIndex === -1 && !window.isDemoMode);
     
     if (!statsDates.length) { 
-        let emptyHTML = `<div style="text-align:center; font-size:11px; color:var(--warning); font-weight:900; text-transform:uppercase; letter-spacing:2px; margin-bottom:8px;">${seasonName}</div>`;
+        let emptyHTML = `<div style="text-align:center; font-size:11px; color:#fff; font-weight:900; text-transform:uppercase; letter-spacing:2px; margin-bottom:8px;">${seasonName}</div>`;
         emptyHTML += "<p style='opacity:0.3; margin-top:30px; text-align:center;'>История пуста</p>";
         if (isAdminAndCurrent) { emptyHTML += `<button class="btn-base icon-btn" style="margin-top:15px; width:100%; padding:12px;" onclick="window.addNewTournament()"><svg class="icon"><use href="#icon-plus"></use></svg> ДОБАВИТЬ ТУР</button>`; }
         cont.innerHTML = emptyHTML; return; 
@@ -2063,7 +2063,7 @@ window.renderCombinedStats = function() {
     });
 
     let h = `<div>`;
-    h += `<div style="text-align:center; font-size:11px; color:var(--warning); font-weight:900; text-transform:uppercase; letter-spacing:2px; margin-bottom:8px;">${seasonName}</div>`;
+    h += `<div style="text-align:center; font-size:11px; color:#fff; font-weight:900; text-transform:uppercase; letter-spacing:2px; margin-bottom:8px;">${seasonName}</div>`;
     h += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
             <button class="stats-page-btn" ${window.currentStatsPageIndex === statsDates.length - 1 ? 'disabled' : ''} onclick="window.changeStatsPage(1)">◀</button>
             <div style="font-size:16px; font-weight:900; text-transform:uppercase; color:var(--text); display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:6px;"><svg class="icon-inline" style="width:20px;height:20px;"><use href="#icon-calendar"></use></svg> ТУР #${tourNumber} <span style="color:var(--accent); font-size:14px; margin-left:4px;">${date.split(' (')[0]}</span>${statusBadge}</div>
@@ -2093,8 +2093,8 @@ window.renderCombinedStats = function() {
     // НОВЫЙ БЛОК: Вывод MVP тура
     if (currentMvps.length > 0) {
         h += `<div style="border: 1px dashed rgba(255,255,255,0.15); border-radius: 12px; padding: 12px; margin-bottom: 15px; background: rgba(255,255,255,0.02);">`;
-        h += `<div style="font-weight:900; color:#facc15; font-size:13px; text-align:left; text-transform:uppercase; display:flex; align-items:center; gap:6px;"><svg class="icon-inline" style="width:16px;height:16px;"><use href="#icon-star"></use></svg> MVP ТУРА</div>`;
-        h += `<div style="font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.5); margin-top: 4px; margin-bottom: 12px; line-height: 1.3; text-align: left;">Топ по сумме очков (Г+П).</div>`;
+        h += `<div style="font-weight:800; color:var(--accent); font-size:12px; text-align:left; margin-bottom:2px; text-transform:uppercase; display:flex; align-items:center; gap:6px;"><svg class="icon-inline" style="width:16px;height:16px;"><use href="#icon-star"></use></svg> MVP ТУРА</div>`;
+        h += `<div style="font-size: 10px; font-weight: 600; color: var(--gray); margin-bottom: 12px; line-height: 1.3; text-align: left;">Топ по сумме очков (Г+П).</div>`;
         h += `<div class="top-podium" style="display: flex; justify-content: center; gap: 8px;">`;
         
         let defaultAvatar = "data:image/svg+xml;utf8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23ffffff%22 opacity=%220.4%22%3E%3Cpath d=%22M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z%22/%3E%3C/svg%3E";
@@ -2114,8 +2114,9 @@ window.renderCombinedStats = function() {
             let assistsText = `${pStats.a || 0} ${getPlural(pStats.a || 0, ['пас', 'паса', 'пасов'])}`;
             let ptsText = `${pts} ${getPlural(pts, ['очко', 'очка', 'очков'])}`;
             
-            h += `<div class="top-minicard" onclick="window.openPlayerCard('${pName}')" style="flex: 1; max-width: 145px; background: ${bgGrad}; border-color: ${brdColor}; cursor: pointer; position: relative; z-index: 5; transition: transform 0.15s ease;" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'" ontouchstart="this.style.transform='scale(0.95)'" ontouchend="this.style.transform='scale(1)'">
-                <div class="minicard-rank" style="background: ${brdColor}; color: #000;"><svg class="icon" style="width:12px;height:12px;"><use href="#icon-star"></use></svg></div>
+            // Чистый onclick без перехвата тач-эвентов для безотказной работы на мобильных устройствах
+            h += `<div class="top-minicard" onclick="window.openPlayerCard('${pName}')" style="flex: 1; max-width: 145px; background: ${bgGrad}; border-color: ${brdColor}; cursor: pointer;">
+                <div class="minicard-rank" style="background: ${brdColor}; color: #000; pointer-events: none;"><svg class="icon" style="width:12px;height:12px;"><use href="#icon-star"></use></svg></div>
                 <div class="minicard-avatar" style="pointer-events: none;">
                     <img src="${avatarSrc}" onerror="this.onerror=null; this.src='${defaultAvatar}';">
                 </div>
@@ -2161,7 +2162,7 @@ window.renderCombinedStats = function() {
             h += `<div style="background:${window.COLORS[teamColor]}; color:${(teamColor==='Белые'||teamColor==='Желтые')?'#000':'#fff'}; padding:8px 12px; font-weight:900; font-size:11px; text-transform:uppercase; display:flex; align-items:center; gap:5px;"><div class="team-dot" style="background:currentColor; opacity:0.5;"></div>${teamColor}</div>`;
             h += `<table class="stats-table" style="margin-bottom:0;"><thead><tr><th style="text-align:left; padding-left:12px;">ИГРОК</th><th style="width:75px; text-align:center;"><svg class="icon-inline" style="width:13px; height:13px;"><use href="#icon-ball"></use></svg></th><th style="width:45px; text-align:center;"><svg class="icon-inline" style="width:13px; height:13px;"><use href="#icon-pass-shoe"></use></svg></th></tr></thead><tbody>`;
             teamPlayers.forEach(p => {
-                let mvpBadge = currentMvps.includes(p.name) ? `<span style="background:var(--warning); color:#000; padding:3px 5px; border-radius:5px; font-size:10px; font-weight:900; margin-left:6px; display:inline-flex; align-items:center; gap:2px; vertical-align:middle; line-height:1;"><svg class="icon" style="width:10px;height:10px;"><use href="#icon-star"></use></svg> MVP</span>` : '';
+                let mvpBadge = currentMvps.includes(p.name) ? `<span style="background:var(--accent); color:var(--bg); padding:3px 5px; border-radius:5px; font-size:10px; font-weight:900; margin-left:6px; display:inline-flex; align-items:center; gap:2px; vertical-align:middle; line-height:1;"><svg class="icon" style="width:10px;height:10px;"><use href="#icon-star"></use></svg> MVP</span>` : '';
                 let ogText = p.og > 0 ? ` <span style="color:var(--danger); font-size:11px; font-weight:normal;">(${p.og}-АГ)</span>` : '';
                 h += `<tr><td style="text-align:left; padding-left:12px;"><b>${p.name}</b>${mvpBadge}</td><td style="text-align:center; font-weight:bold;">${p.g}${ogText}</td><td style="text-align:center;">${p.a}</td></tr>`;
             });
