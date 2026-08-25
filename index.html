@@ -895,7 +895,7 @@ window.openPlayerDB = function() {
             let win_bonus = Math.min(5.0, winRate * 10.0);
 
             // Титулы: золото = 1.0, серебро = 0.5 (макс +2.5)
-            let weightedCups = (p.titles || 0) + ((p.silver || 0) * 0.5);
+            let weightedCups = (p.titles || 0) + ((p.silvers || 0) * 0.5);
             let cupRate = p.days > 0 ? (weightedCups / p.days) : 0;
             let cup_bonus = Math.min(2.5, cupRate * 3.5);
             
