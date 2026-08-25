@@ -906,28 +906,28 @@ window.openPlayerDB = function() {
             let base_ovr = 67.6;
             p.ovrRaw = base_ovr + rate_impact + def_bonus + win_bonus + cup_bonus + exp_bonus;
 
-            // === ФИФА ПАРАМЕТРЫ ДЛЯ КАРТОЧКИ (60-99) ===
-            // 1. АТАКА (ATT): шкала 60 - 99, максимум при 7.5+ очков за тур
-            p.dispATT = Math.min(99, Math.max(60, Math.round(60 + (avgPts / 7.5) * 39)));
+            // === ФИФА ПАРАМЕТРЫ ДЛЯ КАРТОЧКИ (70-99) ===
+            // 1. АТАКА (ATT): шкала 70 - 99, максимум при 7.5+ очков за тур
+            p.dispATT = Math.min(99, Math.max(70, Math.round(70 + (avgPts / 7.5) * 29)));
 
-            // 2. ОБОРОНА (DEF): для плюса от 75 до 99, для минуса от 60 до 75
+            // 2. ОБОРОНА (DEF): гибрид (50% объем на дистанции + 50% плотность за матч)
             if (p.def > 0) {
                 let score_sum = Math.min(1.0, p.def / 23.0);
                 let score_avg = Math.min(1.0, defPerMatch / 0.18);
                 let hybrid = 0.5 * score_sum + 0.5 * score_avg;
-                p.dispDEF = Math.min(99, Math.max(75, Math.round(75 + hybrid * 24)));
+                p.dispDEF = Math.min(99, Math.max(80, Math.round(80 + hybrid * 19)));
             } else {
-                p.dispDEF = Math.min(75, Math.max(60, Math.round(75 + (defPerMatch / 0.10) * 15)));
+                p.dispDEF = Math.min(80, Math.max(70, Math.round(80 + (defPerMatch / 0.10) * 10)));
             }
 
-            // 3. ПОБЕДЫ (WIN): шкала 60 - 99, максимум при 50% винрейте
+            // 3. ПОБЕДЫ (WIN): строгая шкала 60 - 99, максимум при 50% винрейте
             p.dispWIN = Math.min(99, Math.max(60, Math.round(60 + (winRate / 0.50) * 39)));
 
-            // 4. ОПЫТ (EXP): шкала 60 - 99, масштабируется на 30 туров сезона
-            p.dispEXP = Math.min(99, Math.max(60, Math.round(60 + (p.days / 30.0) * 39)));
+            // 4. ОПЫТ (EXP): шкала 70 - 99, масштабируется на 30 туров сезона
+            p.dispEXP = Math.min(99, Math.max(70, Math.round(70 + (p.days / 30.0) * 29)));
         } else { 
             p.ovrRaw = 60.0; 
-            p.dispATT = 60; p.dispWIN = 60; p.dispDEF = 60; p.dispEXP = 60;
+            p.dispATT = 70; p.dispWIN = 60; p.dispDEF = 70; p.dispEXP = 70;
         } 
         
         p.isCalibrating = p.days < 3; // КАЛИБРОВКА ТЕПЕРЬ 3 ДНЯ
@@ -2102,7 +2102,7 @@ window.renderCombinedStats = function() {
         h += `<div style="font-weight:800; color:var(--accent); font-size:12px; text-align:left; margin-bottom:10px; text-transform:uppercase;">Таблица тура</div>`;
         h += `<table class="stats-table" style="margin-bottom:0;"><thead><tr><th style="text-align:left">КОМАНДА</th><th>И</th><th>В</th><th>Н</th><th>П</th><th>ГЗ</th><th>ГП</th><th>+/-</th><th>О</th></tr></thead>
         <tbody>${Object.values(stats).sort((a,b)=>b.o-a.o || (b.gz-b.gp)-(a.gz-a.gp)).map((t, idx) => {
-            let winBadge = (idx === 0 && isFinished) ? `<span style="background:var(--accent); color:var(--bg); padding:3px 5px; border-radius:5px; font-size:10px; font-weight:900; margin-left:6px; display:inline-flex; align-items:center; gap:2px; vertical-align:middle; line-height:1;">WIN</span>` : '';
+            let winBadge = idx === 0 ? `<span style="background:var(--accent); color:var(--bg); padding:3px 5px; border-radius:5px; font-size:10px; font-weight:900; margin-left:6px; display:inline-flex; align-items:center; gap:2px; vertical-align:middle; line-height:1;">WIN</span>` : '';
             return `<tr><td style="text-align:left; white-space:nowrap;"><div class="team-dot" style="background:${window.COLORS[t.n]||'var(--gray)'}"></div><b>${t.n}</b>${winBadge}</td><td>${t.i}</td><td>${t.v}</td><td>${t.nch}</td><td>${t.p}</td><td>${t.gz}</td><td>${t.gp}</td><td>${t.gz-t.gp}</td><td style="color:var(--accent); font-weight:900; font-size: 14px;">${t.o}</td></tr>`;
         }).join('')}</tbody></table>`;
         h += `</div>`;
