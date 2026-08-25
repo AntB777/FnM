@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#0f172a">
-    <title>Футбол на Манеже v20.47</title>
+    <title>Футбол на Манеже v20.50</title>
 
     <script>
         window.GITHUB_REPO = "antb777/FnM";
@@ -358,7 +358,7 @@
                 <span class="btn-subtext" style="color: #000;">Режим тестирования</span>
             </button>
             <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
-                v20.47 Demo • <a href="https://antb777.github.io/FnM/" target="_blank" style="color: inherit; text-decoration: none;">antb777.github.io/FnM/</a>
+                v20.50 Demo • <a href="https://antb777.github.io/FnM/" target="_blank" style="color: inherit; text-decoration: none;">antb777.github.io/FnM/</a>
             </div>
         </div>
     </div>
@@ -529,7 +529,7 @@
     </div>
 
 <script>
-/* JS LOGIC v20.47 (OVR Ratings + Seasons + OVR Formula Fix) */
+/* JS LOGIC v20.50 (OVR Ratings + Seasons + OVR Formula Fix) */
 window.COLORS = { "Черные": "#000000", "Белые": "#ffffff", "Желтые": "#facc15", "Зеленые": "#22c55e", "Красные": "#ef4444", "Синие": "#3b82f6", "Разноцветные": "linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" };
 window.colorKeys = Object.keys(window.COLORS);
 window.audioCtx = null;
@@ -884,32 +884,50 @@ window.openPlayerDB = function() {
         if (p.matches > 0) {
             let avgPts = p.days > 0 ? (p.pts / p.days) : 0;
             
-            // 1. Атака: линейный вес средней результативности (5.0 очков/день дает ощутимый отрыв от 3.4)
-            let rate_impact = Math.min(18.0, avgPts * 2.5);
+            // 1. Атака: повышенный вес Г+П для бомбардиров (макс +15.6)
+            let rate_impact = Math.min(15.6, avgPts * 2.40);
             
-            // 2. Оборона DEF (штраф не более -1.0, чтобы не топить форвардов)
+            // 2. Оборона DEF: мягкий штраф форвардам (-0.35 макс) и до +3.5 защитникам
             let defPerMatch = p.def / p.matches;
-            let def_bonus = defPerMatch >= 0 ? Math.min(3.5, defPerMatch * 15.0) : Math.max(-1.0, defPerMatch * 8.0);
+            let def_bonus = defPerMatch >= 0 ? Math.min(3.5, defPerMatch * 18.0) : Math.max(-0.35, defPerMatch * 4.0);
             
-            // 3. Командный успех (умеренный вес титулов)
-            let win_bonus = winRate * 5.0;
-            let cupRate = p.days > 0 ? (p.titles / p.days) : 0;
-            let cup_bonus = Math.min(3.0, cupRate * 3.5);
-            
-            // 4. Опыт и дистанция (до +4.5 за 15 дней — вытягивает ветеранов наверх)
-            let exp_bonus = Math.min(4.5, p.days * 0.3);
+            // 3. Командный успех: винрейт (макс +5.0 при 50% побед)
+            let win_bonus = Math.min(5.0, winRate * 10.0);
 
-            let base_ovr = 68.0; // Высокая база подтягивает основу к 79-82
+            // Титулы: золото = 1.0, серебро = 0.5 (макс +2.5)
+            let weightedCups = (p.titles || 0) + ((p.silver || 0) * 0.5);
+            let cupRate = p.days > 0 ? (weightedCups / p.days) : 0;
+            let cup_bonus = Math.min(2.5, cupRate * 3.5);
+            
+            // 4. Опыт и дистанция: плавный рост на 30 туров (макс +6.0)
+            let exp_bonus = Math.min(6.0, p.days * 0.20);
+
+            // Базовый рейтинг
+            let base_ovr = 67.6;
             p.ovrRaw = base_ovr + rate_impact + def_bonus + win_bonus + cup_bonus + exp_bonus;
 
-            // === ФИФА ПАРАМЕТРЫ ДЛЯ КАРТОЧКИ (0-99) ===
-            p.dispATT = Math.round(Math.min(99, Math.max(50, 50 + (avgPts * 7.2))));
-            p.dispWIN = Math.round(Math.min(99, Math.max(50, 50 + (winRate * 100))));
-            p.dispDEF = Math.round(Math.max(45, Math.min(99, 75 + (defPerMatch * 30))));
-            p.dispEXP = Math.round(Math.min(99, Math.max(50, 50 + (p.days * 3.3))));
+            // === ФИФА ПАРАМЕТРЫ ДЛЯ КАРТОЧКИ (70-99) ===
+            // 1. АТАКА (ATT): шкала 70 - 99, максимум при 7.5+ очков за тур
+            p.dispATT = Math.min(99, Math.max(70, Math.round(70 + (avgPts / 7.5) * 29)));
+
+            // 2. ОБОРОНА (DEF): гибрид (50% объем на дистанции + 50% плотность за матч)
+            if (p.def > 0) {
+                let score_sum = Math.min(1.0, p.def / 23.0);
+                let score_avg = Math.min(1.0, defPerMatch / 0.18);
+                let hybrid = 0.5 * score_sum + 0.5 * score_avg;
+                p.dispDEF = Math.min(99, Math.max(80, Math.round(80 + hybrid * 19)));
+            } else {
+                p.dispDEF = Math.min(80, Math.max(70, Math.round(80 + (defPerMatch / 0.10) * 10)));
+            }
+
+            // 3. ПОБЕДЫ (WIN): шкала 70 - 99, максимум при 50% винрейте
+            p.dispWIN = Math.min(99, Math.max(70, Math.round(70 + (winRate / 0.50) * 29)));
+
+            // 4. ОПЫТ (EXP): шкала 70 - 99, масштабируется на 30 туров сезона
+            p.dispEXP = Math.min(99, Math.max(70, Math.round(70 + (p.days / 30.0) * 29)));
         } else { 
             p.ovrRaw = 60.0; 
-            p.dispATT = 50; p.dispWIN = 50; p.dispDEF = 50; p.dispEXP = 50;
+            p.dispATT = 70; p.dispWIN = 70; p.dispDEF = 70; p.dispEXP = 70;
         } 
         
         p.isCalibrating = p.days < 3; // КАЛИБРОВКА ТЕПЕРЬ 3 ДНЯ
