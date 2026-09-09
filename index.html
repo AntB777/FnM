@@ -172,7 +172,8 @@
         #playerDBContainer table th { padding: 6px 1px; font-size: 8px; letter-spacing: -0.3px; }
         #playerDBContainer table td { padding: 8px 1px; font-size: 11px; letter-spacing: -0.2px; }
         .ovr-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 20px; padding: 0 3px; border-radius: 4px; font-weight: 900; color: #000; font-size: 10px; }
-        .ovr-gold { background: linear-gradient(135deg, #fde047, #f59e0b); }
+        .ovr-elite { background: linear-gradient(135deg, #ffffff, #fef08a 40%, #facc15 80%, #d97706); box-shadow: 0 0 8px rgba(250, 204, 21, 0.6); }
+        .ovr-gold { background: linear-gradient(135deg, #fef08a, #fcd34d); }
         .ovr-silver { background: linear-gradient(135deg, #e2e8f0, #94a3b8); }
         .ovr-bronze { background: linear-gradient(135deg, #d97706, #92400e); color: #fff; }
         .ovr-calib { background: #334155; color: #fff; }
@@ -983,7 +984,8 @@ window.renderPlayerDBTable = function() {
         
         let badgeClass = 'ovr-calib';
         if (!p.isCalibrating) {
-            if (p.ovr >= 80) badgeClass = 'ovr-gold';
+            if (p.ovr >= 90) badgeClass = 'ovr-elite';
+            else if (p.ovr >= 80) badgeClass = 'ovr-gold';
             else if (p.ovr >= 70) badgeClass = 'ovr-silver';
             else badgeClass = 'ovr-bronze';
         }
