@@ -39,8 +39,9 @@
       ]
     },
     "teams": [
-      "Черные",
-      "Красные"
+      "Зеленые",
+      "Красные",
+      "Черные"
     ],
     "tourDayCounters": {
       "21.04.2026": 1,
@@ -62,9 +63,9 @@
     ],
     "isLocked": false,
     "goldenGoal": false,
-    "time": 2460,
+    "time": 420,
     "useOT": false,
-    "goalLimit": 0,
+    "goalLimit": 2,
     "currentSeason": "Сезон 2026/2027",
     "avatars": {
       "Гера": "photos/гера_1787331432233.jpg",
