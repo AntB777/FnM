@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#0f172a">
-    <title>Футбол на Манеже v20.51</title>
+    <title>Футбол на Манеже v20.52</title>
 
     <script>
         window.GITHUB_REPO = "antb777/FnM";
@@ -359,7 +359,7 @@
                 <span class="btn-subtext" style="color: #000;">Режим тестирования</span>
             </button>
             <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
-                v20.51 Demo • <a href="https://antb777.github.io/FnM/" target="_blank" style="color: inherit; text-decoration: none;">antb777.github.io/FnM/</a>
+                v20.52 Demo • <a href="https://antb777.github.io/FnM/" target="_blank" style="color: inherit; text-decoration: none;">antb777.github.io/FnM/</a>
             </div>
         </div>
     </div>
@@ -530,7 +530,7 @@
     </div>
 
 <script>
-/* JS LOGIC v20.51 (OVR Ratings + Seasons + OVR Formula Fix) */
+/* JS LOGIC v20.52 (OVR Ratings + Seasons + OVR Formula Fix) */
 window.COLORS = { "Черные": "#000000", "Белые": "#ffffff", "Желтые": "#facc15", "Зеленые": "#22c55e", "Красные": "#ef4444", "Синие": "#3b82f6", "Разноцветные": "linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" };
 window.colorKeys = Object.keys(window.COLORS);
 window.audioCtx = null;
@@ -2090,13 +2090,17 @@ window.renderCombinedStats = function() {
             <button class="stats-page-btn" ${window.currentStatsPageIndex === 0 ? 'disabled' : ''} onclick="window.changeStatsPage(-1)">▶</button>
           </div>`;
 
-    if (isAdminAndCurrent || (window.currentRole === 'admin' && window.viewingSeasonIndex === -1 && window.isDemoMode)) {
+    if ((isAdminAndCurrent || (window.currentRole === 'admin' && window.viewingSeasonIndex === -1 && window.isDemoMode)) && !isFinished) {
         h += `<div style="display:flex; gap:5px; margin-bottom:15px; justify-content:center; flex-wrap:wrap;">`;
         h += `  <button class="admin-edit-btn icon-btn" style="width:auto; padding:8px 14px; font-size:11px; background:var(--card); border:1px solid #a855f7; border-radius:8px; color:#a855f7;" onclick="window.addNewTournament()"><svg class="icon"><use href="#icon-plus"></use></svg> ПРОШЛЫЙ ТУР</button>`;
         if (!isFinished && date === activeD) { h += `<button class="admin-edit-btn icon-btn" style="width:auto; padding:8px 14px; font-size:11px; background:var(--card); border:1px solid var(--success); border-radius:8px; color:var(--success);" onclick="window.startNewTournament('${date}')"><svg class="icon"><use href="#icon-stop"></use></svg> ЗАВЕРШИТЬ ТУР</button>`; }
         h += `  <button class="admin-edit-btn icon-btn" style="width:auto; padding:8px 14px; font-size:11px; background:var(--card); border:1px solid var(--accent); border-radius:8px; color:var(--accent);" onclick="window.openShareModal('${date}')"><svg class="icon"><use href="#icon-share"></use></svg> ПОДЕЛИТЬСЯ</button>
                 <button class="admin-edit-btn icon-btn" style="width:auto; padding:8px 14px; font-size:13px; background:var(--card); border:1px solid var(--danger); border-radius:8px; color:var(--danger);" onclick="window.deleteDay('${date}')"><svg class="icon"><use href="#icon-trash"></use></svg></button>`;
         h += `</div>`;
+    } else {
+        h += `<div style="display:flex; gap:5px; margin-bottom:15px; justify-content:center; flex-wrap:wrap;">
+                <button class="admin-edit-btn icon-btn" style="width:auto; padding:8px 14px; font-size:11px; background:var(--card); border:1px solid var(--accent); border-radius:8px; color:var(--accent);" onclick="window.openShareModal('${date}')"><svg class="icon"><use href="#icon-share"></use></svg> ПОДЕЛИТЬСЯ</button>
+              </div>`;
     }
 
     if (Object.keys(stats).length > 0) {
@@ -2105,7 +2109,7 @@ window.renderCombinedStats = function() {
         h += `<table class="stats-table" style="margin-bottom:0;"><thead><tr><th style="text-align:left">КОМАНДА</th><th>И</th><th>В</th><th>Н</th><th>П</th><th>ГЗ</th><th>ГП</th><th>+/-</th><th>О</th></tr></thead>
         <tbody>${Object.values(stats).sort((a,b)=>b.o-a.o || (b.gz-b.gp)-(a.gz-a.gp)).map((t, idx) => {
             let winBadge = (idx === 0 && isFinished) ? `<span style="background:var(--accent); color:var(--bg); padding:3px 5px; border-radius:5px; font-size:10px; font-weight:900; margin-left:6px; display:inline-flex; align-items:center; gap:2px; vertical-align:middle; line-height:1;">WIN</span>` : '';
-            return `<tr><td style="text-align:left; white-space:nowrap;"><div class="team-dot" style="background:${window.COLORS[t.n]||'var(--gray)'}"></div><b>${t.n}</b>${winBadge}</td><td>${t.i}</td><td>${t.v}</td><td>${t.nch}</td><td>${t.p}</td><td>${t.gz}</td><td>${t.gp}</td><td>${t.gz-t.gp}</td><td style="color:var(--accent); font-weight:900; font-size: 14px;">${t.o}</td></tr>`;
+            return `<tr><td style="text-align:left; white-space:nowrap;"><div class="team-dot" style="background:${window.COLORS[t.n]\vert{}\vert{}'var(--gray)'}"></div><b>${t.n}</b>${winBadge}</td><td>${t.i}</td><td>${t.v}</td><td>${t.nch}</td><td>${t.p}</td><td>${t.gz}</td><td>${t.gp}</td><td>${t.gz-t.gp}</td><td style="color:var(--accent); font-weight:900; font-size: 14px;">${t.o}</td></tr>`;
         }).join('')}</tbody></table>`;
         h += `</div>`;
     } else { h += `<div style="text-align:center; font-size:11px; color:var(--gray); margin-bottom:20px;">Нет данных таблицы</div>`; }
@@ -2155,14 +2159,14 @@ window.renderCombinedStats = function() {
         h += `<div style="font-weight:800; color:var(--accent); font-size:12px; text-align:left; margin-bottom:10px; text-transform:uppercase;">Результаты матчей</div>`;
         dayMatches.forEach((m, idx) => {
             const gl = m.events ? m.events.filter(e => e.side===1) : []; const gr = m.events ? m.events.filter(e => e.side===2) : [];
-            const adminMatchBtn = isAdminAndCurrent ? `&nbsp;&nbsp;&nbsp;<button class="admin-edit-btn icon-btn" style="background:var(--card); border:1px solid var(--accent); border-radius:8px; padding:4px 10px; color:var(--accent); display:inline-flex; vertical-align:middle; cursor:pointer;" onclick="window.openMatchEditor(${m.id})"><svg class="icon" style="width:14px; height:14px;"><use href="#icon-edit"></use></svg></button>` : '';
+            const adminMatchBtn = (isAdminAndCurrent && !isFinished) ? `&nbsp;&nbsp;&nbsp;<button class="admin-edit-btn icon-btn" style="background:var(--card); border:1px solid var(--accent); border-radius:8px; padding:4px 10px; color:var(--accent); display:inline-flex; vertical-align:middle; cursor:pointer;" onclick="window.openMatchEditor(${m.id})"><svg class="icon" style="width:14px; height:14px;"><use href="#icon-edit"></use></svg></button>` : '';
             const matchNumber = dayMatches.length - idx;
             h += `<div class="history-card">
             <div style="font-size: 9px; color: #64748b; text-align: center; margin-bottom: 4px; font-weight: bold; text-transform: uppercase;">МАТЧ #${matchNumber} • ${m.date} ${m.time}</div>
             <div class="h-main-row"><div class="h-team-l">${m.t1}</div><div class="h-score" style="display:flex; justify-content:center; align-items:center;">${m.s1}:${m.s2}${adminMatchBtn}</div><div class="h-team-r">${m.t2}</div></div>
             <div class="h-details-row"><div class="h-goals-l">${gl.map(e=>`<div><svg class="icon-inline" style="width:11px; height:11px;"><use href="#icon-ball"></use></svg> ${window.formatGoal(e)}</div>`).join('')}</div><div class="h-goals-r">${gr.map(e=>`<div><svg class="icon-inline" style="width:11px; height:11px;"><use href="#icon-ball"></use></svg> ${window.formatGoal(e)}</div>`).join('')}</div></div></div>`;
         });
-        if (isAdminAndCurrent) h += `<button class="btn-base icon-btn" style="margin-top:5px; width:100%; padding:14px; font-size:12px;" onclick="window.openAddPastMatch('${date}')"><svg class="icon"><use href="#icon-plus"></use></svg> ДОБАВИТЬ МАТЧ</button>`;
+        if (isAdminAndCurrent && !isFinished) h += `<button class="btn-base icon-btn" style="margin-top:5px; width:100%; padding:14px; font-size:12px;" onclick="window.openAddPastMatch('${date}')"><svg class="icon"><use href="#icon-plus"></use></svg> ДОБАВИТЬ МАТЧ</button>`;
         h += `</div>`;
     }
 
@@ -2170,9 +2174,9 @@ window.renderCombinedStats = function() {
         h += `<div style="border: 1px dashed rgba(255,255,255,0.15); border-radius: 12px; padding: 12px; margin-bottom: 15px; background: rgba(255,255,255,0.02);">`;
         h += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                 <div style="font-weight:800; color:var(--accent); font-size:12px; text-transform:uppercase;">Статистика игроков`;
-        if (isAdminAndCurrent) h += `&nbsp;&nbsp;&nbsp;<button class="admin-edit-btn icon-btn" style="background:var(--card); border:1px solid var(--accent); border-radius:8px; padding:4px 10px; color:var(--accent); display:inline-flex; vertical-align:middle; cursor:pointer;" onclick="window.openTourPlayerEditor('${date}')"><svg class="icon" style="width:14px; height:14px;"><use href="#icon-edit"></use></svg></button>`;
+        if (isAdminAndCurrent && !isFinished) h += `&nbsp;&nbsp;&nbsp;<button class="admin-edit-btn icon-btn" style="background:var(--card); border:1px solid var(--accent); border-radius:8px; padding:4px 10px; color:var(--accent); display:inline-flex; vertical-align:middle; cursor:pointer;" onclick="window.openTourPlayerEditor('${date}')"><svg class="icon" style="width:14px; height:14px;"><use href="#icon-edit"></use></svg></button>`;
         h += `</div>`;
-        if (isAdminAndCurrent && activeTeams.length > 0) h += `<button class="admin-edit-btn icon-btn" style="padding:5px 10px; font-size:10px; background:var(--card); border:1px solid #facc15; border-radius:8px; color:#facc15;" onclick="window.openMvpSelector('${date}')"><svg class="icon"><use href="#icon-star"></use></svg> MVP ТУРА</button>`;
+        if (isAdminAndCurrent && !isFinished && activeTeams.length > 0) h += `<button class="admin-edit-btn icon-btn" style="padding:5px 10px; font-size:10px; background:var(--card); border:1px solid #facc15; border-radius:8px; color:#facc15;" onclick="window.openMvpSelector('${date}')"><svg class="icon"><use href="#icon-star"></use></svg> MVP ТУРА</button>`;
         h += `</div>`;
         
         let teamsWithPlayers = [...new Set(Object.values(playerStats).map(p => p.team))];
