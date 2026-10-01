@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#0f172a">
-    <title>Футбол на Манеже v20.52</title>
+    <title>Футбол на Манеже v20.53</title>
 
     <script>
         window.GITHUB_REPO = "antb777/FnM";
@@ -359,7 +359,7 @@
                 <span class="btn-subtext" style="color: #000;">Режим тестирования</span>
             </button>
             <div style="font-size: 11px; margin-top: 25px; opacity: 0.5; display:flex; align-items:center; justify-content:center; gap: 4px;">
-                v20.52 Demo • <a href="https://antb777.github.io/FnM/" target="_blank" style="color: inherit; text-decoration: none;">antb777.github.io/FnM/</a>
+                v20.53 Demo • <a href="https://antb777.github.io/FnM/" target="_blank" style="color: inherit; text-decoration: none;">antb777.github.io/FnM/</a>
             </div>
         </div>
     </div>
@@ -530,7 +530,7 @@
     </div>
 
 <script>
-/* JS LOGIC v20.52 (OVR Ratings + Seasons + OVR Formula Fix) */
+/* JS LOGIC v20.53 (OVR Ratings + Seasons + OVR Formula Fix) */
 window.COLORS = { "Черные": "#000000", "Белые": "#ffffff", "Желтые": "#facc15", "Зеленые": "#22c55e", "Красные": "#ef4444", "Синие": "#3b82f6", "Разноцветные": "linear-gradient(45deg, #f00, #ff0, #0f0, #0ff, #00f, #f0f)" };
 window.colorKeys = Object.keys(window.COLORS);
 window.audioCtx = null;
@@ -2090,17 +2090,17 @@ window.renderCombinedStats = function() {
             <button class="stats-page-btn" ${window.currentStatsPageIndex === 0 ? 'disabled' : ''} onclick="window.changeStatsPage(-1)">▶</button>
           </div>`;
 
-    if ((isAdminAndCurrent || (window.currentRole === 'admin' && window.viewingSeasonIndex === -1 && window.isDemoMode)) && !isFinished) {
+    if (isAdminAndCurrent || (window.currentRole === 'admin' && window.viewingSeasonIndex === -1 && window.isDemoMode)) {
         h += `<div style="display:flex; gap:5px; margin-bottom:15px; justify-content:center; flex-wrap:wrap;">`;
-        h += `  <button class="admin-edit-btn icon-btn" style="width:auto; padding:8px 14px; font-size:11px; background:var(--card); border:1px solid #a855f7; border-radius:8px; color:#a855f7;" onclick="window.addNewTournament()"><svg class="icon"><use href="#icon-plus"></use></svg> ПРОШЛЫЙ ТУР</button>`;
-        if (!isFinished && date === activeD) { h += `<button class="admin-edit-btn icon-btn" style="width:auto; padding:8px 14px; font-size:11px; background:var(--card); border:1px solid var(--success); border-radius:8px; color:var(--success);" onclick="window.startNewTournament('${date}')"><svg class="icon"><use href="#icon-stop"></use></svg> ЗАВЕРШИТЬ ТУР</button>`; }
-        h += `  <button class="admin-edit-btn icon-btn" style="width:auto; padding:8px 14px; font-size:11px; background:var(--card); border:1px solid var(--accent); border-radius:8px; color:var(--accent);" onclick="window.openShareModal('${date}')"><svg class="icon"><use href="#icon-share"></use></svg> ПОДЕЛИТЬСЯ</button>
-                <button class="admin-edit-btn icon-btn" style="width:auto; padding:8px 14px; font-size:13px; background:var(--card); border:1px solid var(--danger); border-radius:8px; color:var(--danger);" onclick="window.deleteDay('${date}')"><svg class="icon"><use href="#icon-trash"></use></svg></button>`;
+        if (!isFinished) {
+            h += `  <button class="admin-edit-btn icon-btn" style="width:auto; padding:8px 14px; font-size:11px; background:var(--card); border:1px solid #a855f7; border-radius:8px; color:#a855f7;" onclick="window.addNewTournament()"><svg class="icon"><use href="#icon-plus"></use></svg> ПРОШЛЫЙ ТУР</button>`;
+            if (date === activeD) { h += `<button class="admin-edit-btn icon-btn" style="width:auto; padding:8px 14px; font-size:11px; background:var(--card); border:1px solid var(--success); border-radius:8px; color:var(--success);" onclick="window.startNewTournament('${date}')"><svg class="icon"><use href="#icon-stop"></use></svg> ЗАВЕРШИТЬ ТУР</button>`; }
+        }
+        h += `  <button class="admin-edit-btn icon-btn" style="width:auto; padding:8px 14px; font-size:11px; background:var(--card); border:1px solid var(--accent); border-radius:8px; color:var(--accent);" onclick="window.openShareModal('${date}')"><svg class="icon"><use href="#icon-share"></use></svg> ПОДЕЛИТЬСЯ</button>`;
+        if (!isFinished) {
+            h += `  <button class="admin-edit-btn icon-btn" style="width:auto; padding:8px 14px; font-size:13px; background:var(--card); border:1px solid var(--danger); border-radius:8px; color:var(--danger);" onclick="window.deleteDay('${date}')"><svg class="icon"><use href="#icon-trash"></use></svg></button>`;
+        }
         h += `</div>`;
-    } else {
-        h += `<div style="display:flex; gap:5px; margin-bottom:15px; justify-content:center; flex-wrap:wrap;">
-                <button class="admin-edit-btn icon-btn" style="width:auto; padding:8px 14px; font-size:11px; background:var(--card); border:1px solid var(--accent); border-radius:8px; color:var(--accent);" onclick="window.openShareModal('${date}')"><svg class="icon"><use href="#icon-share"></use></svg> ПОДЕЛИТЬСЯ</button>
-              </div>`;
     }
 
     if (Object.keys(stats).length > 0) {
@@ -2138,7 +2138,6 @@ window.renderCombinedStats = function() {
             let assistsText = `${pStats.a || 0} ${getPlural(pStats.a || 0, ['пас', 'паса', 'пасов'])}`;
             let ptsText = `${pts} ${getPlural(pts, ['очко', 'очка', 'очков'])}`;
             
-            // Чистый onclick без перехвата тач-эвентов для безотказной работы на мобильных устройствах
             h += `<div class="top-minicard" onclick="window.openPlayerCard('${pName}')" style="flex: 1; max-width: 145px; background: ${bgGrad}; border-color: ${brdColor}; cursor: pointer;">
                 <div class="minicard-rank" style="background: ${brdColor}; color: #000; pointer-events: none;"><svg class="icon" style="width:12px;height:12px;"><use href="#icon-star"></use></svg></div>
                 <div class="minicard-avatar" style="pointer-events: none;">
